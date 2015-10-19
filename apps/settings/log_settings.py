@@ -78,10 +78,6 @@ LOGGING = {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
         },
-        'jpush': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',          
-        },
                         
     }
 }

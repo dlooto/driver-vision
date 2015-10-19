@@ -1,0 +1,11 @@
+/*!
+ * vision v1.0.0 
+ * Copyright @2015
+*/
+
+.page-header {
+    padding-bottom: 9px;
+    margin: 0px 0 20px;
+    border-bottom: 0px solid #eee;
+    font-size: 32px;
+}
