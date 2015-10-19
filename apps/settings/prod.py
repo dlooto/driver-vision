@@ -14,26 +14,21 @@ import os
 from base import *
 
 ALLOWED_HOSTS = [
-    'mombaby.me',
-    'www.mombaby.me',
-    'm1.mombaby.me', 
-    'dr.mombaby.me', 
-    'shop.mombaby.me',
-    'dl.mombaby.me',
-    'api.mombaby.me',
-    'admin.mombaby.me',
-    
+    'vt.dondon.im',    
     '127.0.0.1', 
 ]
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': '/etc/mysql/my.cnf',
-        }, 
+    "default": {
+        "ENGINE": 'django.db.backends.mysql', # Add "postgresql_psycopg2", "postgresql", "mysql", "sqlite3" or "oracle".
+        "NAME": 'vision',                 # Or path to database file if using sqlite3.
+        "USER": 'root',                       # Not used with sqlite3.
+        "PASSWORD": 'Nian2014@n',                 # Not used with sqlite3.
+        "HOST": 'localhost',                  # Set to empty string for localhost. Not used with sqlite3.
+        "PORT": '3306',                       # Set to empty string for default. Not used with sqlite3.
     }
 }
+
 
 MIDDLEWARE_CLASSES += [
     #'core.middleware.PrintSqlMiddleware',
@@ -41,8 +36,8 @@ MIDDLEWARE_CLASSES += [
     
 ]
 
-MEDIA_URL = 'http://m1.mombaby.me/media/'
-STATIC_URL = 'http://m1.mombaby.me/static/'
+MEDIA_URL = 'http://vt.dondon.im/media/'
+STATIC_URL = 'http://vt.dondon.im/static/'
 
 INSTALLED_APPS += ['gunicorn',]
 
