@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+    
+<head>
+{% block header_base %}
+    <meta charset="utf-8" />
+    <link rel="icon" href="{{STATIC_URL}}vision/img/logo_50.png" />
+    <title>{% block title %}{% endblock %}</title>
+    
+    {% block css %}
+        <link rel="stylesheet" href="main.css" />
+        <link rel="stylesheet" href="" />
+    {% endblock %}
+    
+    {% block extra_css %}{% endblock %}
+    {% block js %}{% endblock %}
+{% endblock %}
+
+</head>
+
+
+<body>
+<div class="container">    
+    
+<!-- HEADER -->
+<div class="topbar">
+{% block topbar %}{% endblock %}
+</div>
+
+<!-- BODY -->
+<div class="body">
+{% block body_base %}
+	{% block body %}{% endblock %}
+{% endblock %}
+</div>
+
+<!-- FOOTER -->	
+<div class="footer">
+{% block footer_base %}        	
+	{% block footer %}{% endblock %}
+{% endblock %}
+</div>	
+
+{% block extra_js %}{% endblock %}
+
+</div>
+
+</body>
+
+</html>

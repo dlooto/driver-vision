@@ -1,0 +1,13 @@
+*.project
+*.pydevproject
+*.pyc
+*.settings
+.idea
+
+apps/media
+media/*
+apps/settings/__init__.py
+settings/local.py
+settings/local_s.py
+
+/apps/build

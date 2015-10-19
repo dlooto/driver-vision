@@ -1,0 +1,15 @@
+*.project
+*.pydevproject
+*.pyc
+*.settings
+.idea
+
+
+apps/settings/__init__.py
+apps/settings/local.py
+
+/apps/build
+media
+logs
+dump.rdb
+

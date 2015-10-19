@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %} Mombaby | 管理后台 {% endblock %}
+
+{% block extrahead %}
+<link rel="icon" href="{{STATIC_URL}}mami/img/logo_50.png" />
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">Mombaby</h1>
+{% endblock %}
+
+{% block userlinks %}
+    {% url 'django-admindocs-docroot' as docsroot %}
+    {% if docsroot %}
+        <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+    {% endif %}
+    
+    {% if user.is_superuser and user.has_usable_password %}
+    <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+    <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+    {% endif %}
+    
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+  {% if not is_popup %}
+  <div id="footer" class="footer">
+    <div class="content">
+      <div class="tools">
+        {% block footer_links %}
+          <a href="http://dr.mombaby.me" target="_blank" class="icon"><i class="icon-question-sign"></i>医生登录</a>
+          <a href="http://shop.mombaby.me" target="_blank" class="icon"><i class="icon-bookmark"></i>机构登录</a>
+          <a href="http://mombaby.me" target="_blank" class="icon"><i class="icon-comment"></i>意见反馈</a>
+        {% endblock %}
+      </div>
+
+      <div class="copyright">
+        {% block copyright %}
+          Copyright &copy; 2015 mombaby.me
+        {% endblock %}
+      </div>
+
+      <div class="branding">妈咪抱抱 v1.0&nbsp; Mombaby.me</div>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

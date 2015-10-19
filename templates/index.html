@@ -1,0 +1,44 @@
+{% extends "theme_base.html" %}
+
+{% block header_base %}
+    <meta charset="utf-8" />
+    <link rel="icon" href="{{STATIC_URL}}mami/img/logo_50.png" />
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}mami/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}mami/css/mombaby.css"/>
+    
+    <title>{% block title %}MomBaby - 智能孕婴产品{% endblock %}</title>
+    
+{% endblock %}
+
+{% block body %}
+<br /> <br /><br /><br />
+
+{% block page_header %}
+<div> 
+<h2 class="page-header" align="center" style="">
+    <img src="{{STATIC_URL}}mami/img/logo_100.png" />  <span style="color: #3366cc;"> 妈咪抱抱 MomBaby </span>
+</h2>
+</div>
+
+<br /> <br /><br />
+<div align="center" > 
+<h2 class="page-header" style="">
+    <span style="color:#3366cc; font-size: 50px;">
+         智慧妈咪, 快乐你的宝宝
+    </span>
+</h2>
+
+</div>
+{% endblock %}
+
+{% endblock %}
+
+<!-- FOOTER -->    
+{% block footer %}
+<div style="margin-top: 200px"></div>
+<span>©2015 mombaby.me &nbsp;&nbsp;
+    <a href="##">关于</a>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="##">加入我们</a>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="mailto:junn@dondon.im">联系我们</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span> 
+{% endblock %}
