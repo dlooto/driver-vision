@@ -10,8 +10,8 @@ source /opt/envs/nian/bin/activate
 # used for web requests
 exec python manage.py run_gunicorn -w 1 \
     --user=ada --group=ada \
-    --settings=settings.local \
+    --settings=settings.prod \
     --timeout=$TIMEOUT \
-    --bind=0.0.0.0:8000 \
+    --bind=0.0.0.0:8001 \
     --log-level=info \
     --log-file=/home/ada/prod/vision/logs/vision.log 2>>/home/ada/prod/vision/logs/vision.log
