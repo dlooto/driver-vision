@@ -30,6 +30,7 @@ BOARD_SIZE_B = {  #大路牌默认尺寸
 
 DEFAULT_ROAD_FONT = ("Helvetica", 15)
 road_font = DEFAULT_ROAD_FONT
+TRIAL_END_FONT = ("Helvetica", 35)
 
 
 WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #默认注视点坐标
