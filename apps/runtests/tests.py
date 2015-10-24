@@ -5,10 +5,7 @@ Created on Sep 17, 2014
 @author: junn
 '''
 from django.test import TestCase
-import settings
-
-
-
+from vision.trials import new_demo
 
 
 class PostsUnreadTest(TestCase):
@@ -18,8 +15,12 @@ class PostsUnreadTest(TestCase):
 
     def test_get_all_posts_unread_count(self):
         print 'unread_dict: \n'
-
+        
+    def test_gui(self):
+        new_demo()    
 
 
 if __name__ == "__main__":
     pass
+
+

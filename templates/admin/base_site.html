@@ -1,14 +1,14 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
 
-{% block title %} Mombaby | 管理后台 {% endblock %}
+{% block title %} Vision Trail | Admin {% endblock %}
 
 {% block extrahead %}
 <link rel="icon" href="{{STATIC_URL}}mami/img/logo_50.png" />
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name">Mombaby</h1>
+<h1 id="site-name">视觉测试</h1>
 {% endblock %}
 
 {% block userlinks %}
@@ -32,19 +32,17 @@
     <div class="content">
       <div class="tools">
         {% block footer_links %}
-          <a href="http://dr.mombaby.me" target="_blank" class="icon"><i class="icon-question-sign"></i>医生登录</a>
-          <a href="http://shop.mombaby.me" target="_blank" class="icon"><i class="icon-bookmark"></i>机构登录</a>
-          <a href="http://mombaby.me" target="_blank" class="icon"><i class="icon-comment"></i>意见反馈</a>
+          <a href="http://localhost:8000" target="_blank" class="icon">
+              <i class="icon-bookmark"></i>开始测试</a>
         {% endblock %}
       </div>
 
       <div class="copyright">
         {% block copyright %}
-          Copyright &copy; 2015 mombaby.me
+          Copyright &copy; 2015 视觉测试
         {% endblock %}
       </div>
 
-      <div class="branding">妈咪抱抱 v1.0&nbsp; Mombaby.me</div>
     </div>
   </div>
   {% endif %}
