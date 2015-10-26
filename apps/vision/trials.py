@@ -50,12 +50,6 @@ class GUI(Tk):
         #self.watch_point = WatchPoint()
         #self.board = Board()
         
-#     def __init1__(self, show_interval=1.6, eccent=6, watch_pos=(100,100)):
-#         self.show_interval = show_interval * 1000
-#         self.eccent = eccent
-#         self.watch_pos = watch_pos
-#         super().__init__()
-
     def init_window(self):
         '''初始化窗口: 绘制试验提示信息等'''
         
@@ -70,6 +64,8 @@ class GUI(Tk):
         self.start_button = Label(self, START_BUTTON, relief=RAISED) #使用Button有些Fuck, 改用Label
         self.start_button.pack(pady=250)
         self.start_button.bind('<Button-1>', self.start)
+        
+        self.bind_keys()
         
         
     def draw_all(self):
@@ -89,6 +85,24 @@ class GUI(Tk):
     
     def init_params(self):
         pass
+    
+    def flash_data(self):
+        '''刷新路牌(及上面的路名)和注视点数据内容, 以开始下一个1.6s的刺激显示 '''
+        
+        self.board.flash_data((BOARD_POS[0], BOARD_POS[1]+50), ('A', 'C', 'D', 'F', 'H'), 'H')
+        self.watch_point.flash_data()    
+        
+    def new_trial(self):
+        '''每一次刺激试验为1.6s. 该方法在单独的线程中被循环调用'''
+        
+        self.flash_data()
+        self.erase_all()
+        #time.sleep(show_interval)   #just for testing. remove later...
+        
+        self.draw_all()
+        self.cv.update()
+        
+        time.sleep(show_interval)  #一次显示有1.6s        
     
     def get_eccent(self):
         '''计算离心率: 注视点到目标项的中心点的半径距离，单位为度'''   
@@ -142,40 +156,19 @@ class GUI(Tk):
         subprocess.call(["afplay", AUD_PATH['F']])
         print 'n: ', e.keysym
         
-class DemoThread(threading.Thread):    
+class DemoThread(threading.Thread):
     def __init__(self, gui):
         threading.Thread.__init__(self)
         self.gui = gui
         
-    def set_show_data(self):
-        '''刷新路牌(及上面的路名)和注视点. '''
-        self.board.flash((BOARD_POS[0], BOARD_POS[1]+50), ('A', 'C', 'D', 'F', 'H'), 'H')
-        self.watch_point.flash()  
-        
-    def new_trial(self):
-        ## TODO: here init board and watch_point ,,,
-        self.gui.set_show_data()
-        self.gui.erase_all()
-        time.sleep(show_interval)   #just for testing...
-        
-        
-        self.gui.draw_all()
-        self.gui.cv.update()
-        time.sleep(show_interval)  #一次显示有1.6s
-        
     def run(self):
+        print 'Demo thread started'
         while self.gui.is_started:
-            self.new_trial()
+            self.gui.new_trial()
             
-        print 'demo stopped'    
+        print 'Demo thread stopped'    
         
-class Trial(object):
-    '''1.6s内的一次刺激实验'''
-    
-    def __init__(self):
-        pass        
-              
-
+        
 class SingleStaticDemo(GUI):
     '''单路静态实验'''
     pass
@@ -194,8 +187,8 @@ class WatchPoint(object):
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
     
-    def flash(self):
-        pass
+    def flash_data(self, pos=WATCH_POS):
+        self.pos = pos
     
     def draw(self, canvas):
         self.tk_id = canvas.create_circle(self.pos[0], self.pos[1], self.radius, 
@@ -361,7 +354,6 @@ def new_demo():
     global gui
     gui = GUI()
     gui.title('Vision Trial 视觉测试')
-    gui.bind_keys()
     gui.mainloop()
 
 if __name__ == '__main__':
