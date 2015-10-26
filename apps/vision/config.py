@@ -5,19 +5,24 @@
 #
 
 '''
-默认参数设置
+视觉测试默认参数设置
 '''
 
-board_color = "#0866B9"
-road_color = 'white'
-watch_color = 'red' 
+face_background = '#F3F9FF'  #主窗口背景颜色
+board_color = "#0866B9"      #路牌背景颜色
+road_color = 'white'         #路名颜色
+watch_color = 'red'          #注视点填充颜色
+show_interval = 1.6         #默认刺激显示间隔时间, 单位秒
+
+DEFAULT_ROAD_FONT = ("Helvetica", 15)
+TRIAL_END_FONT =    ("Helvetica", 35)      #试验结束文字字体
+road_font = DEFAULT_ROAD_FONT
 
 # 试验界面窗口默认尺寸
 FACE_SIZE = {
     'w': 1024,
     'h': 768
 }
-face_background = '#F3F9FF'  #主窗口背景颜色
 
 BOARD_SIZE = {  #小路牌默认尺寸, bs_w, bs_h
     'w': 280,
@@ -28,13 +33,10 @@ BOARD_SIZE_B = {  #大路牌默认尺寸
     'h': 300             
 }
 
-DEFAULT_ROAD_FONT = ("Helvetica", 15)
-road_font = DEFAULT_ROAD_FONT
-TRIAL_END_FONT = ("Helvetica", 35)
+WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #注视点坐标默认值
+BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #路牌中心点坐标默认值,  bp_x, bp_y
 
-
-WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #默认注视点坐标
-BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #默认路牌中心点坐标,  bp_x, bp_y
+# 路名默认坐标点
 ROAD_POS = {
     'A': (BOARD_POS[0]-80, BOARD_POS[1]+10),    #路名高度15, 路名相隔间距10 
     'B': (BOARD_POS[0]-80, BOARD_POS[1]+35),
@@ -48,3 +50,30 @@ ROAD_POS = {
     'H': (BOARD_POS[0],    BOARD_POS[1]-45)
 }
 
+#试验提示信息
+TRIAL_START_PROMPT = { 
+    'text': u'点击"开始"按钮进行测试, 按 y(真)  或  n(假) 键进行判断选择.', 
+    'bg': face_background,
+    'fg': 'blue',
+    'font': ("Helvetica", 30), 
+}
+
+TRIAL_END_PROMPT = {
+    'text': u'测试结束', 
+    'pos':  WATCH_POS,
+    'font': ("Helvetica", 35),
+    'fill': '#1F90F2'
+}
+
+START_BUTTON = {
+    'bg':   '#009900',
+    'fg':   'white',
+    'font': ("Helvetica", 30, 'bold'),     
+    'text': u'开始测试',   
+    'width': 8,
+}
+
+AUD_PATH = {
+    'T': '/Users/junn/work/vision/media/aud/tink.wav',
+    'F': '/Users/junn/work/vision/media/aud/tock.wav'            
+}

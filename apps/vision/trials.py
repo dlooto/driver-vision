@@ -6,11 +6,13 @@
 # Created on Oct 22, 2015, by Junn
 #
 
+import random
 from Tkinter import *           # 导入 Tkinter 库
 import maths
 from config import *
-import random
-
+import time
+import threading
+import subprocess
 
 
 def _create_circle(self, x, y, r, **kwargs): 
@@ -24,74 +26,77 @@ def _create_rectangle(self, x, y, w, h, **kwargs):
 Canvas.create_circle = _create_circle
 Canvas.create_rectangle_pro = _create_rectangle
 
+CACHED_ROADS = [u'交大路', u'川大路', u'咚咚路', u'成创路', u'Mac路', 
+                 u'胜利路', u'飞天路', u'乳香路', u'宁夏路', u'创业路']
+
+def get_random_road(choice_roads):
+        return random.choice(choice_roads)
+
+
 class GUI(Tk):
     '''一次完整的实验, 基础父类'''
     
     # single or multi, static or dynamic, determined by subclass
-    wp_tk_id = None
-    watch_pos = None            #注视点坐标           default 
-    show_interval = None        #显示时间, 毫秒单位    default
-    eccent = 6                  #离心率              
-    board = None
+    #eccent = 6                  #离心率              
+    #board = None
+    
     
     def __init__(self):
         Tk.__init__(self)
-        
         self.is_started = False              #实验进行状态, 默认为未开始
+        self.init_window()
+        
+        # init elements
+        #self.watch_point = WatchPoint()
+        #self.board = Board()
+        
+#     def __init1__(self, show_interval=1.6, eccent=6, watch_pos=(100,100)):
+#         self.show_interval = show_interval * 1000
+#         self.eccent = eccent
+#         self.watch_pos = watch_pos
+#         super().__init__()
+
+    def init_window(self):
+        '''初始化窗口: 绘制试验提示信息等'''
+        
+        self.config(bg=face_background) #设置窗体背景颜色
+        self.geometry("%dx%d" % (FACE_SIZE['w'], FACE_SIZE['h']))
         self.cv = Canvas(self, width=FACE_SIZE['w'], height=FACE_SIZE['h'], background=face_background) #灰白色
-        self.cv.pack()
+        self.cv.widget_dict = {} # 画布上的组件字典
         
-        self.init_watch_point()
-        self.init_board()
+        self.prompt = Label(self, TRIAL_START_PROMPT)
+        self.prompt.pack(pady=50)
         
-    def __init1__(self, show_interval=1.6, eccent=6, watch_pos=(100,100)):
-        self.show_interval = show_interval * 1000
-        self.eccent = eccent
-        self.watch_pos = watch_pos
-        super().__init__()
-    
+        self.start_button = Label(self, START_BUTTON, relief=RAISED) #使用Button有些Fuck, 改用Label
+        self.start_button.pack(pady=250)
+        self.start_button.bind('<Button-1>', self.start)
+        
+        
     def draw_all(self):
-        self.draw_watch_point()
+        self.watch_point.draw(self.cv)
         self.board.draw(self.cv)
         
     def draw_gameover(self):
-        self.cv.create_text(WATCH_POS, text='Game Over', fill='blue', font=TRIAL_END_FONT)    
+        gover = TRIAL_END_PROMPT   
+        tk_id = self.cv.create_text(gover['pos'], text=gover['text'], 
+                                    fill=gover['fill'], font=gover['font'])
+        self.cv.widget_dict[tk_id] = gover
         
     def erase_all(self):
-        if self.wp_tk_id:
-            self.cv.delete(self.wp_tk_id)
-        if self.board:    
-            self.board.erase(self.cv)
+        for tk_id in self.cv.widget_dict.keys():
+            self.cv.delete(tk_id)
+        self.cv.widget_dict = {}    
     
-    def draw_watch_point(self):
-        self.wp_tk_id = self.cv.create_circle(WATCH_POS[0], WATCH_POS[1], 5, fill=watch_color, outline=watch_color) #注视点
-    
-    def init_watch_point(self):
-        pass
-    
-    def init_board(self):
-        self.board = Board()
-        
     def init_params(self):
         pass
     
-    def gen_board(self):
-        '''生成路牌. 
-        每个1.6s要重新生成一个路牌'''
-        self.board = Board()
-        
-     
     def get_eccent(self):
         '''计算离心率: 注视点到目标项的中心点的半径距离，单位为度'''   
          
         road = self.board.get_target_road()
         #or target_board
-        return maths.dist(self.watch_pos, road.pos)
+        return maths.dist(self.watch_point, road.pos)
         # or return self.eccent
-        
-    def new_trial(self):
-        '''新生成一次1.6s的实验'''
-        return Trial()
         
     def stop(self, e):
         self.is_started = False
@@ -99,10 +104,70 @@ class GUI(Tk):
         self.draw_gameover()
     
     def start(self, e):
+        '''点击按钮开始试验'''
         self.is_started = True
-        self.erase_all()
-        self.draw_all()
         
+        # 清屏
+        self.prompt.destroy()
+        self.start_button.destroy()
+        self.cv.pack()
+        self.erase_all()
+        
+        # 启动试验线程
+        DemoThread(self).start()
+        
+    def bind_keys(self):
+        self.bind('<Key-Left>',     self._press_left)     #左
+        self.bind('<Key-Right>',    self._press_right)   #右
+        self.bind('<KeyPress-y>',   self._press_y)      #y键
+        self.bind('<KeyPress-n>',   self._press_n)      #n键
+        
+        self.bind('<KeyPress-S>',   self.start)     #开始键
+        self.bind('<KeyPress-Q>',   self.stop)      #结束键
+                
+        
+    def _press_left(self, e):
+        print 'Left:', e.keysym 
+        
+    def _press_right(self, e):
+        print 'Right: ', e.keysym
+        
+    def _press_y(self, e):
+        '''用户识别目标为 真'''
+        subprocess.call(["afplay", AUD_PATH['T']])
+        print 'y: ', e.keysym
+        
+    def _press_n(self, e):
+        '''用户识别目标为 假'''
+        subprocess.call(["afplay", AUD_PATH['F']])
+        print 'n: ', e.keysym
+        
+class DemoThread(threading.Thread):    
+    def __init__(self, gui):
+        threading.Thread.__init__(self)
+        self.gui = gui
+        
+    def set_show_data(self):
+        '''刷新路牌(及上面的路名)和注视点. '''
+        self.board.flash((BOARD_POS[0], BOARD_POS[1]+50), ('A', 'C', 'D', 'F', 'H'), 'H')
+        self.watch_point.flash()  
+        
+    def new_trial(self):
+        ## TODO: here init board and watch_point ,,,
+        self.gui.set_show_data()
+        self.gui.erase_all()
+        time.sleep(show_interval)   #just for testing...
+        
+        
+        self.gui.draw_all()
+        self.gui.cv.update()
+        time.sleep(show_interval)  #一次显示有1.6s
+        
+    def run(self):
+        while self.gui.is_started:
+            self.new_trial()
+            
+        print 'demo stopped'    
         
 class Trial(object):
     '''1.6s内的一次刺激实验'''
@@ -118,9 +183,28 @@ class SingleStaticDemo(GUI):
 class SingleDynamicDemo(GUI):
     pass
 
+class WatchPoint(object):
+    tk_id = None
+    pos = WATCH_POS
+    radius = 5
+    
+    def __init__(self, pos=WATCH_POS, radius=5, fill=watch_color, outline=watch_color):
+        self.pos = pos              #坐标点
+        self.radius = radius        #圆圈半径
+        self.fill = fill            #填充颜色
+        self.outline = outline      #边框颜色
+    
+    def flash(self):
+        pass
+    
+    def draw(self, canvas):
+        self.tk_id = canvas.create_circle(self.pos[0], self.pos[1], self.radius, 
+                                          fill=self.fill, outline=self.outline) #注视点
+        canvas.widget_dict[self.tk_id] = self
+
 class Board(object):
     '''路牌'''
-    tk_id = None
+    tk_id = None                #在画布上的id
     pos = 100, 100              #中心点坐标, 即路牌位置
     angle = 30                  #路牌初始角度, 在0,30, 60等中取值, 单位度
     width = 280                 #路牌宽度
@@ -137,7 +221,6 @@ class Board(object):
         self.angle = angle
         
         self.init_road_list(('A', 'D', 'H'), 'A')
-        self.set_target_road('A')
     
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
@@ -145,10 +228,20 @@ class Board(object):
         '''
         pass
     
+    def flash(self, pos, roads_state, target, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
+        print pos, ':', roads_state, ':', target
+        ''' like roads_state=('A', 'D', 'H'), 'A' '''
+        self.pos = pos
+        self.width = width
+        self.height = height
+        self.angle = angle
+        self.init_road_list(roads_state, target)
+    
     def draw(self, canvas):
         '''显示在屏幕上'''  
-        self.tk_id = canvas.create_rectangle_pro(self.pos[0], self.pos[1], 
+        tk_id = canvas.create_rectangle_pro(self.pos[0], self.pos[1], 
                                                  self.width, self.height, fill=board_color, outline=board_color)
+        canvas.widget_dict[tk_id] = self
         self._draw_roads(canvas)
             
     def _draw_roads(self, canvas):
@@ -176,12 +269,15 @@ class Board(object):
         '''从DB随机选择num个路名, marks指定路名所在位置, 如('A', 'B', 'D', 'G')
         target表示目标项, 如target='B'
         '''
-        choice_roads = DEFAULT_ROADS
+        print 'marks:', marks
+        choice_roads = CACHED_ROADS
         self.road_dict = {}
         for mark in marks:
             road_name = get_random_road(choice_roads)
             self.road_dict[mark] = Road(road_name, self.pos_xx(mark))
             choice_roads.remove(road_name)
+            print 'CACHED_ROADS: ', len(CACHED_ROADS)
+            print 'choice_roads: ', len(choice_roads)
         self.target_road = self.road_dict.get(target)
         self.target_road.is_target = True   
     
@@ -197,6 +293,7 @@ class Board(object):
     def get_road_num(self):
         return len(self.road_dict)
     
+    # 获取A, B, C, D, E, F, G, H各点坐标
     def pos_a(self):
         return self.pos[0]-80, self.pos[1]+10
     def pos_b(self):
@@ -219,28 +316,25 @@ class Board(object):
         return getattr(self, mt)()
     
         
-DEFAULT_ROADS = [u'交大路', u'川大路', u'咚咚路', u'成创路', u'Mac路', 
-                 u'胜利路', u'飞天路', u'乳香路', u'宁夏路', u'创业路']
-def get_random_road(choice_roads):
-        return random.choice(choice_roads)
-
-
 class Road(object):
     tk_id = None
     name = ''           #路名   
     size = 15           #路名尺寸, 指字体大小, 单位px
     pos = 0, 0          #路名中心点在路牌上的位置坐标
     is_target = False   #是否是目标路名
+    is_real = False     #是否真名
     
-    def __init__(self, name, pos, size=15, is_target=False):
+    def __init__(self, name, pos, size=15, is_target=False, is_real=False):
         self.name = name
         self.pos = pos
         self.size = size
         self.is_target = is_target
+        self.is_real = is_real
     
     def draw(self, canvas):
         '''显示在屏幕上'''  #调用画布进行绘制...
         self.tk_id = canvas.create_text(self.pos, text=self.name, fill=road_color, font=road_font)
+        canvas.widget_dict[self.tk_id] = self 
         
     def erase(self, canvas):
         '''擦除路名'''
@@ -260,18 +354,6 @@ class Move():
 class Tester():
     pass
 
-def press_left(e):
-    print 'Left:', e.keysym 
-    
-def press_right(e):
-    print 'Right: ', e.keysym
-    
-def press_y(e):
-    print 'y: ', e.keysym
-    
-def press_n(e):
-    print 'n: ', e.keysym
-    
 
 def new_demo():
     '''开始新的实验
@@ -279,13 +361,7 @@ def new_demo():
     global gui
     gui = GUI()
     gui.title('Vision Trial 视觉测试')
-    gui.bind('<Key-Left>', press_left)
-    gui.bind('<Key-Right>', press_right)
-    gui.bind('<KeyPress-y>', press_y)
-    
-    gui.bind('<KeyPress-S>', gui.start)
-    gui.bind('<KeyPress-Q>', gui.stop)
-    
+    gui.bind_keys()
     gui.mainloop()
 
 if __name__ == '__main__':

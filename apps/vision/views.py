@@ -4,7 +4,7 @@
 # Created on Oct 19, 2015, by Junn
 #
 from utils import http, logs
-from vision import gui
+from vision import trials
 from config import *
 
 
@@ -24,17 +24,17 @@ def start_demo(req):
     '''开始试验
     被试者点击开始时, 请求该方法
     '''
-
-    demo = req.session.get('demo')
-    if demo:
-        logs.info('demo starting...')
-         
-        ## 进入到测试界面, 启动一个1.6s的trial. 一直到所有的trial完成
-        demo.start()
-         
-        logs.info('demo ended with ')
-        del req.session['demo']
-        return http.ok('试验完成')
+    trials.new_demo()
+#     demo = req.session.get('demo')
+#     if demo:
+#         logs.info('demo starting...')
+#          
+#         ## 进入到测试界面, 启动一个1.6s的trial. 一直到所有的trial完成
+#         demo.start()
+#          
+#         logs.info('demo ended with ')
+#         del req.session['demo']
+#         return http.ok('试验完成')
     
     return http.failed('参数未设置')    
         
