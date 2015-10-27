@@ -11,7 +11,8 @@ import maths
 from config import *
 import time
 import subprocess
-from vision.trials import WatchPoint, Board, DemoThread
+from vision.trials import WatchPoint, Board
+import threading
 
 
 def _create_circle(self, x, y, r, **kwargs): 
@@ -27,20 +28,18 @@ Canvas.create_rectangle_pro = _create_rectangle
 
 
 class GUI(Tk):
-    '''一次完整的实验, 基础父类'''
+    '''基础Gui控制类'''
     
     # single or multi, static or dynamic, determined by subclass
-    #eccent = 6                  #离心率              
-    #board = None
+    #eccent = 6                  #离心率
+    pattern = None               #试验模式, 4种: 单路静态, 单路动态, 多路静态, 多路动态 
+    watch_point = None            
+    board = None                 #多路牌试验模式时表示多个路牌的列表        
     
     def __init__(self):
         Tk.__init__(self)
         self.is_started = False              #实验进行状态, 默认为未开始
         self.init_window()
-        
-        # init elements
-        self.watch_point = WatchPoint()
-        self.board = Board()
         
     def init_window(self):
         '''初始化窗口: 绘制试验提示信息等'''
@@ -63,8 +62,9 @@ class GUI(Tk):
     def draw_all(self):
         self.watch_point.draw(self.cv)
         self.board.draw(self.cv)
+        self.cv.update()
         
-    def draw_gameover(self):
+    def gameover(self):
         gover = TRIAL_END_PROMPT   
         tk_id = self.cv.create_text(gover['pos'], text=gover['text'], 
                                     fill=gover['fill'], font=gover['font'])
@@ -73,28 +73,39 @@ class GUI(Tk):
     def erase_all(self):
         for tk_id in self.cv.widget_dict.keys():
             self.cv.delete(tk_id)
-        self.cv.widget_dict = {}    
+        self.cv.widget_dict = {}
+        self.cv.update()
     
     def init_params(self):
-        pass
+        '''初始参数设置: 从DB读取试验参数并初始化参数'''
+        self.watch_point = WatchPoint()
+        self.board = Board()
     
-    def flash_data(self):
-        '''刷新路牌(及上面的路名)和注视点数据内容, 以开始下一个1.6s的刺激显示 '''
+    def flash_params(self):
+        '''控制参数变化: 刷新路牌(及上面的路名)和注视点数据内容, 以开始下一个1.6s的刺激显示
+        '''
         
-        self.board.flash_data((BOARD_POS[0], BOARD_POS[1]+50), ('A', 'C', 'D', 'F', 'H'), 'H')
-        self.watch_point.flash_data()    
+        if not getattr(self, 'board') or not self.board:
+            self.board = Board()
+        if not getattr(self, 'watch_point') or not self.watch_point:
+            self.watch_point = WatchPoint()  
+            
+        self.board.flash_params()
+        self.watch_point.flash_params()
         
     def new_trial(self):
         '''每一次刺激试验为1.6s. 该方法在单独的线程中被循环调用'''
         
-        self.flash_data()
         self.erase_all()
         #time.sleep(show_interval)   #just for testing. remove later...
         
         self.draw_all()
-        self.cv.update()
+        #time.sleep(show_interval)  #等待1.6s, 等待用户进行键盘操作 y/n 并唤醒
+        signal.wait(show_interval)
         
-        time.sleep(show_interval)  #一次刺激显示有1.6s        
+        # 刷新控制参数为下一次1.6s的刺激显示作准备
+        self.flash_params()
+        
     
     def get_eccent(self):
         '''计算离心率: 注视点到目标项的中心点的半径距离，单位为度'''   
@@ -104,13 +115,12 @@ class GUI(Tk):
         return maths.dist(self.watch_point, road.pos)
         # or return self.eccent
         
-    def stop(self, e):
-        self.is_started = False
-        self.erase_all()
-        self.draw_gameover()
-    
     def start(self, e):
-        '''点击按钮开始试验'''
+        '''点击按钮开始试验.
+        点击开始前, 需要先设置好试验参数.
+        '''
+        if self.is_started:
+            return
         self.is_started = True
         
         # 清屏
@@ -120,8 +130,14 @@ class GUI(Tk):
         self.erase_all()
         
         # 启动试验线程
-        DemoThread(self).start()
+        self.init_params()
+        DemoThread(self).start()    
         
+    def stop(self, e):
+        self.is_started = False
+        self.erase_all()
+        self.gameover()
+    
     def bind_keys(self):
         self.bind('<Key-Left>',     self._press_left)     #左
         self.bind('<Key-Right>',    self._press_right)   #右
@@ -140,12 +156,20 @@ class GUI(Tk):
         
     def _press_y(self, e):
         '''用户识别目标为 真'''
-        subprocess.call(["afplay", AUD_PATH['T']])
+        #subprocess.call(["afplay", AUD_PATH['T']])
+        
+        ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
+        signal.set()    
+        
+        ## Do other things...
         print 'y: ', e.keysym
         
     def _press_n(self, e):
         '''用户识别目标为 假'''
         subprocess.call(["afplay", AUD_PATH['F']])
+        ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
+        signal.set() 
+        
         print 'n: ', e.keysym
         
         
@@ -157,14 +181,28 @@ class SingleDynamicDemo(GUI):
     pass
 
 
+signal = threading.Event()
+class DemoThread(threading.Thread):
+    def __init__(self, gui):
+        threading.Thread.__init__(self)
+        self.gui = gui
+        
+    def run(self):
+        print 'Demo thread started'
+        while self.gui.is_started:
+            signal.clear()          #重置线程flag标志位为False, 以使得event.wait调用有效
+            self.gui.new_trial()
+            
+        print 'Demo thread stopped'  
+
 def new_demo():
-    '''开始新的实验
-    '''
+    '''开始新的实验'''
     global gui
     gui = GUI()
     gui.title('Vision Trial 视觉测试')
     gui.mainloop()
 
+# 可不通过该main入口执行, 改为命令: python manage.py run_trial
 if __name__ == '__main__':
     new_demo()
 

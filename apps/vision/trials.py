@@ -9,25 +9,64 @@
 import random, threading
 import maths
 from config import *
+from vision.models import *
 
 
 CACHED_ROADS = [u'交大路', u'川大路', u'咚咚路', u'成创路', u'Mac路', 
                  u'胜利路', u'飞天路', u'乳香路', u'宁夏路', u'创业路']
 
+ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
+
 def get_random_road(choice_roads):
         return random.choice(choice_roads)
 
-class DemoThread(threading.Thread):
-    def __init__(self, gui):
-        threading.Thread.__init__(self)
-        self.gui = gui
         
-    def run(self):
-        print 'Demo thread started'
-        while self.gui.is_started:
-            self.gui.new_trial()
-            
-        print 'Demo thread stopped'    
+# class TrialParam(object):
+#     '''从DB存取参数, 进行参数设定, 及参数的控制与变化.
+#     默认获取最新参数设置数据
+#     '''
+#     
+#     board = None
+#     watch_point = None
+#     cached_roads = None
+#     
+#     #objects = TrialParamManager()
+#     
+#     def __init__(self):
+#         ## get data from DB and init all fields
+#         self.board_pos = BOARD_POS
+#         self.cached_roads = self.cache_roads()
+#     
+#     def save_init_params(self):
+#         '''向DB中写入试验参数. 管理者每设置一次写入一次'''
+#         
+#     def save_controlled_params(self, demo_id): 
+#         '''向DB写入某次试验的控制参数'''   
+#     
+#     def cache_roads(self):
+#         '''将所有备选路各缓存为列表结构, 元素类型为Road Model(name, is_real)
+#         '''
+#         pass
+#     
+#     def generate_random_roads(self, road_num=None):
+#         '''根据传入的路名数量, 获取不重复的随机路名列表, 列表元素类型为Road Model(name, is_real)
+#         该方法可作为工具方法
+#         '''
+#         
+#     def get_road_num(self):
+#         return self.road_num
+#     
+#     def get_target_seat(self):
+#         return self.target_seat    
+#         
+#     def get_road_seats(self):
+#         '''返回路名位置序列, 最后一个为目标项位置. Get from DB'''
+#         #return ('A', 'B', 'D', 'E', 'H'), 'A'
+#         return random.sample(ALLOWED_ROAD_SEATS, self.get_road_num()), self.get_target_seat()
+#              
+#     def get_board_pos(self):
+#         return self.board_pos
+        
         
         
 class WatchPoint(object):
@@ -41,7 +80,7 @@ class WatchPoint(object):
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
     
-    def flash_data(self, pos=WATCH_POS):
+    def flash_params(self, pos=WATCH_POS):
         self.pos = pos
     
     def draw(self, canvas):
@@ -49,10 +88,22 @@ class WatchPoint(object):
                                           fill=self.fill, outline=self.outline) #注视点
         canvas.widget_dict[self.tk_id] = self
 
+
+def cache_all_roads():
+    '''将所有备选路各缓存为列表结构, 元素类型为Road Model(name, is_real)
+    '''
+    # 分成真路名列表和假路名列表 ...
+    return Road.objects.filter(is_valid=True)
+    
+cached_roads = cache_all_roads()
+#cached_real_roads, cached_kana_roads = cache_all_roads()
+
 class Board(object):
     '''路牌'''
+    trial_param = None
+    
     tk_id = None                #在画布上的id
-    pos = 100, 100              #中心点坐标, 即路牌位置
+    pos = BOARD_POS              #中心点坐标, 即路牌位置
     angle = 30                  #路牌初始角度, 在0,30, 60等中取值, 单位度
     width = 280                 #路牌宽度
     height = 200                #路牌高度
@@ -60,14 +111,49 @@ class Board(object):
     road_dict = None            #路名列表
     target_road = None          #目标项
     
-    #BOARD_POS[0], BOARD_POS[1], BOARD_SIZE['w'], BOARD_SIZE['h'], fill=board_color, outline=board_color
-    def __init__(self, pos=BOARD_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
+    def __init__(self, pos=BOARD_POS, road_seats=None, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
+        self._load_params()
+        
         self.pos = pos
         self.width = width
         self.height = height
         self.angle = angle
         
-        self.init_road_list(('A', 'D', 'H'), 'A')
+        self.init_road_dict(self.get_road_seats())
+    
+    def _load_params(self):
+        '''从DB加载最新试验参数'''
+        #self.trial_param = TrialParam.objects.latest()
+        self.road_num = 5
+        
+    
+    def save_init_params(self):
+        '''向DB中写入试验参数. 管理者每设置一次写入一次'''
+        
+    def save_controlled_params(self, demo_id): 
+        '''向DB写入某次试验的控制参数'''   
+    
+    def generate_random_roads(self):
+        '''根据传入的路名数量, 获取不重复的随机路名列表, 列表元素类型为Road Model(name, is_real)
+        '''
+        return random.sample(cached_roads, self.road_num)
+        
+    def get_road_num(self):
+        return self.road_num
+    
+    def get_target_seat(self):
+        return random.choice(ALLOWED_ROAD_SEATS)  #for test
+        #return self.target_seat    
+        
+    def get_road_seats(self):
+        '''返回路名位置序列, 最后一个为目标项位置. Get from DB'''
+        #return ('A', 'B', 'D', 'E', 'H'), 'A'
+        # trial_param.road_seats 
+        rand_seats = random.sample(ALLOWED_ROAD_SEATS, self.get_road_num())
+        return rand_seats, random.choice(rand_seats)
+             
+    def get_board_pos(self):
+        return self.board_pos    
     
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
@@ -75,16 +161,14 @@ class Board(object):
         '''
         pass
     
-    def flash_data(self, pos, roads_state, target, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
-        ''' like roads_state=('A', 'D', 'H'), 'A' '''
+    def flash_params(self):
+        ''''''
+        ## do something to flash...
         
-        print pos, ':', roads_state, ':', target
-        self.pos = pos
-        self.width = width
-        self.height = height
-        self.angle = angle
-        self.init_road_list(roads_state, target)
-    
+        # following just for testing...
+        self.pos = self.pos[0], self.pos[1]-5
+        self.init_road_dict(self.get_road_seats())
+
     def draw(self, canvas):
         '''显示在屏幕上'''  
         self.tk_id = canvas.create_rectangle_pro(self.pos[0], self.pos[1], 
@@ -102,35 +186,28 @@ class Board(object):
                 
     def erase(self, canvas):
         '''擦除路牌, 开始下一个1.6s的显示. 擦除路牌同时擦除所有路名'''
-        #canvas.after(3*1000)
-        #canvas.update()        
-        
         self._erase_roads(canvas)
-        #canvas.after(3*1000)
-        #canvas.update()
-        
         canvas.delete(self.tk_id)
         #canvas.after(3*1000)
         #canvas.update()
     
-    def init_road_list(self, marks, target):
-        '''从DB随机选择num个路名, marks指定路名所在位置, 如('A', 'B', 'D', 'G')
-        target表示目标项, 如target='B'
-        '''
-        print 'marks:', marks
-        choice_roads = CACHED_ROADS
+    def init_road_dict(self, road_seats):
+        ''' '''
+        marks, target_mark = road_seats
+        print '===>1', marks, target_mark
+        modeled_roads = self.generate_random_roads()
+
         self.road_dict = {}
         for mark in marks:
-            road_name = get_random_road(choice_roads)
-            self.road_dict[mark] = Road(road_name, self.pos_xx(mark))
-            choice_roads.remove(road_name)
-            print 'CACHED_ROADS: ', len(CACHED_ROADS)
-            print 'choice_roads: ', len(choice_roads)
-        self.target_road = self.road_dict.get(target)
+            road_model = random.choice(modeled_roads)
+            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), is_real=road_model.is_real)
+            modeled_roads.remove(road_model)
+        self.target_road = self.road_dict.get(target_mark)
+        print '===>', self.road_dict
         self.target_road.is_target = True   
     
     def clear_road_list(self):
-        pass
+        self.road_dict.clear()
     
     def set_target_road(self, mark): 
         self.road_dict.get(mark).is_target = True  
@@ -138,10 +215,8 @@ class Board(object):
     def get_target_road(self):
         return self.target_road
     
-    def get_road_num(self):
-        return len(self.road_dict)
     
-    # 获取A, B, C, D, E, F, G, H各点坐标
+    # 获取路牌上 A, B, C, D, E, F, G, H各点坐标
     def pos_a(self):
         return self.pos[0]-80, self.pos[1]+10
     def pos_b(self):
@@ -168,7 +243,7 @@ class Road(object):
     tk_id = None
     name = ''           #路名   
     size = 15           #路名尺寸, 指字体大小, 单位px
-    pos = 0, 0          #路名中心点在路牌上的位置坐标
+    pos = 0, 0          #路名中心点在路牌上的位置坐标, 坐标会不断变化
     is_target = False   #是否是目标路名
     is_real = False     #是否真名
     
