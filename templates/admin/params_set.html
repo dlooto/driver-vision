@@ -18,6 +18,9 @@ input.road_style_b {
 
 </style>
 
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/verify.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/jquery.cookie.js"></script>
+
 <script type="text/javascript">
 $(document).ready(function(){
     $("#demo_scheme").change(function(){
@@ -31,17 +34,73 @@ $(document).ready(function(){
   
     
 });
-    function checkMark(m) {
-        if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
-            $("#"+m+"_pressed").css("background-color","#99CCFF");
-            $("#"+m+"_pressed").val(m.toUpperCase());
-            $("#mark_"+m).attr("checked", false);
-        } else {  //未选中时点击
-            $("#"+m+"_pressed").css("background-color","#1F90F2");
-            $("#mark_"+m).attr("checked", 'checked');
-        }
-        
+function checkMark(m) {
+    var rm = m.toUpperCase();
+    if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
+        $("#"+m+"_pressed").css("background-color","#99CCFF");
+        $("#"+m+"_pressed").val(m.toUpperCase());
+        $("#mark_"+m).attr("checked", false);
+    } else {  //未选中时点击
+        $("#"+m+"_pressed").css("background-color","#1F90F2");
+        $("#mark_"+m).attr("checked", 'checked');
     }
+}
+
+function saveParams() {
+    var board_type = $('#board_type').val();
+    var demo_scheme = $('#demo_scheme').val();
+    var dynamic_type = $("input[name='dynamic_type']:checked").val();
+    var road_num = $('#road_num').val();
+    
+    var target_road = $('#target_road').val();
+    var eccent = $('#eccent').val();
+    var init_angle = $('#init_angle').val();
+    var road_size = $('#road_size').val();
+    var board_size = $('#board_size').val();
+    
+    var marks = new Array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+    var road_marks = '';
+    for(i in marks) {
+        if($("#mark_"+marks[i]).attr("checked") == "checked") {
+            road_marks += marks[i].toUpperCase()+',';    
+        }
+    }
+    if(isNull(road_marks)) {
+        alert('请设置路名位置');
+        return;
+    }
+    
+    $.ajax({
+        url:     '/admin/vt/set_params',
+        type:    "POST",
+        dataType:"json",
+        data:      {"board_type":   board_type, 
+                    "demo_scheme":  demo_scheme, 
+                    "dynamic_type": dynamic_type, 
+                    "road_num":     road_num,
+                    "road_marks":   road_marks,
+                    "target_road":  target_road,
+                    "eccent":       eccent,
+                    "init_angle":   init_angle,
+                    "road_size":    road_size,
+                    "board_size":   board_size, 
+        }, 
+                    
+        success: function(res){
+            if(res.code == 1) {
+                console.log("参数设置成功");
+                alert("参数设置成功: \n" + res.msg);
+            }
+        },
+        error:  function(e){
+            alert("提交异常")
+        },
+        beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFTOKEN", $.cookie('csrftoken'));
+        },
+        complete:   function(){},
+    });
+}
 </script>
 {% endblock %}
 
@@ -49,7 +108,7 @@ $(document).ready(function(){
 {% block content %}
 <div class="tab-content tab-content-main">
     
-<form id="params_form" method="post" action="#" class="form-horizontal">    
+<form id="params_form" method="post" action="##" class="form-horizontal">    
 {% csrf_token %}        
 
 <!--路牌选择-->
@@ -57,7 +116,7 @@ $(document).ready(function(){
     <div class="control-label">
         <label class="required">路牌选择:</label></div>
     <div class="controls">
-        <select name="board_type">
+        <select id="board_type" name="board_type">
             <option value="S" selected="selected">单路牌</option>
             <option value="M">多路牌</option>
         </select></div>
@@ -73,7 +132,7 @@ $(document).ready(function(){
             <option value="D">动态</option>
         </select>&nbsp;&nbsp;
             <div id="dynamic_type" style="display: none;">
-            <input name="dynamic_type" type="radio" checked="checked" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
+            <input name="dynamic_type" type="radio" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
             <input name="dynamic_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
             <input name="dynamic_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
             <input name="dynamic_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
@@ -85,8 +144,8 @@ $(document).ready(function(){
 <div class="control-group form-row"><div>
     <div class="control-label"><label>路名数量:</label></div>
     <div class="controls">
-        <select name="road_num">
-            <option value="2">2</option>
+        <select id="road_num" name="road_num">
+            <option value="2" selected="selected">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="5">5</option>
@@ -111,14 +170,14 @@ $(document).ready(function(){
         <input onclick="checkMark('f');" type="button" value="F" id="f_pressed" class="road_style_h" /><br />
     
         <div>
-            <input id="mark_a" name="mark_a" type="checkbox" value="A">
-            <input id="mark_b" name="mark_b" type="checkbox" value="B">
-            <input id="mark_c" name="mark_c" type="checkbox" value="C">
-            <input id="mark_d" name="mark_d" type="checkbox" value="D">
-            <input id="mark_e" name="mark_e" type="checkbox" value="E">
-            <input id="mark_f" name="mark_f" type="checkbox" value="F">
-            <input id="mark_g" name="mark_g" type="checkbox" value="G">
-            <input id="mark_h" name="mark_h" type="checkbox" value="H">
+            a<input id="mark_a" name="mark_a" type="checkbox" value="A">
+            b<input id="mark_b" name="mark_b" type="checkbox" value="B">
+            c<input id="mark_c" name="mark_c" type="checkbox" value="C">
+            d<input id="mark_d" name="mark_d" type="checkbox" value="D">
+            e<input id="mark_e" name="mark_e" type="checkbox" value="E">
+            f<input id="mark_f" name="mark_f" type="checkbox" value="F">
+            g<input id="mark_g" name="mark_g" type="checkbox" value="G">
+            h<input id="mark_h" name="mark_h" type="checkbox" value="H">
         </div>
     </div>
 </div></div>   
@@ -127,8 +186,8 @@ $(document).ready(function(){
 <div class="control-group form-row"><div>
     <div class="control-label"><label>目标项:</label></div>
     <div class="controls">
-        <select name="target_road">
-            <option value="A">A</option>
+        <select id="target_road" name="target_road">
+            <option value="A" selected="selected">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
             <option value="D">D</option>
@@ -168,8 +227,8 @@ $(document).ready(function(){
 <div class="control-group form-row"><div>
     <div class="control-label"><label>路牌大小:</label></div>
     <div class="controls">
-        <select name="board_size">
-            <option value="S">280*200</option>
+        <select id="board_size" name="board_size">
+            <option value="S" selected="selected">280*200</option>
             <option value="B">420*300</option>
        </select>            
     </div>
@@ -177,8 +236,7 @@ $(document).ready(function(){
  
 
 <br />
-<button type="submit" class="btn btn-high btn-info" name="save_params">保存参数</button>    
-<input type="button" onclick="return;" value="Button" />
+<input onclick="saveParams();" value="保存参数" class="btn btn-high btn-info" name="save_params" type="button" />    
 </form>
 </div>
 
