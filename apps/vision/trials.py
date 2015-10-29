@@ -12,15 +12,6 @@ from config import *
 from vision.models import *
 
 
-CACHED_ROADS = [u'交大路', u'川大路', u'咚咚路', u'成创路', u'Mac路', 
-                 u'胜利路', u'飞天路', u'乳香路', u'宁夏路', u'创业路']
-
-ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
-
-def get_random_road(choice_roads):
-        return random.choice(choice_roads)
-
-        
 # class TrialParam(object):
 #     '''从DB存取参数, 进行参数设定, 及参数的控制与变化.
 #     默认获取最新参数设置数据

@@ -156,7 +156,7 @@ class GUI(Tk):
         
     def _press_y(self, e):
         '''用户识别目标为 真'''
-        #subprocess.call(["afplay", AUD_PATH['T']])
+        subprocess.call(["afplay", AUD_PATH['T']])
         
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
         signal.set()    

@@ -6,35 +6,29 @@
 from utils import http, logs
 from vision import trials
 from config import *
+from django.contrib import admin
+from django.views.generic.base import TemplateView
+from django.utils.decorators import method_decorator
+from rest_framework.decorators import api_view
 
+admin_view = admin.site.admin_view
 
+@api_view(['POST'])
 def new_demo(req):
-    '''创建新的试验. 管理者请求该方法
-    管理者参数设置完毕, 并点击确认后请求该方法
+    '''创建新的试验. 管理者参数设置完毕, 并点击确认后请求该方法
     ''' 
     
+    hello = req.POST.get('nickname')
+    print hello
     
-    demo = new_demo()
-    demo.gen_board()
-    req.session['demo'] = demo
+    return http.ok({'hello': hello})
     
-    return http.ok('创建试验成功')
+class ParamsSet(TemplateView):
+    '''进入试验参数设置界面'''
     
-def start_demo(req):
-    '''开始试验
-    被试者点击开始时, 请求该方法
-    '''
-    trials.new_demo()
-#     demo = req.session.get('demo')
-#     if demo:
-#         logs.info('demo starting...')
-#          
-#         ## 进入到测试界面, 启动一个1.6s的trial. 一直到所有的trial完成
-#         demo.start()
-#          
-#         logs.info('demo ended with ')
-#         del req.session['demo']
-#         return http.ok('试验完成')
-    
-    return http.failed('参数未设置')    
+    template_name = 'admin/params_set.html'
+
+    @method_decorator(admin_view)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ParamsSet, self).dispatch(request, *args, **kwargs)
         

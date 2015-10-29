@@ -12,10 +12,9 @@ handler500 = "django.views.defaults.server_error"
 urlpatterns = patterns('',
 
     # Web home
-    url(r"^$",          TemplateView.as_view(template_name='index.html')),
-    url(r'^admin/',     include(admin.site.urls)),
-    
-    url(r'^vision',     include('vision.urls')),
+    url(r"^$",              TemplateView.as_view(template_name='index.html')),
+    url(r'^admin/',         include(admin.site.urls)),
+    url(r'^admin/vt',       include('vision.urls')),
     
 )
 

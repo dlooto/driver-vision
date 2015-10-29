@@ -1,0 +1,185 @@
+{% extends "admin/base_site.html" %}
+{% load widget_tweaks %}
+
+{% block extrahead %}
+<style type="text/css">
+input.road_style_h {
+    margin-right: 80px; width: 120px; height: 30px;
+    background-color: #D3E9FF;
+}
+input.road_style_v {
+    margin-left: 100px; width: 120px; height: 30px;
+    background-color: #D3E9FF;
+}
+input.road_style_b {
+    margin-left: 100px; margin-bottom: 10px; width: 120px; height: 30px;
+    background-color: #D3E9FF;
+}
+
+</style>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    $("#demo_scheme").change(function(){
+        var demo_schemo = $("#demo_scheme").val();
+        if(demo_schemo == 'S') { //静态
+            $("#dynamic_type").hide();
+        } else {//动态
+            $("#dynamic_type").show();
+        }
+    }); //end change()
+  
+    
+});
+    function checkMark(m) {
+        if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
+            $("#"+m+"_pressed").css("background-color","#99CCFF");
+            $("#"+m+"_pressed").val(m.toUpperCase());
+            $("#mark_"+m).attr("checked", false);
+        } else {  //未选中时点击
+            $("#"+m+"_pressed").css("background-color","#1F90F2");
+            $("#mark_"+m).attr("checked", 'checked');
+        }
+        
+    }
+</script>
+{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+<div class="tab-content tab-content-main">
+    
+<form id="params_form" method="post" action="#" class="form-horizontal">    
+{% csrf_token %}        
+
+<!--路牌选择-->
+<div class="control-group form-row"><div>
+    <div class="control-label">
+        <label class="required">路牌选择:</label></div>
+    <div class="controls">
+        <select name="board_type">
+            <option value="S" selected="selected">单路牌</option>
+            <option value="M">多路牌</option>
+        </select></div>
+</div></div>
+
+<!--实验模式-->
+<div class="control-group form-row"><div>
+    <div class="control-label">
+        <label class="required">实验模式:</label></div>
+    <div class="controls">
+        <select id="demo_scheme" name="demo_scheme">
+            <option value="S" selected="selected">静态</option>
+            <option value="D">动态</option>
+        </select>&nbsp;&nbsp;
+            <div id="dynamic_type" style="display: none;">
+            <input name="dynamic_type" type="radio" checked="checked" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
+            <input name="dynamic_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
+            <input name="dynamic_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
+            <input name="dynamic_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
+            </div>
+    </div>
+</div></div>
+
+<!--路名数量-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名数量:</label></div>
+    <div class="controls">
+        <select name="road_num">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
+    </div>
+</div></div>
+    
+<!--路名位置设置-->    
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名位置:</label></div>
+    <div class="controls">
+        <input onclick="checkMark('g');" type="button" value="G" id="g_pressed" class="road_style_v" /><br />
+        <input onclick="checkMark('h');" type="button" value="H" id="h_pressed" class="road_style_b" /><br />
+        <input onclick="checkMark('a');" type="button" value="A" id="a_pressed" class="road_style_h" />
+        <input onclick="checkMark('d');" type="button" value="D" id="d_pressed" class="road_style_h" /><br />
+        <input onclick="checkMark('b');" type="button" value="B" id="b_pressed" class="road_style_h" />
+        <input onclick="checkMark('e');" type="button" value="E" id="e_pressed" class="road_style_h" /><br />
+        <input onclick="checkMark('c');" type="button" value="C" id="c_pressed" class="road_style_h" />
+        <input onclick="checkMark('f');" type="button" value="F" id="f_pressed" class="road_style_h" /><br />
+    
+        <div>
+            <input id="mark_a" name="mark_a" type="checkbox" value="A">
+            <input id="mark_b" name="mark_b" type="checkbox" value="B">
+            <input id="mark_c" name="mark_c" type="checkbox" value="C">
+            <input id="mark_d" name="mark_d" type="checkbox" value="D">
+            <input id="mark_e" name="mark_e" type="checkbox" value="E">
+            <input id="mark_f" name="mark_f" type="checkbox" value="F">
+            <input id="mark_g" name="mark_g" type="checkbox" value="G">
+            <input id="mark_h" name="mark_h" type="checkbox" value="H">
+        </div>
+    </div>
+</div></div>   
+
+<!--目标项-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>目标项:</label></div>
+    <div class="controls">
+        <select name="target_road">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+        </select>
+    </div>
+</div></div> 
+
+<!--初始角度-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>离心率(E):</label></div>
+    <div class="controls">
+        <input name="eccent" class="vTextField" id="eccent" type="text" value="6">
+    </div>
+</div></div>
+
+<!--初始角度-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>初始角度:</label></div>
+    <div class="controls">
+        <input name="init_angle" class="vTextField" id="init_angle" type="text" value="0">
+    </div>
+</div></div> 
+
+<!--路名尺寸-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名尺寸:</label></div>
+    <div class="controls">
+        <input name="road_size" class="vTextField" id="road_size" type="text" value="15" /> 单位:px(像素)
+    </div>
+</div></div> 
+
+<!--路牌大小-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌大小:</label></div>
+    <div class="controls">
+        <select name="board_size">
+            <option value="S">280*200</option>
+            <option value="B">420*300</option>
+       </select>            
+    </div>
+</div></div> 
+ 
+
+<br />
+<button type="submit" class="btn btn-high btn-info" name="save_params">保存参数</button>    
+<input type="button" onclick="return;" value="Button" />
+</form>
+</div>
+
+{% endblock %}

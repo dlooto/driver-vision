@@ -4,7 +4,7 @@
 {% block title %} Vision Trail | Admin {% endblock %}
 
 {% block extrahead %}
-<link rel="icon" href="{{STATIC_URL}}mami/img/logo_50.png" />
+<link rel="icon" href="{{ STATIC_URL }}vision/img/logo_50.png" />
 {% endblock %}
 
 {% block branding %}
@@ -32,7 +32,7 @@
     <div class="content">
       <div class="tools">
         {% block footer_links %}
-          <a href="http://localhost:8000" target="_blank" class="icon">
+          <a href="/admin/vt" target="_blank" class="icon">
               <i class="icon-bookmark"></i>开始测试</a>
         {% endblock %}
       </div>

@@ -36,6 +36,8 @@ BOARD_SIZE_B = {  #大路牌默认尺寸
 WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #注视点坐标默认值
 BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #路牌中心点坐标默认值,  bp_x, bp_y
 
+ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
+
 # 路名默认坐标点
 ROAD_POS = {
     'A': (BOARD_POS[0]-80, BOARD_POS[1]+10),    #路名高度15, 路名相隔间距10 
