@@ -11,7 +11,7 @@ import settings
 
 urlpatterns = patterns(
     '',
-    url(r"^$",          views.ParamsSet.as_view(), name="params_home"),
-    url(r'^/set_params', views.set_params, name="set_params"),
+    url(r"^$",          views.ParamsIndex.as_view(), name="params_index"),
+    url(r'^/set_params', views.set_params,           name="set_params"),
     
 )

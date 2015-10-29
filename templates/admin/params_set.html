@@ -26,9 +26,9 @@ $(document).ready(function(){
     $("#demo_scheme").change(function(){
         var demo_schemo = $("#demo_scheme").val();
         if(demo_schemo == 'S') { //静态
-            $("#dynamic_type").hide();
+            $("#move_type").hide();
         } else {//动态
-            $("#dynamic_type").show();
+            $("#move_type").show();
         }
     }); //end change()
   
@@ -37,7 +37,7 @@ $(document).ready(function(){
 function checkMark(m) {
     var rm = m.toUpperCase();
     if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
-        $("#"+m+"_pressed").css("background-color","#99CCFF");
+        $("#"+m+"_pressed").css("background-color","#D3E9FF");
         $("#"+m+"_pressed").val(m.toUpperCase());
         $("#mark_"+m).attr("checked", false);
     } else {  //未选中时点击
@@ -49,7 +49,7 @@ function checkMark(m) {
 function saveParams() {
     var board_type = $('#board_type').val();
     var demo_scheme = $('#demo_scheme').val();
-    var dynamic_type = $("input[name='dynamic_type']:checked").val();
+    var move_type = $("input[name='move_type']:checked").val();
     var road_num = $('#road_num').val();
     
     var target_road = $('#target_road').val();
@@ -66,20 +66,21 @@ function saveParams() {
         }
     }
     if(isNull(road_marks)) {
-        alert('请设置路名位置');
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append('没有设置路名位置');
         return;
     }
     
     $.ajax({
-        url:     '/admin/vt/set_params',
+        url:     '/admin/vision/set_params',
         type:    "POST",
         dataType:"json",
         data:      {"board_type":   board_type, 
                     "demo_scheme":  demo_scheme, 
-                    "dynamic_type": dynamic_type, 
+                    "move_type":    move_type, 
                     "road_num":     road_num,
-                    "road_marks":   road_marks,
-                    "target_road":  target_road,
+                    "road_marks":   road_marks + target_road,
                     "eccent":       eccent,
                     "init_angle":   init_angle,
                     "road_size":    road_size,
@@ -87,10 +88,8 @@ function saveParams() {
         }, 
                     
         success: function(res){
-            if(res.code == 1) {
-                console.log("参数设置成功");
-                alert("参数设置成功: \n" + res.msg);
-            }
+            console.log(res);
+            setResult(res);
         },
         error:  function(e){
             alert("提交异常")
@@ -100,6 +99,19 @@ function saveParams() {
         },
         complete:   function(){},
     });
+}
+
+function setResult(res) {
+    if(res.code == 1) {
+        $("#set_result").css('color', '#009900');
+        $("#set_result").html('');
+        $("#set_result").append('参数设置成功');    
+    } else {
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append(res.msg);
+    }
+    
 }
 </script>
 {% endblock %}
@@ -131,14 +143,33 @@ function saveParams() {
             <option value="S" selected="selected">静态</option>
             <option value="D">动态</option>
         </select>&nbsp;&nbsp;
-            <div id="dynamic_type" style="display: none;">
-            <input name="dynamic_type" type="radio" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
-            <input name="dynamic_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
-            <input name="dynamic_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
-            <input name="dynamic_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
+            <div id="move_type" style="display: none;">
+            <input name="move_type" type="radio" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
+            <input name="move_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
+            <input name="move_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
+            <input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
             </div>
     </div>
 </div></div>
+
+<!--路牌大小-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌大小:</label></div>
+    <div class="controls">
+        <select id="board_size" name="board_size">
+            <option value="280,200" selected="selected">280*200</option>
+            <option value="420,300">420*300</option>
+       </select>            
+    </div>
+</div></div> 
+
+<!--路名尺寸-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名尺寸:</label></div>
+    <div class="controls">
+        <input name="road_size" class="vTextField" id="road_size" type="text" value="15" /> 单位:px(像素)
+    </div>
+</div></div> 
 
 <!--路名数量-->
 <div class="control-group form-row"><div>
@@ -169,7 +200,7 @@ function saveParams() {
         <input onclick="checkMark('c');" type="button" value="C" id="c_pressed" class="road_style_h" />
         <input onclick="checkMark('f');" type="button" value="F" id="f_pressed" class="road_style_h" /><br />
     
-        <div>
+        <div style="display: none;">
             a<input id="mark_a" name="mark_a" type="checkbox" value="A">
             b<input id="mark_b" name="mark_b" type="checkbox" value="B">
             c<input id="mark_c" name="mark_c" type="checkbox" value="C">
@@ -215,28 +246,11 @@ function saveParams() {
     </div>
 </div></div> 
 
-<!--路名尺寸-->
-<div class="control-group form-row"><div>
-    <div class="control-label"><label>路名尺寸:</label></div>
-    <div class="controls">
-        <input name="road_size" class="vTextField" id="road_size" type="text" value="15" /> 单位:px(像素)
-    </div>
-</div></div> 
-
-<!--路牌大小-->
-<div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌大小:</label></div>
-    <div class="controls">
-        <select id="board_size" name="board_size">
-            <option value="S" selected="selected">280*200</option>
-            <option value="B">420*300</option>
-       </select>            
-    </div>
-</div></div> 
- 
 
 <br />
 <input onclick="saveParams();" value="保存参数" class="btn btn-high btn-info" name="save_params" type="button" />    
+&nbsp;&nbsp;<span id="set_result"></span>
+
 </form>
 </div>
 

@@ -14,7 +14,7 @@ urlpatterns = patterns('',
     # Web home
     url(r"^$",              TemplateView.as_view(template_name='index.html')),
     url(r'^admin/',         include(admin.site.urls)),
-    url(r'^admin/vt',       include('vision.urls')),
+    url(r'^admin/vision',   include('vision.urls')),
     
 )
 
