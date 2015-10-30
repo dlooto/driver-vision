@@ -9,57 +9,9 @@
 import random, threading
 import maths
 from config import *
-from vision.models import *
+from vision.models import Road, TrialParam
 
 
-# class TrialParam(object):
-#     '''从DB存取参数, 进行参数设定, 及参数的控制与变化.
-#     默认获取最新参数设置数据
-#     '''
-#     
-#     board = None
-#     watch_point = None
-#     cached_roads = None
-#     
-#     #objects = TrialParamManager()
-#     
-#     def __init__(self):
-#         ## get data from DB and init all fields
-#         self.board_pos = BOARD_POS
-#         self.cached_roads = self.cache_roads()
-#     
-#     def save_init_params(self):
-#         '''向DB中写入试验参数. 管理者每设置一次写入一次'''
-#         
-#     def save_controlled_params(self, demo_id): 
-#         '''向DB写入某次试验的控制参数'''   
-#     
-#     def cache_roads(self):
-#         '''将所有备选路各缓存为列表结构, 元素类型为Road Model(name, is_real)
-#         '''
-#         pass
-#     
-#     def generate_random_roads(self, road_num=None):
-#         '''根据传入的路名数量, 获取不重复的随机路名列表, 列表元素类型为Road Model(name, is_real)
-#         该方法可作为工具方法
-#         '''
-#         
-#     def get_road_num(self):
-#         return self.road_num
-#     
-#     def get_target_seat(self):
-#         return self.target_seat    
-#         
-#     def get_road_seats(self):
-#         '''返回路名位置序列, 最后一个为目标项位置. Get from DB'''
-#         #return ('A', 'B', 'D', 'E', 'H'), 'A'
-#         return random.sample(ALLOWED_ROAD_SEATS, self.get_road_num()), self.get_target_seat()
-#              
-#     def get_board_pos(self):
-#         return self.board_pos
-        
-        
-        
 class WatchPoint(object):
     tk_id = None
     pos = WATCH_POS
@@ -80,22 +32,17 @@ class WatchPoint(object):
         canvas.widget_dict[self.tk_id] = self
 
 
-def cache_all_roads():
-    '''将所有备选路各缓存为列表结构, 元素类型为Road Model(name, is_real)
-    '''
-    # 分成真路名列表和假路名列表 ...
-    return Road.objects.filter(is_valid=True)
-    
-cached_roads = cache_all_roads()
-#cached_real_roads, cached_kana_roads = cache_all_roads()
+cached_real_roads = Road.objects.all_real_roads()
+cached_kana_roads = Road.objects.all_kana_roads()
 
 class Board(object):
     '''路牌'''
+    
     trial_param = None
     
-    tk_id = None                #在画布上的id
-    pos = BOARD_POS              #中心点坐标, 即路牌位置
-    angle = 30                  #路牌初始角度, 在0,30, 60等中取值, 单位度
+    tk_id = None                #路牌在画布上的id
+    pos = BOARD_POS             #中心点坐标, 即路牌位置
+    angle = 0                   #路牌初始角度, 在0,30, 60等中取值, 单位度
     width = 280                 #路牌宽度
     height = 200                #路牌高度
     
@@ -114,34 +61,45 @@ class Board(object):
     
     def _load_params(self):
         '''从DB加载最新试验参数'''
-        #self.trial_param = TrialParam.objects.latest()
-        self.road_num = 5
-        
+        self.trial_param = TrialParam.objects.get_latest_available()
+        if not self.trial_param:
+            raise Exception('trial_param is null')
     
     def save_init_params(self):
         '''向DB中写入试验参数. 管理者每设置一次写入一次'''
+        pass
         
     def save_controlled_params(self, demo_id): 
         '''向DB写入某次试验的控制参数'''   
+        pass
     
     def generate_random_roads(self):
-        '''根据传入的路名数量, 获取不重复的随机路名列表, 列表元素类型为Road Model(name, is_real)
+        ''' 获取不重复的随机路名列表, 列表元素类型为Road Model(name, is_real).
+        算法规则: 若路名数量为偶数, 则真假路名各一半, 若为奇数, 则假名多1.
+        
         '''
-        return random.sample(cached_roads, self.road_num)
+        num = self.get_road_num() / 2
+        real_roads = random.sample(cached_real_roads, num)
+        if self.trial_param.road_num % 2 == 1: #奇数
+            real_roads.extend(random.sample(cached_kana_roads, num+1))
+        else: #偶数
+            real_roads.extend(random.sample(cached_kana_roads, num))            
+                    
+        return real_roads
         
     def get_road_num(self):
-        return self.road_num
+        return self.trial_param.road_num
     
     def get_target_seat(self):
-        return random.choice(ALLOWED_ROAD_SEATS)  #for test
-        #return self.target_seat    
+        '''返回目标项位置标记, 如 'A'  '''
+        return self.get_road_seats()[1]
         
     def get_road_seats(self):
-        '''返回路名位置序列, 最后一个为目标项位置. Get from DB'''
-        #return ('A', 'B', 'D', 'E', 'H'), 'A'
-        # trial_param.road_seats 
-        rand_seats = random.sample(ALLOWED_ROAD_SEATS, self.get_road_num())
-        return rand_seats, random.choice(rand_seats)
+        '''返回路名位置标记序列, 最后一个为目标项位置.
+        @return: 元组, 如 ['A', 'B', 'D', 'E', 'H'], 'A'
+        '''
+        # rand_seats = random.sample(ALLOWED_ROAD_SEATS, self.get_road_num())  # just for test
+        return self.trial_param.get_road_seats()
              
     def get_board_pos(self):
         return self.board_pos    
@@ -185,7 +143,6 @@ class Board(object):
     def init_road_dict(self, road_seats):
         ''' '''
         marks, target_mark = road_seats
-        print '===>1', marks, target_mark
         modeled_roads = self.generate_random_roads()
 
         self.road_dict = {}
@@ -194,7 +151,6 @@ class Board(object):
             self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), is_real=road_model.is_real)
             modeled_roads.remove(road_model)
         self.target_road = self.road_dict.get(target_mark)
-        print '===>', self.road_dict
         self.target_road.is_target = True   
     
     def clear_road_list(self):

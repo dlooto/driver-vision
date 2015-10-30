@@ -10,7 +10,14 @@ from utils import eggs, logs
 from core.managers import BaseManager
 
 class RoadManager(BaseManager):
-    pass
+    
+    def all_real_roads(self):
+        '''返回所有真路名'''
+        return self.filter(is_real=True, is_valid=True)
+    
+    def all_kana_roads(self):
+        '''返回所有假路名'''
+        return self.filter(is_real=False, is_valid=True) 
 
 class Road(BaseModel):
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='') #作为医生时要显示真实姓名
@@ -29,10 +36,13 @@ class Road(BaseModel):
         return u'%s' % self.name
     
 class TrialParamManager(BaseManager):
-    pass   
+    
+    def get_latest_available(self):
+        '''获取最新的未被执行的一条参数数据'''
+        return self.filter(is_trial=False).order_by('-created_time')[:1]
     
 # 路牌类型
-BOARD_CATE = ( 
+BOARD_CATE = (
     ('S', u'单路牌'),
     ('M', u'多路牌'),
 )    
