@@ -29,7 +29,7 @@ class TrialParamManager(BaseManager):
         '''设置即将使用的参数记录为False'''
         TrialParam.objects.filter(is_coming=True).update(is_coming=False)    
 
-class Road(BaseModel):
+class RoadModel(BaseModel):
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='') #作为医生时要显示真实姓名
     is_real = models.BooleanField(u'是真路名', default=False)
     
@@ -39,6 +39,7 @@ class Road(BaseModel):
     objects = RoadManager()
     
     class Meta:
+        db_table = 'vision_road'
         verbose_name = u'路名'
         verbose_name_plural = u'路名'
 

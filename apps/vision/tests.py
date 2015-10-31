@@ -72,7 +72,7 @@ Canvas.create_rectangle_pro = _create_rectangle
 
 
 # board_color = "#0866B9"
-# road_color = 'white'
+# road_color = DEFAULT_ROAD_COLOR
 # watch_color = 'red' 
 # 
 # # 试验界面窗口默认尺寸

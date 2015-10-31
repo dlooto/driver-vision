@@ -97,13 +97,12 @@ class GUI(Tk):
         '''每一次刺激试验为1.6s. 该方法在单独的线程中被循环调用'''
         
         self.erase_all()
-        #time.sleep(show_interval)   #just for testing. remove later...
+        #time.sleep(show_interval)   #just for testing...
         
         self.draw_all()
-        #time.sleep(show_interval)  #等待1.6s, 等待用户进行键盘操作 y/n 并唤醒
-        signal.wait(show_interval)
+        signal.wait(show_interval)  #等待1.6s, 等待用户进行键盘操作 y/n 并唤醒
         
-        # 刷新控制参数为下一次1.6s的刺激显示作准备
+        # 刷新控制参数, 为下一次1.6s的刺激显示作准备
         self.flash_params()
         
     

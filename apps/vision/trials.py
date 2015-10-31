@@ -9,7 +9,7 @@
 import random, threading
 import maths
 from config import *
-from vision.models import Road, TrialParam
+from vision.models import RoadModel, TrialParam
 
 
 class WatchPoint(object):
@@ -32,8 +32,8 @@ class WatchPoint(object):
         canvas.widget_dict[self.tk_id] = self
 
 
-cached_real_roads = Road.objects.all_real_roads()
-cached_kana_roads = Road.objects.all_kana_roads()
+cached_real_roads = RoadModel.objects.all_real_roads()
+cached_kana_roads = RoadModel.objects.all_kana_roads()
 
 class Board(object):
     '''路牌'''
@@ -49,7 +49,7 @@ class Board(object):
     road_dict = None            #路名列表
     target_road = None          #目标项
     
-    def __init__(self, pos=BOARD_POS, road_seats=None, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
+    def __init__(self, pos=BOARD_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], angle=0):
         self._load_params()
         
         self.pos = pos
@@ -57,13 +57,13 @@ class Board(object):
         self.height = height
         self.angle = angle
         
-        self.init_road_dict(self.get_road_seats())
+        self.init_road_dict()
     
     def _load_params(self):
-        '''从DB加载最新试验参数'''
+        '''从DB加载最新的有效试验参数. '''
         self.trial_param = TrialParam.objects.latest_coming()
         if not self.trial_param:
-            raise Exception('trial_param is null')
+            raise Exception(u'请先设置有效的试验参数')
     
     def save_control_params(self, demo_id): 
         '''向DB写入某次试验的控制参数'''   
@@ -107,19 +107,21 @@ class Board(object):
         pass
     
     def flash_params(self):
-        ''''''
+        '''控制参数变化'''
         ## do something to flash...
         
         # following just for testing...
-        self.pos = self.pos[0], self.pos[1]-5
-        self.init_road_dict(self.get_road_seats())
+        self.pos = self.pos[0], self.pos[1]-5  # 路牌向上移动, for testing... 
+        self.init_road_dict()
 
     def draw(self, canvas):
         '''显示在屏幕上'''  
         
         #绘制路牌
-        self.tk_id = canvas.create_rectangle_pro(self.pos[0], self.pos[1], 
-                                                 self.width, self.height, fill=board_color, outline=board_color)
+        self.tk_id = canvas.create_rectangle_pro(
+            self.pos[0], self.pos[1], self.width, self.height, fill=board_color, 
+            outline=board_color
+        )
         canvas.widget_dict[self.tk_id] = self
         self._draw_roads(canvas)
             
@@ -138,18 +140,21 @@ class Board(object):
         #canvas.after(3*1000)
         #canvas.update()
     
-    def init_road_dict(self, road_seats):
-        ''' '''
-        marks, target_mark = road_seats
+    def init_road_dict(self):
+        ''' 初始化路牌上的所有路名'''
+        marks, target = self.get_road_seats()
         modeled_roads = self.generate_random_roads()
 
         self.road_dict = {}
         for mark in marks:
             road_model = random.choice(modeled_roads)
-            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), is_real=road_model.is_real, size=self.trial_param.road_size)
+            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), 
+                                        is_real=road_model.is_real, 
+                                        size=self.trial_param.road_size)
+            self.road_dict[mark].is_target = True if mark == target else False
             modeled_roads.remove(road_model)
-        self.target_road = self.road_dict.get(target_mark)
-        self.target_road.is_target = True   
+            
+        self.target_road = self.road_dict.get(target)
     
     def clear_road_list(self):
         self.road_dict.clear()
@@ -202,6 +207,7 @@ class Road(object):
     def draw(self, canvas):
         '''显示在屏幕上'''  #调用画布进行绘制...
         road_font = DEFAULT_ROAD_FONT[0], self.size
+        road_color = TARGET_ROAD_COLOR if self.is_target else DEFAULT_ROAD_COLOR
         self.tk_id = canvas.create_text(self.pos, text=self.name, fill=road_color, font=road_font)
         canvas.widget_dict[self.tk_id] = self 
         

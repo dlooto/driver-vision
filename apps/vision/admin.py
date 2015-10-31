@@ -5,7 +5,7 @@
 #
 
 from django.contrib import admin
-from vision.models import Road, TrialParam
+from vision.models import RoadModel, TrialParam
 
 
 def make_valid(modeladmin, request, queryset):
@@ -46,5 +46,5 @@ class TrialParamAdmin(admin.ModelAdmin):
     actions = [set_is_coming, ]
     change_list_template = 'admin/trial_param_list.html'   #替换template, 使转向到定制页面 
 
-admin.site.register(Road, RoadAdmin)
+admin.site.register(RoadModel, RoadAdmin)
 admin.site.register(TrialParam, TrialParamAdmin)

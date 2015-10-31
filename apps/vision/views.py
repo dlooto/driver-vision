@@ -14,6 +14,16 @@ from vision.models import TrialParam
 
 admin_view = admin.site.admin_view
 
+
+class ParamsIndex(TemplateView):
+    '''进入试验参数设置界面'''
+    
+    template_name = 'admin/params_set.html'
+
+    @method_decorator(admin_view)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ParamsIndex, self).dispatch(request, *args, **kwargs)
+
 @api_view(['POST'])
 def set_params(req):
     '''创建新的试验. 管理者参数设置完毕, 并点击确认后请求该方法
@@ -61,12 +71,4 @@ def set_params(req):
     
     return http.ok()
     
-class ParamsIndex(TemplateView):
-    '''进入试验参数设置界面'''
-    
-    template_name = 'admin/params_set.html'
-
-    @method_decorator(admin_view)
-    def dispatch(self, request, *args, **kwargs):
-        return super(ParamsIndex, self).dispatch(request, *args, **kwargs)
         

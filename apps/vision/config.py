@@ -10,7 +10,8 @@
 
 face_background = '#F3F9FF'  #主窗口背景颜色
 board_color = "#0866B9"      #路牌背景颜色
-road_color = 'white'         #路名颜色
+DEFAULT_ROAD_COLOR = 'white'            #路名颜色
+TARGET_ROAD_COLOR = 'green'             #目标路名颜色
 watch_color = 'red'          #注视点填充颜色
 show_interval = 1.6         #默认刺激显示间隔时间, 单位秒
 
