@@ -104,7 +104,8 @@ function setResult(res) {
     if(res.code == 1) {
         $("#set_result").css('color', '#009900');
         $("#set_result").html('');
-        $("#set_result").append('参数设置成功');    
+        //$("#set_result").append('参数设置成功');
+        window.location.href="/admin/vision/trialparam/";  //跳转到列表页面  
     } else {
         $("#set_result").css('color', 'red');
         $("#set_result").html('');
@@ -143,7 +144,7 @@ function setResult(res) {
             <option value="D">动态</option>
         </select>&nbsp;&nbsp;
             <div id="move_type" style="display: none;">
-            <input name="move_type" type="radio" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
+            <input name="move_type" type="radio" checked="checked" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
             <input name="move_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
             <input name="move_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
             <input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
@@ -166,7 +167,11 @@ function setResult(res) {
 <div class="control-group form-row"><div>
     <div class="control-label"><label>路名尺寸:</label></div>
     <div class="controls">
-        <input name="road_size" class="vTextField" id="road_size" type="text" value="15" /> 单位:px(像素)
+        <select id="road_size" name="road_size">
+            <option value="11">11</option>
+            <option value="15" selected="selected">15</option>
+            <option value="20">20</option>        
+        </select>
     </div>
 </div></div> 
 

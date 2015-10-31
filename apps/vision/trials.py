@@ -61,15 +61,11 @@ class Board(object):
     
     def _load_params(self):
         '''从DB加载最新试验参数'''
-        self.trial_param = TrialParam.objects.get_latest_available()
+        self.trial_param = TrialParam.objects.latest_coming()
         if not self.trial_param:
             raise Exception('trial_param is null')
     
-    def save_init_params(self):
-        '''向DB中写入试验参数. 管理者每设置一次写入一次'''
-        pass
-        
-    def save_controlled_params(self, demo_id): 
+    def save_control_params(self, demo_id): 
         '''向DB写入某次试验的控制参数'''   
         pass
     
@@ -120,6 +116,8 @@ class Board(object):
 
     def draw(self, canvas):
         '''显示在屏幕上'''  
+        
+        #绘制路牌
         self.tk_id = canvas.create_rectangle_pro(self.pos[0], self.pos[1], 
                                                  self.width, self.height, fill=board_color, outline=board_color)
         canvas.widget_dict[self.tk_id] = self
@@ -148,7 +146,7 @@ class Board(object):
         self.road_dict = {}
         for mark in marks:
             road_model = random.choice(modeled_roads)
-            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), is_real=road_model.is_real)
+            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), is_real=road_model.is_real, size=self.trial_param.road_size)
             modeled_roads.remove(road_model)
         self.target_road = self.road_dict.get(target_mark)
         self.target_road.is_target = True   
@@ -203,6 +201,7 @@ class Road(object):
     
     def draw(self, canvas):
         '''显示在屏幕上'''  #调用画布进行绘制...
+        road_font = DEFAULT_ROAD_FONT[0], self.size
         self.tk_id = canvas.create_text(self.pos, text=self.name, fill=road_color, font=road_font)
         canvas.widget_dict[self.tk_id] = self 
         

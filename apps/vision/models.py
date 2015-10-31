@@ -18,6 +18,16 @@ class RoadManager(BaseManager):
     def all_kana_roads(self):
         '''返回所有假路名'''
         return self.filter(is_real=False, is_valid=True) 
+    
+class TrialParamManager(BaseManager):
+    
+    def latest_coming(self):
+        '''获取最新一条可用的参数数据'''
+        return self.filter(is_coming=True).order_by('-created_time')[0]
+    
+    def set_not_coming(self):
+        '''设置即将使用的参数记录为False'''
+        TrialParam.objects.filter(is_coming=True).update(is_coming=False)    
 
 class Road(BaseModel):
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='') #作为医生时要显示真实姓名
@@ -35,11 +45,7 @@ class Road(BaseModel):
     def __unicode__(self):
         return u'%s' % self.name
     
-class TrialParamManager(BaseManager):
-    
-    def get_latest_available(self):
-        '''获取最新的未被执行的一条参数数据'''
-        return self.filter(is_trial=False).order_by('-created_time')[:1]
+
     
 # 路牌类型
 BOARD_CATE = (
@@ -72,8 +78,11 @@ class TrialParam(BaseModel):
     eccent = models.IntegerField(u'离心率', null=True, blank=True) 
     init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
 
-    is_trialed = models.BooleanField(u'试验已执行', default=False)  #被试者若已进行试验, 则置为True
-    desc = models.CharField(u'描述', max_length=40, default='')
+    trialed_count = models.IntegerField(u'执行次数', null=True, blank=True, default=0) #数据被执行次数
+    
+    #下次试验将被使用, 则其他参数数据将失效. 每次仅有一条数据可用
+    is_coming = models.BooleanField(u'是否可用', default=True)
+    desc = models.CharField(u'描述', max_length=40, null=True, blank=True, default='')
 
     objects = TrialParamManager()
     
@@ -98,10 +107,14 @@ class TrialParam(BaseModel):
         size = self.board_size.split(',')
         return size[0], size[1]
         
-    def get_road_searts(self):
+    def get_road_seats(self):
         '''将路名位置字符串分解后返回, 如'A,B,D|B'分解后返回 ['A', 'B', 'D'], 'B'   
         '''
         roads_str, target_road = self.road_marks.split('|')
         return roads_str.split(','), target_road
         
+    def be_executed(self):
+        '''被执行一次, 执行次数加1'''
+        self.trialed_count += 1
+        self.save()
 

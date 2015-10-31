@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+<!-- 定制默认的增加试验参数页面 -->
+{% block object-tools %}
+    {% if has_add_permission %}
+      <div class="object-tools">
+        {% block object-tools-items %}
+          <a href="/admin/vision{% if is_popup %}?_popup=1{% endif %}" class="btn btn-success">
+            <i class="icon-plus-sign icon-white"></i>&nbsp;
+            {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+          </a>
+          <!-- original link -->
+          <!-- <br /><a href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}" class="addlink">
+                {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+          </a> -->
+        {% endblock %}
+      </div>
+    {% endif %}
+{% endblock %}

@@ -27,23 +27,24 @@ class RoadAdmin(admin.ModelAdmin):
     ordering = ('created_time', )
     actions = [make_valid, make_unvalid]
     
-def set_trialed(modeladmin, request, queryset):
-    queryset.update(is_trialed=True) 
+    
+def set_is_coming(modeladmin, request, queryset):
+    if len(queryset) > 1:
+        raise Exception('仅可以设置一条数据 is_coming=True')
+    TrialParam.objects.set_not_coming()
+    queryset.update(is_coming=True)
+    
      
-def set_not_trialed(modeladmin, request, queryset):
-    queryset.update(is_trialed=False)   
-
-     
-set_trialed.short_description = u'set 已执行' 
-set_not_trialed.short_description = u'set 未执行'    
+set_is_coming.short_description = u'设为可用' 
     
 class TrialParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'board_type', 'demo_scheme', 'road_num', 'road_marks', 'eccent', 'is_trialed', 'created_time') # item list 
+    list_display = ('id', 'board_type', 'demo_scheme', 'road_num', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
     search_fields = ('desc', )
-    list_filter = ('board_type', 'demo_scheme', 'move_type', 'is_trialed')
+    list_filter = ('board_type', 'demo_scheme', 'move_type', 'is_coming')
     #fields = ('board_type', 'demo_scheme', )
-    ordering = ('-created_time', )
-    actions = [set_trialed, set_not_trialed]    
+    ordering = ('-created_time', 'is_coming')
+    actions = [set_is_coming, ]
+    change_list_template = 'admin/trial_param_list.html'   #替换template, 使转向到定制页面 
 
 admin.site.register(Road, RoadAdmin)
 admin.site.register(TrialParam, TrialParamAdmin)

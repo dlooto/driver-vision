@@ -16,7 +16,6 @@ show_interval = 1.6         #默认刺激显示间隔时间, 单位秒
 
 DEFAULT_ROAD_FONT = ("Helvetica", 15)
 TRIAL_END_FONT =    ("Helvetica", 35)      #试验结束文字字体
-road_font = DEFAULT_ROAD_FONT
 
 # 试验界面窗口默认尺寸
 FACE_SIZE = {

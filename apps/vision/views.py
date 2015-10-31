@@ -52,6 +52,7 @@ def set_params(req):
                 "init_angle":   int(init_angle),
         }
     
+        TrialParam.objects.set_not_coming()
         trial_param = TrialParam(**params)
         trial_param.save()
     except Exception, e:
