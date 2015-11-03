@@ -194,8 +194,8 @@ class DemoThread(threading.Thread):
             
         print 'Demo thread stopped'  
 
+## 开始新的实验
 def new_demo():
-    '''开始新的实验'''
     global gui
     gui = GUI()
     gui.title('Vision Trial 视觉测试')

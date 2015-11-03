@@ -7,6 +7,7 @@
 from core.models import BaseModel
 from django.db import models
 from utils import eggs, logs
+from config import *
 from core.managers import BaseManager
 
 class RoadManager(BaseManager):
@@ -40,8 +41,8 @@ class RoadModel(BaseModel):
     
     class Meta:
         db_table = 'vision_road'
-        verbose_name = u'路名'
-        verbose_name_plural = u'路名'
+        verbose_name = u'Road'
+        verbose_name_plural = u'Roads'
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -75,7 +76,7 @@ class TrialParam(BaseModel):
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #路牌尺寸 
     road_size = models.IntegerField(u'路名大小', default=15) 
     road_num = models.IntegerField(u'路名条数', default=3)
-    road_marks = models.CharField(u'路名位置标记', max_length=30)  #如: 'A','B','C'|'A', 分为两部分, 前面为路名位置,以','分隔, 最后以|分隔目标路名 
+    road_marks = models.CharField(u'路名位置标记', max_length=30)  #如: 'A,B,C|A', 分为两部分, 前面为路名位置,以','分隔, 最后以|分隔目标路名 
     eccent = models.IntegerField(u'离心率', null=True, blank=True) 
     init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
 
@@ -118,4 +119,105 @@ class TrialParam(BaseModel):
         '''被执行一次, 执行次数加1'''
         self.trialed_count += 1
         self.save()
+        
+        
+class Demo(BaseModel):
+    '''一次完整试验记录'''
+    
+    param = models.ForeignKey(TrialParam, verbose_name=u'选用参数', null=True, blank=True) #所使用的初始参数设置
+    correct_rate = models.FloatField(u'试验正确率')
+    end_time = models.DateTimeField(u'试验结束时间', )
+    is_break = models.BooleanField(u'是否被中断', default=False) #实验被中断时置为True
+    desc = models.CharField(u'描述', max_length=40, default='')
+    
+    class Meta:
+        db_table = 'vision_demo'
+        verbose_name = u'Demo'
+        verbose_name_plural = u'Demos'
 
+    def __unicode__(self):
+        return self.id
+    
+# 阶梯变化类型
+STEP_TYPE_CHOICES = {
+    ('N', u'数量(N)'),
+    ('S', u'尺寸(S)'),
+    ('R', u'间距(R)'),
+    ('V', u'速度(V)'),                             
+}    
+    
+class Block(BaseModel):
+    '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
+    
+    demo = models.ForeignKey(Demo, verbose_name=u'所属试验')
+    
+    tseat = models.CharField(u'目标位置(D)', max_length=1)     #如A/B/C/...
+    eccent = models.IntegerField(u'离心率(E)')                      
+    angle = models.IntegerField(u'角度(@)')
+    
+    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
+                         
+    
+    ## 以下参数依据求不同的阈值时存在, 且不同时存在. 如求尺寸阈值时, N的阶梯变化值将记录在Trial模型中, 
+    # 而此时Block中N字段将为空
+    N = models.SmallIntegerField(u'干扰项数量(N)', null=True, blank=True, default=1)
+    S = models.FloatField(u'路名尺寸(S)', null=True, blank=True)
+    R = models.CharField(u'目干间距(R)', max_length=40, null=True, blank=True)    #目标与干扰项间距, 多个间距以逗号分隔, 如:r1,r2,r3
+    V = models.FloatField(u'目标项速度(V)', null=True, blank=True)  
+    
+    class Meta:
+        db_table = 'vision_block'
+        verbose_name = u'Block'
+        verbose_name_plural = u'Blocks'
+
+    def __unicode__(self):
+        return self.id
+    
+class Trial(BaseModel):
+    '''一次刺激显示中的数据记录'''
+    
+    block = models.ForeignKey(Demo, verbose_name=u'所属Block')
+    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
+    
+    resp_cost = models.IntegerField(u'响应时间', default=show_interval*1000) #毫秒数
+    is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
+    steps_value = models.CharField(u'阶梯值', max_length=50)  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项的间距的字符串); 其他情况为单值
+    
+    target_road = models.ForeignKey(RoadModel, verbose_name=u'目标路名')   #由此可知道用户按钮情况
+    
+    class Meta:
+        db_table = 'vision_trial'
+        verbose_name = u'Trial'
+        verbose_name_plural = u'Trials'
+
+    def __unicode__(self):
+        return self.id
+    
+class BoardLog(BaseModel):
+    '''一次刺激显示中的路牌数据
+    @todo: ...
+    '''
+    
+    trial = models.ForeignKey(Trial, verbose_name=u'所属刺激显示')
+    #pos, width, height, road_marks, ...
+    
+    class Meta:
+        db_table = 'vision_boardlog'
+        verbose_name = u'boardlog'
+        verbose_name_plural = u'boardlog'
+
+    def __unicode__(self):
+        return self.id        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

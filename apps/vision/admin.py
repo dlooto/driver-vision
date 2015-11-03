@@ -5,7 +5,7 @@
 #
 
 from django.contrib import admin
-from vision.models import RoadModel, TrialParam
+from vision.models import RoadModel, TrialParam, Demo, Trial, Block
 
 
 def make_valid(modeladmin, request, queryset):
@@ -46,5 +46,29 @@ class TrialParamAdmin(admin.ModelAdmin):
     actions = [set_is_coming, ]
     change_list_template = 'admin/trial_param_list.html'   #替换template, 使转向到定制页面 
 
+class DemoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'param', 'correct_rate', 'end_time', 'is_break', 'created_time') # item list 
+    search_fields = ('desc', )
+    list_filter = ('is_break', )
+    fields = ('param', 'correct_rate', 'end_time', 'is_break', 'desc')
+    ordering = ('-created_time', )
+
+class BlockAdmin(admin.ModelAdmin):
+    list_display = ('id', 'demo', 'tseat', 'eccent', 'angle', 'cate', 'N', 'S', 'R', 'V', 'created_time') # item list 
+#     search_fields = ('desc', )
+    list_filter = ('cate', )
+    ordering = ('-demo', )     
+    
+class TrialAdmin(admin.ModelAdmin):
+    list_display = ('id', 'block', 'cate', 'resp_cost', 'is_correct', 'steps_value', 'created_time') # item list 
+#     search_fields = ('desc', )
+    list_filter = ('is_correct', )
+    #fields = ('param', 'correct_rate', 'end_time', 'is_break', 'desc')
+    ordering = ('-block', ) 
+    
+    
 admin.site.register(RoadModel, RoadAdmin)
 admin.site.register(TrialParam, TrialParamAdmin)
+admin.site.register(Demo, DemoAdmin)
+admin.site.register(Trial, TrialAdmin)
+admin.site.register(Block, BlockAdmin)

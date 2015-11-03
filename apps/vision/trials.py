@@ -64,6 +64,8 @@ class Board(object):
         self.trial_param = TrialParam.objects.latest_coming()
         if not self.trial_param:
             raise Exception(u'请先设置有效的试验参数')
+        
+        self.trial_param.be_executed()
     
     def save_control_params(self, demo_id): 
         '''向DB写入某次试验的控制参数'''   
@@ -164,6 +166,11 @@ class Board(object):
         
     def get_target_road(self):
         return self.target_road
+    
+    def save(self):
+        # TODO: save board into DB ...
+        # 保存一次刺激显示中的路牌状态信息到BoardLog...
+        pass
     
     
     # 获取路牌上 A, B, C, D, E, F, G, H各点坐标
