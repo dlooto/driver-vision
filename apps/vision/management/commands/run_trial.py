@@ -3,7 +3,7 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Oct 27, 2015, by Junn
 #
-from vision.gui import new_demo
+from vision.gui import run
 
 '''运行Vision Trial 程序'''
 
@@ -14,4 +14,4 @@ class Command(BaseCommand):
     help = "Run vision trial Gui"
     
     def handle(self, *args, **options):
-        new_demo()
+        run()

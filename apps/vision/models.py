@@ -76,7 +76,8 @@ class TrialParam(BaseModel):
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #路牌尺寸 
     road_size = models.IntegerField(u'路名大小', default=15) 
     road_num = models.IntegerField(u'路名条数', default=3)
-    road_marks = models.CharField(u'路名位置标记', max_length=30)  #如: 'A,B,C|A', 分为两部分, 前面为路名位置,以','分隔, 最后以|分隔目标路名 
+    road_marks = models.CharField(u'路名位置标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
+     
     eccent = models.IntegerField(u'离心率', null=True, blank=True) 
     init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
 
@@ -105,16 +106,24 @@ class TrialParam(BaseModel):
                 
         return u'%s %s' % (self.id, res)    
         
+    def is_single(self):
+        '''是否单路牌类型'''
+        return True if self.board_type == 'S' else False
+                    
+    def is_static(self):
+        '''是否静态模式'''
+        return True if self.demo_scheme == 'S' else False                    
+        
     def get_board_size(self):
         size = self.board_size.split(',')
         return size[0], size[1]
         
-    def get_road_seats(self):
-        '''将路名位置字符串分解后返回, 如'A,B,D|B'分解后返回 ['A', 'B', 'D'], 'B'   
+    def get_road_seats(self):# TODO...
+        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 ['A', 'B', 'D'], ['B', 'D']   
         '''
-        roads_str, target_road = self.road_marks.split('|')
-        return roads_str.split(','), target_road
-        
+        roads_str, targets_str = self.road_marks.split('|')
+        return roads_str.split(','), targets_str.split(',')
+    
     def be_executed(self):
         '''被执行一次, 执行次数加1'''
         self.trialed_count += 1
@@ -124,11 +133,11 @@ class TrialParam(BaseModel):
 class Demo(BaseModel):
     '''一次完整试验记录'''
     
-    param = models.ForeignKey(TrialParam, verbose_name=u'选用参数', null=True, blank=True) #所使用的初始参数设置
-    correct_rate = models.FloatField(u'试验正确率')
-    end_time = models.DateTimeField(u'试验结束时间', )
+    param = models.ForeignKey(TrialParam, verbose_name=u'初始参数', null=True, blank=True) #所使用的初始参数设置
+    correct_rate = models.FloatField(u'试验正确率', default=0)
+    end_time = models.DateTimeField(u'试验结束时间', auto_now_add=True)
     is_break = models.BooleanField(u'是否被中断', default=False) #实验被中断时置为True
-    desc = models.CharField(u'描述', max_length=40, default='')
+    desc = models.CharField(u'描述', max_length=40, null=True, blank=True, default='')
     
     class Meta:
         db_table = 'vision_demo'
@@ -158,7 +167,7 @@ class Block(BaseModel):
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
                          
     
-    ## 以下参数依据求不同的阈值时存在, 且不同时存在. 如求尺寸阈值时, N的阶梯变化值将记录在Trial模型中, 
+    ## 以下参数根据求不同的阈值时不同时存在. 如求数量阈值时, N的阶梯变化值将记录在Trial模型中, 
     # 而此时Block中N字段将为空
     N = models.SmallIntegerField(u'干扰项数量(N)', null=True, blank=True, default=1)
     S = models.FloatField(u'路名尺寸(S)', null=True, blank=True)
@@ -177,13 +186,13 @@ class Trial(BaseModel):
     '''一次刺激显示中的数据记录'''
     
     block = models.ForeignKey(Demo, verbose_name=u'所属Block')
-    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
+    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
     
     resp_cost = models.IntegerField(u'响应时间', default=show_interval*1000) #毫秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
     steps_value = models.CharField(u'阶梯值', max_length=50)  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项的间距的字符串); 其他情况为单值
     
-    target_road = models.ForeignKey(RoadModel, verbose_name=u'目标路名')   #由此可知道用户按钮情况
+    target_road = models.ForeignKey(RoadModel, verbose_name=u'目标路名')   #由此可知道用户按键情况
     
     class Meta:
         db_table = 'vision_trial'

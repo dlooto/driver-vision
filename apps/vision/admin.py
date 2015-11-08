@@ -50,7 +50,6 @@ class DemoAdmin(admin.ModelAdmin):
     list_display = ('id', 'param', 'correct_rate', 'end_time', 'is_break', 'created_time') # item list 
     search_fields = ('desc', )
     list_filter = ('is_break', )
-    fields = ('param', 'correct_rate', 'end_time', 'is_break', 'desc')
     ordering = ('-created_time', )
 
 class BlockAdmin(admin.ModelAdmin):

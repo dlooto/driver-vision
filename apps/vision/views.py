@@ -36,18 +36,20 @@ def set_params(req):
     road_size = req.POST.get('road_size')       #路名尺寸
     road_num = req.POST.get('road_num')         #路名数量
     road_marks = req.POST.get('road_marks')     #路名设置: 'A,B,C,D,A'
+    target_seats = req.POST.get('target_seats') #待选目标项: 'A,B,D'
     
     eccent = req.POST.get('eccent')#离心率
     init_angle = req.POST.get('init_angle')#初始角度
     
     # check params
-    mark_list, target = road_marks[0:-2].split(','), road_marks[-1]
+    mark_list = road_marks[0:-1].split(',')
     if int(road_num) > len(mark_list) or int(road_num) < len(mark_list):
         return http.failed(u'路名数量与路名位置数不匹配: 路名数量=%s,  路名位置=%s' % (road_num, mark_list))
     
-    if target not in mark_list:
-        logs.inf(__name__, eggs.lineno(), target, mark_list)
-        return http.failed(u'目标项 %s 不在设置的路名里 %s' % (target, mark_list))
+    target_list = target_seats[0:-1].split(',')
+    if not set(target_list).issubset(set(mark_list)): #若不是子集关系
+        logs.inf(__name__, eggs.lineno(), target_list, mark_list)
+        return http.failed(u'目标项 %s 不在设置的路名里 %s' % (target_list, mark_list))
     
     try:
         params = {"board_type":   board_type, 
@@ -57,7 +59,7 @@ def set_params(req):
                 "road_size":    int(road_size),
                 "road_num":     int(road_num),
                 
-                "road_marks":   road_marks[0:-2]+'|'+road_marks[-1],  #组装成: 'A,B,C,D|A'
+                "road_marks":   road_marks[0:-1]+'|'+target_seats[0:-1],  #组装成: 'A,B,C,D|A,D'
                 "eccent":       int(eccent),
                 "init_angle":   int(init_angle),
         }

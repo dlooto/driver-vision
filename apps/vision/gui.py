@@ -9,10 +9,10 @@
 from Tkinter import *           # 导入 Tkinter 库
 import maths
 from config import *
-import time
 import subprocess
-from vision.trials import WatchPoint, Board
-import threading
+from vision.demos import StaticSingleDemoThread,\
+    StaticMultiDemoThread, DynamicSingleDemoThread, DynamicMultiDemoThread
+from vision.models import TrialParam
 
 
 def _create_circle(self, x, y, r, **kwargs): 
@@ -30,15 +30,8 @@ Canvas.create_rectangle_pro = _create_rectangle
 class GUI(Tk):
     '''基础Gui控制类'''
     
-    # single or multi, static or dynamic, determined by subclass
-    #eccent = 6                  #离心率
-    pattern = None               #试验模式, 4种: 单路静态, 单路动态, 多路静态, 多路动态 
-    watch_point = None            
-    board = None                 #多路牌试验模式时表示多个路牌的列表        
-    
     def __init__(self):
         Tk.__init__(self)
-        self.is_started = False              #实验进行状态, 默认为未开始
         self.init_window()
         
     def init_window(self):
@@ -47,7 +40,7 @@ class GUI(Tk):
         self.config(bg=face_background) #设置窗体背景颜色
         self.geometry("%dx%d" % (FACE_SIZE['w'], FACE_SIZE['h']))
         self.cv = Canvas(self, width=FACE_SIZE['w'], height=FACE_SIZE['h'], background=face_background) #灰白色
-        self.cv.widget_dict = {} # 画布上的组件字典
+        self.cv.widget_list = [] # 画布上的组件字典
         
         self.prompt = Label(self, TRIAL_START_PROMPT)
         self.prompt.pack(pady=50)
@@ -58,84 +51,79 @@ class GUI(Tk):
         
         self.bind_keys()
         
+        self.demo_thread = self.build_demo_thread(self)
+      
+    def build_demo_thread(self):
+        param = TrialParam.objects.latest_coming()
+        if not param:
+            raise Exception(u'请先设置有效的试验参数')
+        param.be_executed()
         
-    def draw_all(self):
-        self.watch_point.draw(self.cv)
-        self.board.draw(self.cv)
-        self.cv.update()
+        if param.is_static() and param.is_single():
+            return StaticSingleDemoThread(self, param)
+        if param.is_static() and not param.is_single():
+            return StaticMultiDemoThread(self, param)
+        if not param.is_static() and param.is_single():
+            return DynamicSingleDemoThread(self, param)
         
-    def gameover(self):
+        return DynamicMultiDemoThread(self, param)                    
+        
+    def erase_all(self):
+        for tk_id in self.cv.widget_list:
+            self.cv.delete(tk_id)
+        self.cv.widget_list = []
+        self.cv.update()   
+        
+    def draw(self, board):
+        '''将路牌及注视点绘制在屏幕上'''  
+        
+        self.erase_all()
+        
+        #绘制注视点
+        wp = board.watch_point
+        wp_id = self.cv.create_circle(wp.pos[0], wp.pos[1], wp.radius, fill=wp.fill, outline=wp.outline)
+        self.cv.widget_list.append(wp_id)
+        
+        #绘制路牌
+        tk_id = self.cv.create_rectangle_pro(
+            board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
+        )
+        self.cv.widget_list.append(tk_id)
+        
+        #绘制路名
+        for road in board.road_dict.values():
+            road_font = DEFAULT_ROAD_FONT[0], road.size
+            road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
+            tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
+            self.cv.widget_list.append(tk_id)
+        
+        self.cv.update()            
+        
+    def draw_gameover(self):
         gover = TRIAL_END_PROMPT   
         tk_id = self.cv.create_text(gover['pos'], text=gover['text'], 
                                     fill=gover['fill'], font=gover['font'])
-        self.cv.widget_dict[tk_id] = gover
-        
-    def erase_all(self):
-        for tk_id in self.cv.widget_dict.keys():
-            self.cv.delete(tk_id)
-        self.cv.widget_dict = {}
-        self.cv.update()
-    
-    def init_params(self):
-        '''初始参数设置: 从DB读取试验参数并初始化参数'''
-        self.watch_point = WatchPoint()
-        self.board = Board()
-    
-    def flash_params(self):
-        '''控制参数变化: 刷新路牌(及上面的路名)和注视点数据内容, 以开始下一个1.6s的刺激显示
-        '''
-        
-        if not getattr(self, 'board') or not self.board:
-            self.board = Board()
-        if not getattr(self, 'watch_point') or not self.watch_point:
-            self.watch_point = WatchPoint()  
-            
-        self.board.flash_params()
-        self.watch_point.flash_params()
-        
-    def new_trial(self):
-        '''每一次刺激试验为1.6s. 该方法在单独的线程中被循环调用'''
-        
-        self.erase_all()
-        #time.sleep(show_interval)   #just for testing...
-        
-        self.draw_all()
-        signal.wait(show_interval)  #等待1.6s, 等待用户进行键盘操作 y/n 并唤醒
-        
-        # 刷新控制参数, 为下一次1.6s的刺激显示作准备
-        self.flash_params()
-        
-    
-    def get_eccent(self):
-        '''计算离心率: 注视点到目标项的中心点的半径距离，单位为度'''   
-         
-        road = self.board.get_target_road()
-        #or target_board
-        return maths.dist(self.watch_point, road.pos)
-        # or return self.eccent
+        self.cv.widget_list.append(tk_id)
         
     def start(self, e):
-        '''点击按钮开始试验.
-        点击开始前, 需要先设置好试验参数.
+        '''点击按钮开始试验. 点击开始前, 需要先设置好试验参数.
         '''
-        if self.is_started:
+        if self.demo_thread.is_started:
             return
-        self.is_started = True
         
         # 清屏
         self.prompt.destroy()
         self.start_button.destroy()
         self.cv.pack()
         self.erase_all()
-        
-        # 启动试验线程
-        self.init_params()
-        DemoThread(self).start()    
+
+        # 启动试验线程        
+        self.demo_thread.start()    
         
     def stop(self, e):
-        self.is_started = False
+        self.demo_thread.is_started = False
         self.erase_all()
-        self.gameover()
+        self.draw_gameover()
     
     def bind_keys(self):
         self.bind('<Key-Left>',     self._press_left)     #左
@@ -155,10 +143,10 @@ class GUI(Tk):
         
     def _press_y(self, e):
         '''用户识别目标为 真'''
-        subprocess.call(["afplay", AUD_PATH['T']])
+#         subprocess.call(["afplay", AUD_PATH['T']])
         
-        ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
-        signal.set()    
+        ## 唤醒线程, 中断1.6s的刺激显示进入下一个1.6s
+        self.demo_thread.awake()    
         
         ## Do other things...
         print 'y: ', e.keysym
@@ -167,35 +155,13 @@ class GUI(Tk):
         '''用户识别目标为 假'''
         subprocess.call(["afplay", AUD_PATH['F']])
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
-        signal.set() 
+        self.demo_thread.awake()
         
         print 'n: ', e.keysym
         
         
-class SingleStaticDemo(GUI):
-    '''单路静态实验'''
-    pass
-
-class SingleDynamicDemo(GUI):
-    pass
-
-
-signal = threading.Event()
-class DemoThread(threading.Thread):
-    def __init__(self, gui):
-        threading.Thread.__init__(self)
-        self.gui = gui
-        
-    def run(self):
-        print 'Demo thread started'
-        while self.gui.is_started:
-            signal.clear()          #重置线程flag标志位为False, 以使得event.wait调用有效
-            self.gui.new_trial()
-            
-        print 'Demo thread stopped'  
-
 ## 开始新的实验
-def new_demo():
+def run():
     global gui
     gui = GUI()
     gui.title('Vision Trial 视觉测试')
@@ -203,7 +169,7 @@ def new_demo():
 
 # 可不通过该main入口执行, 改为命令: python manage.py run_trial
 if __name__ == '__main__':
-    new_demo()
+    run()
 
 
 

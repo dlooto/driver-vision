@@ -2,15 +2,20 @@
 
 {% block extrahead %}
 <style type="text/css">
-input.road_style_h {
-    margin-right: 80px; width: 120px; height: 30px;
+input.road_style_h1 { /* 水平方向路名A,B,C */
+    width: 120px; height: 30px;
     background-color: #D3E9FF;
 }
-input.road_style_v {
+input.road_style_h2 { /* 水平方向路名D,E,F */
+    margin-left: 80px; width: 120px; height: 30px;
+    background-color: #D3E9FF;
+}
+
+input.road_style_v1 { /* 垂直方向路名G */
     margin-left: 100px; width: 120px; height: 30px;
     background-color: #D3E9FF;
 }
-input.road_style_b {
+input.road_style_v2 { /* 垂直方向路名H */
     margin-left: 100px; margin-bottom: 10px; width: 120px; height: 30px;
     background-color: #D3E9FF;
 }
@@ -39,9 +44,11 @@ function checkMark(m) {
         $("#"+m+"_pressed").css("background-color","#D3E9FF");
         $("#"+m+"_pressed").val(m.toUpperCase());
         $("#mark_"+m).attr("checked", false);
+        $("#"+m+"_as_target").attr("checked", false);  //
     } else {  //未选中时点击
         $("#"+m+"_pressed").css("background-color","#1F90F2");
         $("#mark_"+m).attr("checked", 'checked');
+        $("#"+m+"_as_target").attr("checked", 'checked');
     }
 }
 
@@ -51,7 +58,7 @@ function saveParams() {
     var move_type = $("input[name='move_type']:checked").val();
     var road_num = $('#road_num').val();
     
-    var target_road = $('#target_road').val();
+    //var target_road = $('#target_road').val();
     var eccent = $('#eccent').val();
     var init_angle = $('#init_angle').val();
     var road_size = $('#road_size').val();
@@ -59,11 +66,16 @@ function saveParams() {
     
     var marks = new Array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
     var road_marks = '';
+    var target_seats = '';
     for(i in marks) {
         if($("#mark_"+marks[i]).attr("checked") == "checked") {
             road_marks += marks[i].toUpperCase()+',';    
         }
+        if($("#"+marks[i]+"_as_target").attr("checked") == "checked") {
+            target_seats += marks[i].toUpperCase()+',';
+        }
     }
+    
     if(isNull(road_marks)) {
         $("#set_result").css('color', 'red');
         $("#set_result").html('');
@@ -79,7 +91,8 @@ function saveParams() {
                     "demo_scheme":  demo_scheme, 
                     "move_type":    move_type, 
                     "road_num":     road_num,
-                    "road_marks":   road_marks + target_road,
+                    "road_marks":   road_marks,
+                    "target_seats": target_seats,
                     "eccent":       eccent,
                     "init_angle":   init_angle,
                     "road_size":    road_size,
@@ -193,16 +206,28 @@ function setResult(res) {
     
 <!--路名位置设置-->    
 <div class="control-group form-row"><div>
-    <div class="control-label"><label>路名位置:</label></div>
+    <div class="control-label"><label>路名位置:<br />(勾选后作为目标项)</label></div>
     <div class="controls">
-        <input onclick="checkMark('g');" type="button" value="G" id="g_pressed" class="road_style_v" /><br />
-        <input onclick="checkMark('h');" type="button" value="H" id="h_pressed" class="road_style_b" /><br />
-        <input onclick="checkMark('a');" type="button" value="A" id="a_pressed" class="road_style_h" />
-        <input onclick="checkMark('d');" type="button" value="D" id="d_pressed" class="road_style_h" /><br />
-        <input onclick="checkMark('b');" type="button" value="B" id="b_pressed" class="road_style_h" />
-        <input onclick="checkMark('e');" type="button" value="E" id="e_pressed" class="road_style_h" /><br />
-        <input onclick="checkMark('c');" type="button" value="C" id="c_pressed" class="road_style_h" />
-        <input onclick="checkMark('f');" type="button" value="F" id="f_pressed" class="road_style_h" /><br />
+        <input onclick="checkMark('g');" type="button" value="G" id="g_pressed" class="road_style_v1" />
+        <input id="g_as_target" name="g_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('h');" type="button" value="H" id="h_pressed" class="road_style_v2" />
+        <input id="h_as_target" name="h_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('a');" type="button" value="A" id="a_pressed" class="road_style_h1" />
+        <input id="a_as_target" name="a_as_target" type="checkbox">
+        <input onclick="checkMark('d');" type="button" value="D" id="d_pressed" class="road_style_h2" />
+        <input id="d_as_target" name="d_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('b');" type="button" value="B" id="b_pressed" class="road_style_h1" />
+        <input id="b_as_target" name="b_as_target" type="checkbox" />
+        <input onclick="checkMark('e');" type="button" value="E" id="e_pressed" class="road_style_h2" />
+        <input id="e_as_target" name="e_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('c');" type="button" value="C" id="c_pressed" class="road_style_h1" />
+        <input id="c_as_target" name="c_as_target" type="checkbox">
+        <input onclick="checkMark('f');" type="button" value="F" id="f_pressed" class="road_style_h2" />
+        <input id="f_as_target" name="f_as_target" type="checkbox"><br />
     
         <div style="display: none;">
             a<input id="mark_a" name="mark_a" type="checkbox" value="A">
@@ -218,7 +243,7 @@ function setResult(res) {
 </div></div>   
 
 <!--目标项-->
-<div class="control-group form-row"><div>
+<!-- <div class="control-group form-row"><div>
     <div class="control-label"><label>目标项:</label></div>
     <div class="controls">
         <select id="target_road" name="target_road">
@@ -232,9 +257,9 @@ function setResult(res) {
             <option value="H">H</option>
         </select>
     </div>
-</div></div> 
+</div></div>  -->
 
-<!--初始角度-->
+<!--离心率-->
 <div class="control-group form-row"><div>
     <div class="control-label"><label>离心率(E):</label></div>
     <div class="controls">
