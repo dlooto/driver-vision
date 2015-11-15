@@ -10,6 +10,7 @@ import random, threading
 import maths
 from config import *
 from vision.models import RoadModel, TrialParam
+import math
 
 
 class WatchPoint(object):
@@ -33,58 +34,83 @@ cached_kana_roads = RoadModel.objects.all_kana_roads()
 class Board(object):
     '''路牌'''
     
-    trial_param = None
-    
-    pos = BOARD_POS             #中心点坐标, 即路牌位置
+    pos = None                  #中心点坐标, 即路牌位置
     width = 280                 #路牌宽度
     height = 200                #路牌高度
     
-    eccent = None               #离心率
-    angle = 0                   #路牌初始角度
-    road_dict = None            #路名列表
-    target_road = None          #目标项
+    road_dict = {}            #路名字典, key/value: 'A'/Road()
+    target_seat = None
     
     # 辅助变量
     his_seats = []              #已被设定过的目标项位置列表
     
-    def __init__(self, pos=BOARD_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
-        self._load_params()
-        
-        self.pos = pos
+    def __init__(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+        ''' e: 路牌中心与注视点距离, a: 路牌中心-注视点连线的水平夹角的角度值, wp_pos: 注视点坐标
+        '''
+        self.pos = self.calc_pos(e, a, wp_pos)
         self.width = width
         self.height = height
-        self.watch_point = WatchPoint()
         
-        #self.load_road_dict()
+#     def __init1__(self, param, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+#         ''' e: 路牌中心与注视点距离, a: 路牌中心-注视点连线的水平夹角的角度值, wp_pos: 注视点坐标
+#         '''
+#         self.pos = self.calc_pos(param.eccent, param.init_angle, wp_pos)
+#         self.width = width
+#         self.height = height        
+#         
+#         self.load_road_dict(param.road_num)
     
-    def _load_params(self):
-        '''从DB加载最新的有效试验参数. '''
-        self.trial_param = TrialParam.objects.latest_coming()
-        if not self.trial_param:
-            raise Exception(u'请先设置有效的试验参数')
-        
-        self.road_seats, self.target_seats = self.trial_param.get_road_seats()
-        self.road_num = self.trial_param.road_num
-        
-        self.trial_param.be_executed()
+#     def _load_params(self):
+#         '''从DB加载最新的有效试验参数. '''
+#         self.trial_param = TrialParam.objects.latest_coming()
+#         if not self.trial_param:
+#             raise Exception(u'请先设置有效的试验参数')
+#         
+#         self.road_seats, self.target_seats = self.trial_param.get_road_seats()
+#         self.road_num = self.trial_param.road_num
+#         
+#         self.trial_param.be_executed()
     
-    def load_road_dict(self, road_num):
-        ''' 设置路牌上的所有路名'''
+    def calc_pos(self, e, a, wp_pos):
+        '''计算路牌中心坐标, 根据初始参数e和a值
+        @param e: 路牌中心距
+        @param a: 路牌中心-注视点连线的水平夹角的角度值 
+        '''
+        x0, y0 = wp_pos
+        return (x0 - e * math.cos(math.radians(a)), y0 - e * math.sin(math.radians(a)))
+    
+#     def load_road_dict(self, road_num):
+#         ''' 设置路牌上的所有路名'''
+#         
+#         modeled_roads = self.generate_random_roads(road_num)
+#         target = random.choice(self.target_seats) #初始随机取一个
+# 
+#         self.road_dict = {}
+#         for mark in self.road_seats:
+#             road_model = random.choice(modeled_roads)
+#             self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), 
+#                                         is_real=road_model.is_real, 
+#                                         size=self.trial_param.road_size)
+#             self.road_dict[mark].is_target = True if mark == target else False
+#             modeled_roads.remove(road_model)
+#         self.target_road = self.road_dict.get(target)
+#         self.his_seats.append(target)    #初始化历史目标项位置列表
         
-        modeled_roads = self.generate_random_roads(road_num)
-        target = random.choice(self.target_seats) #初始随机取一个
-
-        self.road_dict = {}
-        for mark in self.road_seats:
+    def load_roads(self, road_seats, target_seat, road_size):
+        ''' 设置路牌上的所有路名. 每次从词库中重新随机选择'''
+        
+        self.road_dict.clear()
+        modeled_roads = self.generate_random_roads(len(road_seats))
+        for mark in road_seats:
             road_model = random.choice(modeled_roads)
-            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark), 
+            self.road_dict[mark] = Road(road_model.name, self.pos_xx(mark, road_size), 
                                         is_real=road_model.is_real, 
-                                        size=self.trial_param.road_size)
-            self.road_dict[mark].is_target = True if mark == target else False
+                                        size=road_size)
+            self.road_dict[mark].is_target = True if mark == target_seat else False
             modeled_roads.remove(road_model)
-        self.target_road = self.road_dict.get(target)
+        self.target_seat = target_seat
         
-        self.his_seats.append(target)    #初始化历史目标项位置列表
+        #self.his_seats.append(target_seat)    #初始化历史目标项位置列表        
         
     
     def next_target_seat(self):
@@ -96,10 +122,6 @@ class Board(object):
         self.his_seats.append(target)
         return target
         
-    def save_control_params(self, demo_id): 
-        '''向DB写入某次试验的控制参数'''   
-        pass
-    
     def generate_random_roads(self, road_num):
         ''' 根据传入的路名数量, 生成不重复的随机路名列表.
          列表元素类型为Road Model(name, is_real).
@@ -107,24 +129,43 @@ class Board(object):
         
         '''
         num = road_num / 2
-        real_roads = random.sample(cached_real_roads, num)
-        if self.trial_param.road_num % 2 == 1: #奇数
-            real_roads.extend(random.sample(cached_kana_roads, num+1))
-        else: #偶数
-            real_roads.extend(random.sample(cached_kana_roads, num))            
+        real_roads = random.sample(cached_real_roads, num) #先挑选一半的真路名列表
+        if road_num % 2 == 1: #奇数
+            num += 1
+        real_roads.extend(random.sample(cached_kana_roads, num))            
                     
         return real_roads
         
-    def get_road_num(self):
-        return self.trial_param.road_num
+    def get_ee(self, target_seat, wpoint):
+        '''计算目标项离心率, 根据目标项位置及注视点对象
+        @param target_seat: 目标项位置标记, 如'A'
+        @param wpoint: 注视点对象  
+        '''
+        return maths.dist(self.road_dict[target_seat].pos, wpoint.pos)
     
-    def get_eccent(self):
-        if not self.eccent: #优先返回当前设定的值
-            return self.trial_param.eccent
-        return self.eccent
+    def get_angle(self, target_seat, wpoint):
+        '''计算目标项与注视点的角度, 根据目标项位置及注视点对象
+        @param target_seat: 目标项位置标记, 如'A'
+        @param wpoint: 注视点对象  
+        '''
+        return maths.angle(self.road_dict[target_seat].pos, wpoint.pos)
     
-    def get_angle(self):
-        return self.trial_param.init_angle
+    def calc_tf_spacings(self):
+        '''计算当前目标项与所有干扰项的间距'''
+        pass
+    
+    def update_flanker_poses(self, is_left_algo):
+        '''更新所有干扰项的坐标, 在间距阶梯法中以反应目标与干扰项的间距变化. 
+        算法规则: 根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近.
+                以目标项为原点, 连线方向指向干扰项.
+        '''
+        target_road = self.road_dict[self.target_seat]
+        road_seats = self.road_dict.keys()
+        road_seats.remove(self.target_seat)
+        
+        for flanker_seat in road_seats:
+            self.road_dict[flanker_seat].reset_pos(target_road, is_left_algo)
+    
     
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
@@ -143,34 +184,41 @@ class Board(object):
         #self.pos = self.pos[0], self.pos[1]-5  # 路牌向上移动, for testing... 
         self.load_road_dict() 
         
+    def is_target_road_real(self):
+        '''判断目标路名是否为真路名'''
+        target_road = self.road_dict[self.target_seat]
+        return target_road.is_real  
     
-    def save(self):
-        # TODO: save board into DB ...
-        # 保存一次刺激显示中的路牌状态信息到BoardLog...
-        pass
-    
-    
-    # 以路牌中心坐标为参照点, 获取路牌上 A, B, C, D, E, F, G, H各点中心坐标
-    def pos_a(self):
-        return self.pos[0]-80, self.pos[1]+10
-    def pos_b(self):
-        return self.pos[0]-80, self.pos[1]+35
-    def pos_c(self):
-        return self.pos[0]-80, self.pos[1]+60
-    def pos_d(self):
-        return self.pos[0]+80, self.pos[1]+10
-    def pos_e(self):
-        return self.pos[0]+80, self.pos[1]+35
-    def pos_f(self):
-        return self.pos[0]+80, self.pos[1]+60
-    def pos_g(self):
-        return self.pos[0], self.pos[1]-70
-    def pos_h(self):
-        return self.pos[0], self.pos[1]-45
-    
-    def pos_xx(self, mark):
+    def pos_xx(self, mark, s):
+        '''以路牌中心坐标为参照点, 获取路牌上 A, B, C, D, E, F, G, H各点中心坐标
+        @param mark: 路名位置标识, 一般为小写字母, 以匹配正确的pos_x方法
+        @param s:  路名尺寸(一般为高度值)
+        '''
         mt = 'pos_%s' % mark.lower()
-        return getattr(self, mt)()
+        return getattr(self, mt)(s)    
+    
+    def pos_a(self, s=0):#带默认值可不传
+        return self.pos[0]-ROAD_SEAT['left_x'], self.pos[1]+ROAD_SEAT['a_y']
+    def pos_b(self, s):
+        x, y = self.pos_a(s)
+        return x, y+s+ROAD_SEAT['blank_y']
+    def pos_c(self, s):
+        x, y = self.pos_b(s)
+        return x, y+s+ROAD_SEAT['blank_y']
+    def pos_d(self, s=0):
+        return self.pos[0]+ROAD_SEAT['right_x'], self.pos[1]+ROAD_SEAT['a_y']
+    def pos_e(self, s):
+        x, y = self.pos_d(s)
+        return x, y+s+ROAD_SEAT['blank_y']
+    def pos_f(self, s):
+        x, y = self.pos_e(s)
+        return x, y+s+ROAD_SEAT['blank_y']
+    def pos_g(self, s):
+        return self.pos[0], self.pos[1]-ROAD_SEAT['g_y']
+    def pos_h(self, s):
+        x, y = self.pos_g(s)
+        return x, y+s+ROAD_SEAT['blank_y']
+    
     
 #     def draw(self, canvas):
 #         '''将路牌绘制在屏幕上, 同是包含注视点'''  
@@ -223,17 +271,24 @@ class Road(object):
         '''计算路名间距'''
         return maths.dist(self.pos, a_road.pos)
     
-    def reset_pos(self, target_road, algo):
-        '''根据两点间距变化值, 重新计算当前路名位置坐标. 根据两点原有坐标可确定间距变化方向
+    def reset_pos(self, target_road, is_left_algo):
+        '''根据两点间距变化值, 重新计算当前路名位置坐标. 
+        根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近
         @param target_road: Road类型对象,
-        @param algo: 问路变化算法, M r=0.5r, I r += 1  
+        @param r: 两路名新的间距值
         '''
         
-        if algo == 'M':     #r = 0.5r
-            pass
-        elif algo == 'I': # r += 1    
-            pass
-        self.pos = 0, 1
+        x0, y0 = target_road.pos
+        x, y = self.pos
+        r = maths.dist((x0, y0), (x, y)) #两路名原来的间距
+        if is_left_algo:
+            r1 = 0.5*r
+        else:
+            r1 = r + 1
+                        
+        x = x0 - r1*(x0-x)/r
+        y = y0 - r1*(y0-y)/r
+        self.pos = x, y
     
 #     def draw(self, canvas):
 #         '''显示在屏幕上'''  #调用画布进行绘制...

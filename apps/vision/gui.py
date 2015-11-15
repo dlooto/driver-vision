@@ -74,30 +74,32 @@ class GUI(Tk):
         self.cv.widget_list = []
         self.cv.update()   
         
-    def draw(self, board):
-        '''将路牌及注视点绘制在屏幕上'''  
-        
+    def draw_all(self, board, wpoint):
         self.erase_all()
+        self.draw_wpoin(wpoint)
+        self.draw_board(board)   
+        self.cv.update()     
         
-        #绘制注视点
-        wp = board.watch_point
-        wp_id = self.cv.create_circle(wp.pos[0], wp.pos[1], wp.radius, fill=wp.fill, outline=wp.outline)
-        self.cv.widget_list.append(wp_id)
+    def draw_wpoin(self, wpoint):
+        '''绘制注视点'''
+        wp_id = self.cv.create_circle(wpoint.pos[0], wpoint.pos[1], wpoint.radius, 
+                                      fill=wpoint.fill, outline=wpoint.outline)
+        self.cv.widget_list.append(wp_id)            
         
-        #绘制路牌
+    def draw_board(self, board):
+        '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
             board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
         )
         self.cv.widget_list.append(tk_id)
         
-        #绘制路名
+        #绘制所有路名
         for road in board.road_dict.values():
             road_font = DEFAULT_ROAD_FONT[0], road.size
             road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
         
-        self.cv.update()            
         
     def draw_gameover(self):
         gover = TRIAL_END_PROMPT   
@@ -137,19 +139,23 @@ class GUI(Tk):
         
     def _press_left(self, e):
         print 'Left:', e.keysym 
-        
     def _press_right(self, e):
         print 'Right: ', e.keysym
         
     def _press_y(self, e):
-        '''用户识别目标为 真'''
-#         subprocess.call(["afplay", AUD_PATH['T']])
+        '''用户按下Y键, 判断目标项为真路名'''
+        print '%s Pressed' % e.keysym
         
-        ## 唤醒线程, 中断1.6s的刺激显示进入下一个1.6s
+        if self.demo_thread.is_target_road_real():  #TODO: 考虑将用户判断按键情况直接传入demo_thread...
+            self.play_voice(True)
+            self.demo_thread.handle_success() #用户判断成功处理
+        else:
+            self.play_voice(False)
+            self.demo_thread.handle_failure() #判断失败处理
+        
+        ## 判断成功与否, 都要唤醒线程, 进入下一个1.6s的刺激显示
         self.demo_thread.awake()    
         
-        ## Do other things...
-        print 'y: ', e.keysym
         
     def _press_n(self, e):
         '''用户识别目标为 假'''
@@ -159,6 +165,12 @@ class GUI(Tk):
         
         print 'n: ', e.keysym
         
+    def play_voice(self, success):
+        #if success:
+        #    subprocess.call(["afplay", AUD_PATH['T']])
+        #else:
+        #    subprocess.call(["afplay", AUD_PATH['F']])
+        pass
         
 ## 开始新的实验
 def run():

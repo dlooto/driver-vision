@@ -11,8 +11,8 @@ import settings
 
 
 
-face_background = '#F3F9FF'  #主窗口背景颜色
-board_color = "#0866B9"      #路牌背景颜色
+face_background = '#F3F9FF'     #主窗口背景颜色
+board_color = "#0866B9"         #路牌背景颜色
 DEFAULT_ROAD_COLOR = 'white'    #路名颜色
 TARGET_ROAD_COLOR = 'green'     #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
@@ -45,18 +45,13 @@ BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #路牌中心点坐标默认值,
 
 ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
 
-# 路名默认坐标点
-ROAD_POS = {
-    'A': (BOARD_POS[0]-80, BOARD_POS[1]+10),    #路名高度15, 路名相隔间距10 
-    'B': (BOARD_POS[0]-80, BOARD_POS[1]+35),
-    'C': (BOARD_POS[0]-80, BOARD_POS[1]+60),
-    
-    'D': (BOARD_POS[0]+80, BOARD_POS[1]+10),
-    'E': (BOARD_POS[0]+80, BOARD_POS[1]+35),
-    'F': (BOARD_POS[0]+80, BOARD_POS[1]+60),
-    
-    'G': (BOARD_POS[0],    BOARD_POS[1]-70),
-    'H': (BOARD_POS[0],    BOARD_POS[1]-45)
+# 路名默认坐标设置
+ROAD_SEAT = {
+    'left_x':   80,     #路牌中心点左侧路名与中心点横向距离
+    'right_x':  80,     #路牌中心点右侧路名与中心点横向距离
+    'a_y':      10,     #A位置路名中心点离路牌中心点的纵向距离
+    'blank_y':  10,     #纵向相邻路名间的空白间距, 以路名上下边缘计算  
+    'g_y':      70      #G位置路名中心点离路牌中心点的纵向距离
 }
 
 #试验提示信息
@@ -84,8 +79,8 @@ START_BUTTON = {
 
 aud_root = '%s/%s' % (settings.MEDIA_ROOT, settings.AUD_DIR)
 AUD_PATH = {
-    'T': '%s/%s' % (aud_root, 'tink.wav'),
-    'F': '%s/%s' % (aud_root, 'tock.wav')            
+    'T': '%s/%s' % (aud_root, 'tink.wav'),  #判断正确提示音
+    'F': '%s/%s' % (aud_root, 'tock.wav')   #判断错误提示音             
 }
 
 

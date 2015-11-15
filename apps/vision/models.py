@@ -74,11 +74,13 @@ class TrialParam(BaseModel):
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
     move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True)#运动模式, 仅当试验模式为动态时有效
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #路牌尺寸 
-    road_size = models.IntegerField(u'路名大小', default=15) 
+    road_size = models.IntegerField(u'路名尺寸', default=15) 
     road_num = models.IntegerField(u'路名条数', default=3)
     road_marks = models.CharField(u'路名位置标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
-     
-    eccent = models.IntegerField(u'离心率', null=True, blank=True) 
+    
+    #该参数初始为离心率, 后改为路牌中心距, 即路牌中心离注视点的距离 
+    eccent = models.FloatField(u'路牌中心距', null=True, blank=True)
+    #路牌中心-注视点连线与水平线的夹角. 顺时针方向旋转为角度增大 
     init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
 
     trialed_count = models.IntegerField(u'执行次数', null=True, blank=True, default=0) #数据被执行次数
@@ -119,7 +121,8 @@ class TrialParam(BaseModel):
         return size[0], size[1]
         
     def get_road_seats(self):# TODO...
-        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 ['A', 'B', 'D'], ['B', 'D']   
+        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 ['A', 'B', 'D'], ['B', 'D'] 
+        第1个列表为所有路名位置, 第2个列表为可选的目标项位置  
         '''
         roads_str, targets_str = self.road_marks.split('|')
         return roads_str.split(','), targets_str.split(',')
@@ -159,9 +162,8 @@ class Block(BaseModel):
     '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
     
     demo = models.ForeignKey(Demo, verbose_name=u'所属试验')
-    
     tseat = models.CharField(u'目标位置(D)', max_length=1)     #如A/B/C/...
-    eccent = models.IntegerField(u'离心率(E)')                      
+    ee = models.IntegerField(u'离心率(E)')                      
     angle = models.IntegerField(u'角度(@)')
     
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
@@ -172,7 +174,7 @@ class Block(BaseModel):
     N = models.SmallIntegerField(u'干扰项数量(N)', null=True, blank=True, default=1)
     S = models.FloatField(u'路名尺寸(S)', null=True, blank=True)
     R = models.CharField(u'目干间距(R)', max_length=40, null=True, blank=True)    #目标与干扰项间距, 多个间距以逗号分隔, 如:r1,r2,r3
-    V = models.FloatField(u'目标项速度(V)', null=True, blank=True)  
+    V = models.FloatField(u'目标项速度(V)', null=True, blank=True, default=0.0)  
     
     class Meta:
         db_table = 'vision_block'
