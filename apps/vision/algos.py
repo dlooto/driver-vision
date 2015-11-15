@@ -12,11 +12,6 @@ class StepProcess(object):
     
     def execute(self):
         pass
-#         '''40次阶梯法过程'''
-#         for r in STEPS_COUNT:
-#             self.change_params(d, self.board.get_eccent(), self.board.get_angle())     
-#             self.gui.draw(self.board)
-#             self.wait()
 
 class NstepProcess(StepProcess):
     '''数量阶梯算法'''
@@ -33,12 +28,12 @@ class RstepProcess(StepProcess):
         self.demo = demo
         self.block = block
         
-    def execute(self):        
-        for i in range(step_count):
-            # calc r1, r2, r3, r4, r5, 
-            self.demo.change_params(d, self.board.get_eccent(), self.board.get_angle())     
-            self.demo.draw(self.board)
-            self.wait()  
+#     def execute(self):        
+#         for i in range(step_count):
+#             # calc r1, r2, r3, r4, r5, 
+#             self.demo.change_params(d, self.board.get_eccent(), self.board.get_angle())     
+#             self.demo.draw(self.board)
+#             self.wait()  
 
 class VstepProcess(StepProcess):
     '''速度阶梯算法'''

@@ -31,7 +31,7 @@ class TrialParamManager(BaseManager):
         TrialParam.objects.filter(is_coming=True).update(is_coming=False)    
 
 class RoadModel(BaseModel):
-    name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='') #作为医生时要显示真实姓名
+    name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='')
     is_real = models.BooleanField(u'是真路名', default=False)
     
     is_valid = models.BooleanField(u'有效', default=True)
@@ -190,9 +190,9 @@ class Trial(BaseModel):
     block = models.ForeignKey(Demo, verbose_name=u'所属Block')
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
     
-    resp_cost = models.IntegerField(u'响应时间', default=show_interval*1000) #毫秒数
+    resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
-    steps_value = models.CharField(u'阶梯值', max_length=50)  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项的间距的字符串); 其他情况为单值
+    steps_value = models.CharField(u'阶梯值', max_length=50)  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
     
     target_road = models.ForeignKey(RoadModel, verbose_name=u'目标路名')   #由此可知道用户按键情况
     

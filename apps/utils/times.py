@@ -102,4 +102,8 @@ def get_current_hour_time():
     '''
     return get_hour_time(now())
 
+def time_cost(begin_time):
+    '''花费的时间, 单位: 秒'''
+    return (now() - begin_time).total_seconds()
+
 

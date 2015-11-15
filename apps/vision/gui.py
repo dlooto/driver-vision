@@ -51,7 +51,7 @@ class GUI(Tk):
         
         self.bind_keys()
         
-        self.demo_thread = self.build_demo_thread(self)
+        self.demo_thread = self.build_demo_thread()
       
     def build_demo_thread(self):
         param = TrialParam.objects.latest_coming()
@@ -144,26 +144,28 @@ class GUI(Tk):
         
     def _press_y(self, e):
         '''用户按下Y键, 判断目标项为真路名'''
-        print '%s Pressed' % e.keysym
         
-        if self.demo_thread.is_target_road_real():  #TODO: 考虑将用户判断按键情况直接传入demo_thread...
-            self.play_voice(True)
-            self.demo_thread.handle_success() #用户判断成功处理
-        else:
-            self.play_voice(False)
-            self.demo_thread.handle_failure() #判断失败处理
+        print '%s Pressed' % e.keysym
+        is_correct = self.demo_thread.is_judge_correct()
+        self.play_voice(is_correct)
+        self.demo_thread.handle_judge(is_correct) #用户判断处理
         
         ## 判断成功与否, 都要唤醒线程, 进入下一个1.6s的刺激显示
         self.demo_thread.awake()    
         
         
     def _press_n(self, e):
-        '''用户识别目标为 假'''
-        subprocess.call(["afplay", AUD_PATH['F']])
+        '''用户按下N键, 判断目标项为假路名'''
+        print '%s Pressed' % e.keysym
+        if self.demo_thread.is_judge_correct():
+            self.play_voice(False)
+            self.demo_thread.handle_judge_failure() #用户判断失败处理
+        else:
+            self.play_voice(True)
+            self.demo_thread.handle_judge_success() #判断成功处理  
+                  
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
         self.demo_thread.awake()
-        
-        print 'n: ', e.keysym
         
     def play_voice(self, success):
         #if success:
