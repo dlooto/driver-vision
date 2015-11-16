@@ -154,6 +154,12 @@ def str_to_time(timestr, format='%Y-%m-%d %H:%M:%S'):
     '''将时间字符串转为对应的时间对象'''
     return time.strptime(timestr, format)
 
+def float_list_to_str(float_list):
+    '''float元素类型列表转为字符串输出'''
+    result = ''
+    for f in float_list:
+        result = '%s|%s' % (result, str(f))
+    return result[1:]   
 
 def make_instance(module_name, class_name, *args, **kwargs):
     '''build instance by module_name and class name passed

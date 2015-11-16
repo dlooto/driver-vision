@@ -119,6 +119,7 @@ class Board(object):
         road_spacings = []
         for f in flanker_roads:
             road_spacings.append(f.dist_with(target_road))
+            
         return road_spacings    
     
     def update_flanker_poses(self, is_left_algo):
@@ -234,7 +235,7 @@ class Road(object):
         return self.name, self.pos, self.is_target    
     
     def dist_with(self, a_road):
-        '''计算路名间距'''
+        '''计算路名间距, 结果取2位小数'''
         return maths.dist(self.pos, a_road.pos)
     
     def reset_pos(self, target_road, is_left_algo):

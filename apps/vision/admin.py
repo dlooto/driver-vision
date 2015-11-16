@@ -47,13 +47,13 @@ class TrialParamAdmin(admin.ModelAdmin):
     change_list_template = 'admin/trial_param_list.html'   #替换template, 使转向到定制页面 
 
 class DemoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'param', 'correct_rate', 'end_time', 'is_break', 'created_time') # item list 
+    list_display = ('id', 'param', 'correct_rate', 'time_cost', 'is_break', 'created_time') # item list 
     search_fields = ('desc', )
     list_filter = ('is_break', )
     ordering = ('-created_time', )
 
 class BlockAdmin(admin.ModelAdmin):
-    list_display = ('id', 'demo', 'tseat', 'eccent', 'angle', 'cate', 'N', 'S', 'R', 'V', 'created_time') # item list 
+    list_display = ('id', 'demo', 'tseat', 'ee', 'angle', 'cate', 'N', 'S', 'R', 'V', 'created_time') # item list 
 #     search_fields = ('desc', )
     list_filter = ('cate', )
     ordering = ('-demo', )     

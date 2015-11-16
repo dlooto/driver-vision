@@ -120,10 +120,12 @@ class GUI(Tk):
         self.erase_all()
 
         # 启动试验线程        
-        self.demo_thread.start()    
+        self.demo_thread.start()
+        self.stop(e)    
         
     def stop(self, e):
         self.demo_thread.is_started = False
+        #self.demo_thread.end_demo(is_break=True)
         self.erase_all()
         self.draw_gameover()
     
@@ -156,13 +158,11 @@ class GUI(Tk):
         
     def _press_n(self, e):
         '''用户按下N键, 判断目标项为假路名'''
+        
         print '%s Pressed' % e.keysym
-        if self.demo_thread.is_judge_correct():
-            self.play_voice(False)
-            self.demo_thread.handle_judge_failure() #用户判断失败处理
-        else:
-            self.play_voice(True)
-            self.demo_thread.handle_judge_success() #判断成功处理  
+        is_correct = self.demo_thread.is_judge_correct(is_real=False)
+        self.play_voice(is_correct)
+        self.demo_thread.handle_judge(is_correct) #用户判断处理    
                   
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
         self.demo_thread.awake()

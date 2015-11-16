@@ -31,6 +31,7 @@ class TrialParamManager(BaseManager):
         TrialParam.objects.filter(is_coming=True).update(is_coming=False)    
 
 class RoadModel(BaseModel):
+    '''作为路名字典'''
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='')
     is_real = models.BooleanField(u'是真路名', default=False)
     
@@ -79,7 +80,7 @@ class TrialParam(BaseModel):
     road_marks = models.CharField(u'路名位置标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
     
     #该参数初始为离心率, 后改为路牌中心距, 即路牌中心离注视点的距离 
-    eccent = models.FloatField(u'路牌中心距', null=True, blank=True)
+    eccent = models.FloatField(u'路牌中心距离', null=True, blank=True)
     #路牌中心-注视点连线与水平线的夹角. 顺时针方向旋转为角度增大 
     init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
 
@@ -106,7 +107,7 @@ class TrialParam(BaseModel):
         else:
             res += u'动态'                
                 
-        return u'%s %s' % (self.id, res)    
+        return u'%s-%s' % (self.id, res)    
         
     def is_single(self):
         '''是否单路牌类型'''
@@ -138,7 +139,7 @@ class Demo(BaseModel):
     
     param = models.ForeignKey(TrialParam, verbose_name=u'初始参数', null=True, blank=True) #所使用的初始参数设置
     correct_rate = models.FloatField(u'试验正确率', default=0)
-    end_time = models.DateTimeField(u'试验结束时间', auto_now_add=True)
+    time_cost = models.FloatField(u'耗费时间(秒)', default=0.0) #秒数
     is_break = models.BooleanField(u'是否被中断', default=False) #实验被中断时置为True
     desc = models.CharField(u'描述', max_length=40, null=True, blank=True, default='')
     
@@ -148,7 +149,7 @@ class Demo(BaseModel):
         verbose_name_plural = u'Demos'
 
     def __unicode__(self):
-        return self.id
+        return u'%s' % self.id
     
 # 阶梯变化类型
 STEP_TYPE_CHOICES = {
@@ -163,7 +164,7 @@ class Block(BaseModel):
     
     demo = models.ForeignKey(Demo, verbose_name=u'所属试验')
     tseat = models.CharField(u'目标位置(D)', max_length=1)     #如A/B/C/...
-    ee = models.IntegerField(u'离心率(E)')                      
+    ee = models.FloatField(u'离心率(E)', null=True, blank=True)                  
     angle = models.IntegerField(u'角度(@)')
     
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
@@ -182,19 +183,19 @@ class Block(BaseModel):
         verbose_name_plural = u'Blocks'
 
     def __unicode__(self):
-        return self.id
+        return u'%s' % self.id
     
 class Trial(BaseModel):
     '''一次刺激显示中的数据记录'''
     
-    block = models.ForeignKey(Demo, verbose_name=u'所属Block')
-    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
+    block = models.ForeignKey(Block, verbose_name=u'所属Block')
+    cate = models.CharField(u'阶梯类型', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
     
     resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
-    steps_value = models.CharField(u'阶梯值', max_length=50)  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
+    steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
     
-    target_road = models.ForeignKey(RoadModel, verbose_name=u'目标路名')   #由此可知道用户按键情况
+    target_road = models.CharField(u'目标路名', max_length=40, null=True, blank=True, default='')   #由此可知道用户按键情况
     
     class Meta:
         db_table = 'vision_trial'
@@ -202,7 +203,14 @@ class Trial(BaseModel):
         verbose_name_plural = u'Trials'
 
     def __unicode__(self):
-        return self.id
+        return u'%s, %s, %s, %s, %s, %s' % (
+                         self.block,                   
+                         self.cate, 
+                         self.resp_cost, 
+                         self.is_correct,
+                         self.steps_value,
+                         self.target_road
+                         )
     
 class BoardLog(BaseModel):
     '''一次刺激显示中的路牌数据

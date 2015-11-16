@@ -6,7 +6,8 @@
 from vision.models import Demo, Block, Trial
 from vision.algos import StepProcess, RstepProcess, NstepProcess, SstepProcess,\
     VstepProcess
-from utils import times
+from utils import times, eggs, logs
+from utils.eggs import float_list_to_str
 
 '''
 试验线程类
@@ -16,7 +17,7 @@ from config import *
 import threading
 from vision.trials import Board, WatchPoint
 
-  
+
 class DemoThread(threading.Thread):
     '''父类试验线程对象.  为初始参数, 路牌,注视点等的容器
     '''
@@ -27,6 +28,14 @@ class DemoThread(threading.Thread):
     wpoint = None     #注视点
     board = None      #多路牌时为Board对象列表结构, 单路牌时为Board对象结构    
     
+    #辅助结构
+    demo = None
+    trial_querylist = []            #缓存trial model对象, 用于批量存储数据
+    is_update_step_value = False    #是否更新阶梯变量值
+    is_left_algo = True             #是否采用左侧算法   
+    total_trials = 0                #总刺激显示次数
+    total_correct_judge = 0         #总正确判断次数
+    
     def __init__(self, gui, param):
         threading.Thread.__init__(self)
         
@@ -34,7 +43,7 @@ class DemoThread(threading.Thread):
         self.param = param
         self.wpoint = WatchPoint()
         self.board = self.build_board()
-
+        
     def run(self):
         print('Demo thread started')
         self.is_started = True              #实验进行状态, 默认为未开始
@@ -42,7 +51,6 @@ class DemoThread(threading.Thread):
         
     def build_board(self):
         '''需要子类重载'''
-        #return Board(self.param.eccent, self.param.init_angle, self.wpoint.pos)
         return Board(self.param.eccent, self.param.init_angle)  
     
     def control_demo(self):
@@ -50,28 +58,32 @@ class DemoThread(threading.Thread):
         首先以 静态单路牌 为例...
         '''
         
-        demo = self.save_demo() #以备后用
+        self.demo = self.save_demo() #以备后用
         road_seats, target_seats = self.param.get_road_seats()
         
         # 关键间距        
-        self.trial_querylist = [] #缓存trial model对象, 用于批量存储数据
         for tseat in target_seats:
-            block_data = {
-                'demo': demo, 
-                'tseat': tseat, 
-                'ee': self.board.get_ee(tseat, self.wpoint), 
-                'angle': self.board.get_angle(tseat, self.wpoint), 
-                'cate': 'R', 
-                'N': len(road_seats)-1, 'S': self.param.road_size, 'V': 0.0
-            }
-            block = self.create_block(**block_data)
             self.board.load_roads(road_seats, tseat, self.param.road_size)
-            for i in range(STEPS_COUNT):
+            block_data = {
+                'demo':  self.demo, 
+                'tseat': tseat, 
+                'ee':    self.board.get_ee(tseat, self.wpoint), 
+                'angle': self.board.get_angle(tseat, self.wpoint), 
+                'cate':  'R', 
+                'N':     len(road_seats)-1, 'S': self.param.road_size, 'V': 0.0
+            }
+            block = self.create_block(block_data)
+            
+            #for i in range(STEPS_COUNT):
+            i = 0
+            while self.is_started and i < STEPS_COUNT:
+                i += 1    
+                self.total_trials += 1
                 trial_data = {
-                    'block': block,  
-                    'cate':  block.cate, 
-                    'steps_value': ','.join(self.board.calc_target_flanker_spacings()), 
-                    'target_road': self.board.get_target_road()
+                    'block':    block,  
+                    'cate':     block.cate, 
+                    'steps_value': float_list_to_str(self.board.calc_target_flanker_spacings()), 
+                    'target_road': self.board.get_target_road().name
                 }
                 self.append_trial(trial_data)
                 
@@ -87,8 +99,8 @@ class DemoThread(threading.Thread):
                 # 更新阶梯变量: R
                 self.board.update_flanker_poses(self.is_left_algo)
                 
-        #批量保存block数据                            
-        Trial.objects.bulk_create(self.trial_querylist)
+        #批量保存block数据
+        self.end_demo(is_break=not self.is_started)
         
 #         # 数量阈值            
 #         block_querylist = []
@@ -114,6 +126,16 @@ class DemoThread(threading.Thread):
         #    block = self.create_block(demo) # (demo, tseat, eccent, angle, cate, N, S, R, V)
         #    VstepProcess(block).execute()
         
+    def end_demo(self, is_break=False):
+        print '====================>B'
+        print self.trial_querylist
+        print '====================>E'  
+        Trial.objects.bulk_create(self.trial_querylist)
+        
+        self.demo.time_cost = round(times.time_cost(self.demo.created_time))
+        self.demo.correct_rate = round(self.total_correct_judge*1.0/self.total_trials, 2)
+        self.demo.is_break = is_break
+        self.demo.save()
             
     def handle_judge(self, is_correct):
         '''处理用户判断成功, called by key_pressed_method in gui
@@ -129,9 +151,16 @@ class DemoThread(threading.Thread):
             self.is_update_step_value = True    #需要更新阶梯变量, 以进行下一次刺激显示 
             self.is_left_algo = False           #按右侧方式更新阶梯变量值                
         
-    def is_judge_correct(self):
-        '''返回用户按键判断是否正确'''
-        self.current_trial.is_correct = self.board.is_target_road_real()
+    def is_judge_correct(self, is_real=True):
+        '''确定用户按键判断是否正确. is_real为用户输入的判断值, 
+            True: 用户判断为真路名, 
+            False: 用户判断为假路名'''
+        if is_real and self.board.is_target_road_real() or not is_real and not self.board.is_target_road_real():
+            self.current_trial.is_correct = True
+            self.total_correct_judge += 1
+        else:
+            self.current_trial.is_correct = False    
+            
         self.current_trial.resp_cost = times.time_cost(self.tmp_begin_time)
         return self.current_trial.is_correct                  
             
@@ -143,26 +172,26 @@ class DemoThread(threading.Thread):
         demo.save()
         return demo   
     
-    def create_block(self, **data): #TODO...
+    def create_block(self, data): #TODO...
         '''进入阶梯循环过程之前调用该方法, 根据调整后的时间复杂度, 立即save不会影响性能'''
-        block = Block(data)
+        block = Block(**data)
         block.save()
         return block
     
-    def append_trial(self, **data): 
+    def append_trial(self, data): 
         '''暂存trial数据对象'''
-        trial = Trial(data)
+        trial = Trial(**data)
         self.trial_querylist.append(trial)
         self.current_trial = trial         #current_trial属性变化是否会影响到最终save DB的值?
         
     def wait(self):
-        '''重置线程flag标志位为False, 以使得signal.wait调用有效.   
-        等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
+        '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
         '''
-        self.signal.clear()                   
+        self.signal.clear()  ##重置线程flag标志位为False, 以使得signal.wait调用有效.                   
         self.signal.wait(show_interval)   
         
     def awake(self):
+        '''唤醒线程'''
         self.signal.set()  
         
         
