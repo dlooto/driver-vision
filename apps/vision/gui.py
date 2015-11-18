@@ -51,7 +51,6 @@ class GUI(Tk):
         
         self.bind_keys()
         
-        self.demo_thread = self.build_demo_thread()
       
     def build_demo_thread(self):
         param = TrialParam.objects.latest_coming()
@@ -84,7 +83,7 @@ class GUI(Tk):
         '''绘制注视点'''
         wp_id = self.cv.create_circle(wpoint.pos[0], wpoint.pos[1], wpoint.radius, 
                                       fill=wpoint.fill, outline=wpoint.outline)
-        self.cv.widget_list.append(wp_id)            
+        self.cv.widget_list.append(wp_id)
         
     def draw_board(self, board):
         '''将路牌绘制在屏幕上'''  
@@ -110,8 +109,10 @@ class GUI(Tk):
     def start(self, e):
         '''点击按钮开始试验. 点击开始前, 需要先设置好试验参数.
         '''
-        if self.demo_thread.is_started:
+        if hasattr(self, 'demo_thread') and self.demo_thread and self.demo_thread.is_started:
             return
+        
+        self.demo_thread = self.build_demo_thread()
         
         # 清屏
         self.prompt.destroy()
@@ -119,13 +120,12 @@ class GUI(Tk):
         self.cv.pack()
         self.erase_all()
 
-        # 启动试验线程        
+        # 启动试验线程
         self.demo_thread.start()
-        self.stop(e)    
+        self.stop()    
         
-    def stop(self, e):
+    def stop(self, e=None):
         self.demo_thread.is_started = False
-        #self.demo_thread.end_demo(is_break=True)
         self.erase_all()
         self.draw_gameover()
     
@@ -149,30 +149,29 @@ class GUI(Tk):
         
         print '%s Pressed' % e.keysym
         is_correct = self.demo_thread.is_judge_correct()
-        self.play_voice(is_correct)
-        self.demo_thread.handle_judge(is_correct) #用户判断处理
-        
-        ## 判断成功与否, 都要唤醒线程, 进入下一个1.6s的刺激显示
-        self.demo_thread.awake()    
-        
+        self._extra_keypressed(is_correct)  
         
     def _press_n(self, e):
         '''用户按下N键, 判断目标项为假路名'''
         
         print '%s Pressed' % e.keysym
         is_correct = self.demo_thread.is_judge_correct(is_real=False)
+        self._extra_keypressed(is_correct)
+        
+    def _extra_keypressed(self, is_correct):
         self.play_voice(is_correct)
         self.demo_thread.handle_judge(is_correct) #用户判断处理    
                   
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s
-        self.demo_thread.awake()
+        self.demo_thread.awake()        
+                
         
     def play_voice(self, success):
-        #if success:
-        #    subprocess.call(["afplay", AUD_PATH['T']])
-        #else:
-        #    subprocess.call(["afplay", AUD_PATH['F']])
-        pass
+        if success:
+            subprocess.call(["afplay", AUD_PATH['T']])
+        else:
+            subprocess.call(["afplay", AUD_PATH['F']])
+#         pass
         
 ## 开始新的实验
 def run():

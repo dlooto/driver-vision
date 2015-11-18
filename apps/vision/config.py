@@ -18,7 +18,7 @@ TARGET_ROAD_COLOR = 'green'     #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
-STEPS_COUNT = 40                    #阶梯法默认循环次数
+STEPS_COUNT = 5                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)   #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
@@ -32,8 +32,8 @@ FACE_SIZE = {
 }
 
 BOARD_SIZE = {  #小路牌默认尺寸, bs_w, bs_h
-    'w': 280,
-    'h': 200             
+    'w': 280, #280
+    'h': 200  #200           
 }
 BOARD_SIZE_B = {  #大路牌默认尺寸
     'w': 420,
@@ -58,7 +58,7 @@ ROAD_SEAT = {
 TRIAL_START_PROMPT = { 
     'text': u'点击"开始"按钮进行测试, "真" 为 "y"  假 为 "n" ', 
     'bg': face_background,
-    'fg': 'blue',
+    'fg': '#1F90F2',
     'font': ("Helvetica", 30), 
 }
 
@@ -72,7 +72,7 @@ TRIAL_END_PROMPT = {
 START_BUTTON = {
     'bg':   '#009900',
     'fg':   'white',
-    'font': ("Helvetica", 25),     
+    'font': ("Helvetica", 25),
     'text': u'开始',   
     'width': 8,
 }

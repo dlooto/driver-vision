@@ -48,6 +48,7 @@ class DemoThread(threading.Thread):
         print('Demo thread started')
         self.is_started = True              #实验进行状态, 默认为未开始
         self.control_demo()
+        print('Demo thread ended')
         
     def build_board(self):
         '''需要子类重载'''
@@ -80,16 +81,20 @@ class DemoThread(threading.Thread):
                 i += 1    
                 self.total_trials += 1
                 trial_data = {
-                    'block':    block,  
-                    'cate':     block.cate, 
-                    'steps_value': float_list_to_str(self.board.calc_target_flanker_spacings()), 
-                    'target_road': self.board.get_target_road().name
+                    'block':        block,  
+                    'cate':         block.cate, 
+                    'steps_value':  float_list_to_str(self.board.calc_target_flanker_spacings()), 
+                    'target_road':  self.board.get_target_road().name
                 }
                 self.append_trial(trial_data)
                 
                 self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
                 self.wait() #等待用户按键判断
+                
+                if not self.is_awakened(): #自然等待1.6s, 视为用户判断错误
+                    self.current_trial.is_correct = False
+                    self.handle_judge(False) 
                 
                 #用户按键唤醒线程后刷新路名    
                 self.board.load_roads(road_seats, tseat, self.param.road_size) 
@@ -98,9 +103,11 @@ class DemoThread(threading.Thread):
                 
                 # 更新阶梯变量: R
                 self.board.update_flanker_poses(self.is_left_algo)
+                print 'Spacing changed: ', self.is_left_algo, self.board.calc_target_flanker_spacings()   #test...
+                print 'Poses changed:', self.board.get_road_poses()
                 
         #批量保存block数据
-        self.end_demo(is_break=not self.is_started)
+        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断
         
 #         # 数量阈值            
 #         block_querylist = []
@@ -127,19 +134,23 @@ class DemoThread(threading.Thread):
         #    VstepProcess(block).execute()
         
     def end_demo(self, is_break=False):
-        print '====================>B'
-        print self.trial_querylist
-        print '====================>E'  
+        '''is_break: True-试验被中断, False-试验未被中断. 
+        '''
+        #print '====================>B'
+        #print self.trial_querylist
+        #print '====================>E'  
         Trial.objects.bulk_create(self.trial_querylist)
         
         self.demo.time_cost = round(times.time_cost(self.demo.created_time))
         self.demo.correct_rate = round(self.total_correct_judge*1.0/self.total_trials, 2)
         self.demo.is_break = is_break
         self.demo.save()
+        
+        self.gui.stop()
             
     def handle_judge(self, is_correct):
-        '''处理用户判断成功, called by key_pressed_method in gui
-        @param is_correct:  按键判断是否正确.
+        '''用户判断后处理, called by key_pressed_method in gui
+        @param is_correct:  用户按键判断是否正确.
         is_left_algo: 表示阶梯值新值计算类型, True表示按流程图左侧算法进行计算, 否则按右侧算法.
         is_update_step_value: 是否更新阶梯变量值, 判断成功后该标记值取反, 判断失败后更新阶梯变量值
         
@@ -155,10 +166,10 @@ class DemoThread(threading.Thread):
         '''确定用户按键判断是否正确. is_real为用户输入的判断值, 
             True: 用户判断为真路名, 
             False: 用户判断为假路名'''
-        if is_real and self.board.is_target_road_real() or not is_real and not self.board.is_target_road_real():
+        if is_real and self.board.is_target_road_real() or not is_real and not self.board.is_target_road_real(): #判断正确
             self.current_trial.is_correct = True
             self.total_correct_judge += 1
-        else:
+        else: #判断错误
             self.current_trial.is_correct = False    
             
         self.current_trial.resp_cost = times.time_cost(self.tmp_begin_time)
@@ -167,7 +178,7 @@ class DemoThread(threading.Thread):
     def build_step_process(self):
         return StepProcess()            
     
-    def save_demo(self): #TODO: 更新demo对象...
+    def save_demo(self):
         demo = Demo(param=self.param)
         demo.save()
         return demo   
@@ -188,10 +199,15 @@ class DemoThread(threading.Thread):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
         '''
         self.signal.clear()  ##重置线程flag标志位为False, 以使得signal.wait调用有效.                   
-        self.signal.wait(show_interval)   
+        self.signal.wait(show_interval)
+        
+    def is_awakened(self):
+        '''线程是否被用户按键唤醒, 若刺激显示是自然等待1.6s开始下一帧则未被唤醒, 此时返回False. 
+        用户按键做判断后, 线程将被唤醒, 唤醒标识位设置为True, '''
+        return self.signal.is_set()           
         
     def awake(self):
-        '''唤醒线程'''
+        '''唤醒线程. Set the internal flag to true'''
         self.signal.set()  
         
         

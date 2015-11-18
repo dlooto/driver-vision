@@ -52,7 +52,7 @@ class Board(object):
         
     def calc_pos(self, e, a, wp_pos):
         '''计算路牌中心坐标, 根据初始参数e和a值
-        @param e: 路牌中心距
+        @param e: 路牌中心与注视点距离
         @param a: 路牌中心-注视点连线的水平夹角的角度值 
         '''
         x0, y0 = wp_pos
@@ -134,6 +134,12 @@ class Board(object):
         for flanker_seat in road_seats:
             self.road_dict[flanker_seat].reset_pos(target_road, is_left_algo)
     
+    def get_road_poses(self):
+        '''返回所有路名坐标, Test...'''
+        poses = []
+        for road in self.road_dict.values():
+            poses.append(road.pos)
+        return poses    
     
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
@@ -164,7 +170,7 @@ class Board(object):
         mt = 'pos_%s' % mark.lower()
         return getattr(self, mt)(s)    
     
-    def pos_a(self, s=0):#带默认值可不传
+    def pos_a(self, s=0):#带默认值可不传, 为便于里pos_xx调用的一致性
         return self.pos[0]-ROAD_SEAT['left_x'], self.pos[1]+ROAD_SEAT['a_y']
     def pos_b(self, s):
         x, y = self.pos_a(s)

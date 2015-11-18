@@ -53,13 +53,13 @@ class DemoAdmin(admin.ModelAdmin):
     ordering = ('-created_time', )
 
 class BlockAdmin(admin.ModelAdmin):
-    list_display = ('id', 'demo', 'tseat', 'ee', 'angle', 'cate', 'N', 'S', 'R', 'V', 'created_time') # item list 
+    list_display = ('id', 'demo', 'tseat', 'ee', 'angle', 'cate', 'N', 'S', 'R', 'V',) # item list 
 #     search_fields = ('desc', )
     list_filter = ('cate', )
     ordering = ('-demo', )     
     
 class TrialAdmin(admin.ModelAdmin):
-    list_display = ('id', 'block', 'cate', 'resp_cost', 'is_correct', 'steps_value', 'created_time') # item list 
+    list_display = ('id', 'block', 'cate', 'target_road', 'resp_cost', 'is_correct', 'steps_value',) # item list 
 #     search_fields = ('desc', )
     list_filter = ('is_correct', )
     #fields = ('param', 'correct_rate', 'end_time', 'is_break', 'desc')
