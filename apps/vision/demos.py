@@ -3,16 +3,15 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Nov 8, 2015, by Junn
 #
+'''
+试验线程类
+'''
+
 from vision.models import Demo, Block, Trial
 from vision.algos import StepProcess, RstepProcess, NstepProcess, SstepProcess,\
     VstepProcess
 from utils import times, eggs, logs
 from utils.eggs import float_list_to_str
-
-'''
-试验线程类
-'''
-
 from config import *
 import threading
 from vision.trials import Board, WatchPoint

@@ -18,7 +18,7 @@ admin_view = admin.site.admin_view
 class ParamsIndex(TemplateView):
     '''进入试验参数设置界面'''
     
-    template_name = 'admin/params_set.html'
+    template_name = 'admin/index.html'
 
     @method_decorator(admin_view)
     def dispatch(self, request, *args, **kwargs):

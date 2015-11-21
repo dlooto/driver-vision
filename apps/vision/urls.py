@@ -7,11 +7,10 @@
 from django.conf.urls import patterns, url
 
 from vision import views
-import settings
 
 urlpatterns = patterns(
     '',
     url(r"^$",          views.ParamsIndex.as_view(), name="vision:params_index"),
-    url(r'^/set_params',views.set_params,           name="set_params"),
+    url(r'^/set_params',views.set_params,            name="set_params"),
     
 )
