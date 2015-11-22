@@ -72,8 +72,15 @@ class Board(object):
             modeled_roads.remove(road_model)
         self.target_seat = target_seat
         
-        #self.his_seats.append(target_seat)    #初始化历史目标项位置列表        
-        
+    def flash_road_names(self, road_seats, target_seat):
+        '''仅刷新路名, 不更新路牌中的路名对象'''
+        modeled_roads = self.generate_random_roads(len(road_seats))
+        for mark in road_seats:
+            road_model = random.choice(modeled_roads)
+            self.road_dict[mark].name = road_model.name 
+            self.road_dict[mark].is_target = True if mark == target_seat else False
+            modeled_roads.remove(road_model)
+        self.target_seat = target_seat            
     
 #     def next_target_seat(self):
 #         '''切换目标项位置, 从目标'A' --> 'B', 
@@ -112,6 +119,11 @@ class Board(object):
         '''
         return maths.angle(self.road_dict[target_seat].pos, wpoint.pos)
     
+    def get_road_spacings(self):
+        if not hasattr(self, 'road_spacings') or not self.road_spacings:
+            self.road_spacings = self.calc_target_flanker_spacings()
+        return self.road_spacings    
+    
     def calc_target_flanker_spacings(self):
         '''计算当前目标项与所有干扰项的间距, 返回间距列表'''
         target_road = self.get_target_road()
@@ -120,7 +132,7 @@ class Board(object):
         for f in flanker_roads:
             road_spacings.append(f.dist_with(target_road))
             
-        return road_spacings    
+        return road_spacings  
     
     def update_flanker_poses(self, is_left_algo):
         '''更新所有干扰项的坐标, 在间距阶梯法中以反应目标与干扰项的间距变化. 
@@ -133,6 +145,18 @@ class Board(object):
         
         for flanker_seat in road_seats:
             self.road_dict[flanker_seat].reset_pos(target_road, is_left_algo)
+            
+    def update_flanker_spacings(self, is_left_algo):
+        '''根据算法更新所有干扰项-目标项间距值, 同时以目标项为基准, 更新所有干扰项的坐标'''
+        
+        road_spacings = self.get_road_spacings()    
+        for i in range(len(road_spacings)):
+            if is_left_algo:
+                road_spacings[i] = 0.5 * road_spacings[i]
+            else:
+                road_spacings[i] += SPACING_RIGHT_DELTA
+                  
+        self.update_flanker_poses(is_left_algo)    
     
     def get_road_poses(self):
         '''返回所有路名坐标, Test...'''
@@ -248,7 +272,7 @@ class Road(object):
         '''根据两点间距变化值, 重新计算当前路名位置坐标. 
         根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近
         @param target_road: Road类型对象,
-        @param r: 两路名新的间距值
+        @param is_left_algo: 算法参数, True-0.5r, False-r+1
         '''
         
         x0, y0 = target_road.pos
@@ -257,10 +281,10 @@ class Road(object):
         if is_left_algo:
             r1 = 0.5*r
         else:
-            r1 = r + 20
+            r1 = r + SPACING_RIGHT_DELTA
                         
-        x = x0 - r1*(x0-x)/r
-        y = y0 - r1*(y0-y)/r
+        x = x0 - r1*(x0-x)/r*1.0
+        y = y0 - r1*(y0-y)/r*1.0
         self.pos = round(x,2), round(y,2)
     
 #     def draw(self, canvas):

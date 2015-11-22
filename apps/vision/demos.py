@@ -82,7 +82,7 @@ class DemoThread(threading.Thread):
                 trial_data = {
                     'block':        block,  
                     'cate':         block.cate, 
-                    'steps_value':  float_list_to_str(self.board.calc_target_flanker_spacings()), 
+                    'steps_value':  float_list_to_str(self.board.get_road_spacings()), 
                     'target_road':  self.board.get_target_road().name
                 }
                 self.append_trial(trial_data)
@@ -96,14 +96,15 @@ class DemoThread(threading.Thread):
                     self.handle_judge(False) 
                 
                 #用户按键唤醒线程后刷新路名    
-                self.board.load_roads(road_seats, tseat, self.param.road_size) 
+                self.board.flash_road_names(road_seats, tseat)
                 if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
                     continue
                 
                 # 更新阶梯变量: R
-                self.board.update_flanker_poses(self.is_left_algo)
-                #print 'Spacing changed: ', self.is_left_algo, self.board.calc_target_flanker_spacings()   #test...
-                print 'Poses changed:', self.board.get_road_poses()
+                #self.board.update_flanker_poses(self.is_left_algo)
+                self.board.update_flanker_spacings(self.is_left_algo)
+#                 print 'Spacing changed: ', self.is_left_algo, self.board.get_road_spacings()   #test...
+                print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()
                 
         #批量保存block数据
         self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断

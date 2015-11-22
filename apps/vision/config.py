@@ -16,7 +16,9 @@ board_color = "#0866B9"         #路牌背景颜色
 DEFAULT_ROAD_COLOR = 'white'    #路名颜色
 TARGET_ROAD_COLOR = 'green'     #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
-show_interval = 3             #默认刺激显示间隔时间, 单位秒
+show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
+
+SPACING_RIGHT_DELTA = 1         #间距变化右算法变化量
 
 STEPS_COUNT = 40                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)   #默认离心率变化值范围
