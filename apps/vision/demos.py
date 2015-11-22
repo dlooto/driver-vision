@@ -102,7 +102,7 @@ class DemoThread(threading.Thread):
                 
                 # 更新阶梯变量: R
                 self.board.update_flanker_poses(self.is_left_algo)
-                print 'Spacing changed: ', self.is_left_algo, self.board.calc_target_flanker_spacings()   #test...
+                #print 'Spacing changed: ', self.is_left_algo, self.board.calc_target_flanker_spacings()   #test...
                 print 'Poses changed:', self.board.get_road_poses()
                 
         #批量保存block数据

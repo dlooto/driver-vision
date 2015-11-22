@@ -257,11 +257,11 @@ class Road(object):
         if is_left_algo:
             r1 = 0.5*r
         else:
-            r1 = r + 1
+            r1 = r + 20
                         
         x = x0 - r1*(x0-x)/r
         y = y0 - r1*(y0-y)/r
-        self.pos = x, y
+        self.pos = round(x,2), round(y,2)
     
 #     def draw(self, canvas):
 #         '''显示在屏幕上'''  #调用画布进行绘制...
