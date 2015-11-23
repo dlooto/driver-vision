@@ -21,7 +21,7 @@ show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 SPACING_RIGHT_DELTA = 1         #间距变化右算法变化量
 
 STEPS_COUNT = 40                     #阶梯法默认循环次数
-DEFAULT_ECCENTS = (6, 10, 14, 16)   #默认离心率变化值范围
+DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
 DEFAULT_ROAD_FONT = ("Helvetica", 15)
@@ -33,11 +33,13 @@ FACE_SIZE = {
     'h': 768
 }
 
-BOARD_SIZE = {  #小路牌默认尺寸, bs_w, bs_h
+#小路牌默认尺寸, bs_w, bs_h
+BOARD_SIZE = {  
     'w': 280, #280
     'h': 200  #200           
 }
-BOARD_SIZE_B = {  #大路牌默认尺寸
+#大路牌默认尺寸
+BOARD_SIZE_B = {  
     'w': 420,
     'h': 300             
 }

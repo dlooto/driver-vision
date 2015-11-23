@@ -6,10 +6,10 @@
 # Created on Oct 22, 2015, by Junn
 #
 
-import random, threading
+import random
 import maths
 from config import *
-from vision.models import RoadModel, TrialParam
+from vision.models import RoadModel
 import math
 
 
@@ -73,7 +73,7 @@ class Board(object):
         self.target_seat = target_seat
         
     def flash_road_names(self, road_seats, target_seat):
-        '''仅刷新路名, 不更新路牌中的路名对象'''
+        '''仅刷新路名, 不替换原有路名对象'''
         modeled_roads = self.generate_random_roads(len(road_seats))
         for mark in road_seats:
             road_model = random.choice(modeled_roads)
@@ -152,7 +152,7 @@ class Board(object):
         road_spacings = self.get_road_spacings()    
         for i in range(len(road_spacings)):
             if is_left_algo:
-                road_spacings[i] = 0.5 * road_spacings[i]
+                road_spacings[i] = round(0.5 * road_spacings[i], 2)
             else:
                 road_spacings[i] += SPACING_RIGHT_DELTA
                   

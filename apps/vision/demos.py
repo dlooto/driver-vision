@@ -103,13 +103,12 @@ class DemoThread(threading.Thread):
                 # 更新阶梯变量: R
                 #self.board.update_flanker_poses(self.is_left_algo)
                 self.board.update_flanker_spacings(self.is_left_algo)
-#                 print 'Spacing changed: ', self.is_left_algo, self.board.get_road_spacings()   #test...
+                #print 'Spacing changed: ', self.is_left_algo, self.board.get_road_spacings()   #test...
                 print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()
-                
-        #批量保存block数据
-        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断
+
+        # 数量阈值            
         
-#         # 数量阈值            
+        
 #         block_querylist = []
 #         self.trial_querylist = []    
 #         for d in self.target_seats:
@@ -117,7 +116,7 @@ class DemoThread(threading.Thread):
 #             NstepProcess(block).execute()
 #         Block.objects.bulk_create(block_querylist)
 #         Trial.objects.bulk_create(self.trial_querylist) #??             
-#             
+#              
 #         # 尺寸阈值
 #         block_querylist = []
 #         self.trial_querylist = []  
@@ -126,12 +125,15 @@ class DemoThread(threading.Thread):
 #             SstepProcess(block).execute()
 #         Block.objects.bulk_create(block_querylist)
 #         Trial.objects.bulk_create(self.trial_querylist) #??              
-            
-            
+             
+             
         # 动态敏感度            
         #for d in self.target_seats:
         #    block = self.create_block(demo) # (demo, tseat, eccent, angle, cate, N, S, R, V)
         #    VstepProcess(block).execute()
+        
+        #批量保存block数据
+        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
         
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 

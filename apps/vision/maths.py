@@ -21,6 +21,9 @@ def angle(p1, p2):
     #return math.atan( (p1[1]-p2[1]) / ((p1[0]-p2[0])*1.0)) *180/math.pi
     dx = p1[0]-p2[0]
     dy = p1[1]-p2[1]
+    if dy == 0:
+        return 0
+    
     if dx == 0: #防止除0情况
         if dy < 0: #p1在p2上方, 
             return 90
@@ -30,10 +33,10 @@ def angle(p1, p2):
     if dx > 0: #二三象限
         return (math.pi + math.atan(dy/dx*1.0) ) * 180/math.pi
     
-    #dx < 0 一四象限
+    #一四象限 dx < 0 
     if dy < 0:
         return math.atan(dy/dx*1.0) * 180/math.pi
     if dy > 0:
-        return (2*math.pi + math.atan(dy/dx*1.0) ) * 180/math.pi
+        return (2*math.pi + math.atan(dy/dx*1.0)) * 180/math.pi
     
 
