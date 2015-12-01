@@ -62,7 +62,24 @@ class DemoThread(threading.Thread):
         road_seats, target_seats = self.param.get_road_seats()
         
         # 关键间距        
+        #self.critical_spacing(road_seats, target_seats)
+
+        # 数量阈值            
+        #self.number_threshold(road_seats, target_seats)
+        
+        # 尺寸阈值
+        self.size_threshold(road_seats, target_seats)
+        
+        # 动态敏感度            
+        #self.dynamic_sensitive()
+        
+        #批量保存block数据
+        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
+
+    def critical_spacing(self, road_seats, target_seats):
+        logs.info('\n求关键间距控制过程开始...')
         for tseat in target_seats:
+            if not self.is_started: break
             self.board.load_roads(road_seats, tseat, self.param.road_size)
             block_data = {
                 'demo':  self.demo, 
@@ -74,15 +91,13 @@ class DemoThread(threading.Thread):
             }
             block = self.create_block(block_data)
             
-            #for i in range(STEPS_COUNT):
-            i = 0
-            while self.is_started and i < STEPS_COUNT:
-                i += 1    
+            for i in range(STEPS_COUNT):
+                if not self.is_started: break   
                 self.total_trials += 1
                 trial_data = {
                     'block':        block,  
                     'cate':         block.cate, 
-                    'steps_value':  float_list_to_str(self.board.get_road_spacings()), 
+                    'steps_value':  self.get_steps_value(), 
                     'target_road':  self.board.get_target_road().name
                 }
                 self.append_trial(trial_data)
@@ -104,43 +119,111 @@ class DemoThread(threading.Thread):
                 #self.board.update_flanker_poses(self.is_left_algo)
                 self.board.update_flanker_spacings(self.is_left_algo)
                 #print 'Spacing changed: ', self.is_left_algo, self.board.get_road_spacings()   #test...
-                print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()
+                print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()            
 
-        # 数量阈值            
+    def number_threshold(self, road_seats, target_seats):
+        '''求数量阈值过程. 干扰项数量进行阶梯变化
+        '''
+        logs.info('\n求数量阈值控制过程开始...')
+        for tseat in target_seats:
+            if not self.is_started: break
+            self.board.load_roads(road_seats, tseat, self.param.road_size)  #加载路名
+            block_data = {
+                'demo':  self.demo, 
+                'tseat': tseat, 
+                'ee':    self.board.get_ee(tseat, self.wpoint), 
+                'angle': self.board.get_angle(tseat, self.wpoint), 
+                
+                # Changed
+                'cate':  'N', #求数量阈值
+                'S': self.param.road_size, 'V': 0.0   # 'R': 应该为空, 因间距个数不确定
+            }
+            block = self.create_block(block_data)
+            
+            # 阶梯变化开始
+            dynamic_road_seats = road_seats  #该值进行阶梯变化
+            for i in range(STEPS_COUNT):
+                if not self.is_started: break  
+                self.total_trials += 1
+                trial_data = {
+                    'block':        block,  
+                    'cate':         block.cate, 
+                    'steps_value':  len(self.board.get_flanker_roads()),  #Changed.
+                    'target_road':  self.board.get_target_road().name
+                }
+                self.append_trial(trial_data)
+                
+                self.tmp_begin_time = times.now() #记录刺激显示开始时间
+                self.gui.draw_all(self.board, self.wpoint) #刺激显示
+                self.wait() #等待用户按键判断
+                
+                if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                    self.current_trial.is_correct = False
+                    self.handle_judge(False)
+                
+                #用户按键唤醒线程后刷新路名    
+                self.board.flash_road_names(dynamic_road_seats, tseat) #TODO: 是否
+                if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                    continue
+                
+                # 更新阶梯变量   #Changed.
+                dynamic_road_seats = self.board.update_flanker_numbers(self.is_left_algo)
+                print 'Flankers:', 'N+2' if self.is_left_algo else 'N-1', len(self.board.get_flanker_roads())            
         
+    def size_threshold(self, road_seats, target_seats): 
+        '''求尺寸阈值过程. 干扰项与目标项一同变化
+        '''
+        logs.info('\n求尺寸阈值过程开始...')
+        for tseat in target_seats:
+            if not self.is_started: break
+            self.board.load_roads(road_seats, tseat, self.param.road_size)  #加载路名
+            block_data = {
+                'demo':  self.demo, 
+                'tseat': tseat, 
+                'ee':    self.board.get_ee(tseat, self.wpoint), 
+                'angle': self.board.get_angle(tseat, self.wpoint), 
+                
+                # Changed
+                'cate':  'S', #求尺寸阈值
+                'N': len(road_seats)-1, 'V': 0.0   # 'R': 置空, 间距随路名尺寸变化而变化
+            }
+            block = self.create_block(block_data)
+            
+            # 阶梯变化开始
+            for i in range(STEPS_COUNT):
+                if not self.is_started: break  
+                self.total_trials += 1
+                trial_data = {
+                    'block':        block,  
+                    'cate':         block.cate, 
+                    'steps_value':  self.board.get_road_size(),  #Changed.
+                    'target_road':  self.board.get_target_road().name
+                }
+                self.append_trial(trial_data)
+                
+                self.tmp_begin_time = times.now() #记录刺激显示开始时间
+                self.gui.draw_all(self.board, self.wpoint) #刺激显示
+                self.wait() #等待用户按键判断
+                
+                if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                    self.current_trial.is_correct = False
+                    self.handle_judge(is_correct=False)
+                
+                #用户按键唤醒线程后刷新路名    
+                self.board.flash_road_names(road_seats, tseat)
+                if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                    continue
+                
+                # 更新阶梯变量   #Changed.
+                self.board.update_road_size(self.is_left_algo)
+                print 'Road size:', '*1.2' if self.is_left_algo else '*0.8', self.board.get_road_size()                       
         
-#         block_querylist = []
-#         self.trial_querylist = []    
-#         for d in self.target_seats:
-#             block = self.create_block(demo) # (demo, tseat, eccent, angle, cate, N, S, R, V)
-#             NstepProcess(block).execute()
-#         Block.objects.bulk_create(block_querylist)
-#         Trial.objects.bulk_create(self.trial_querylist) #??             
-#              
-#         # 尺寸阈值
-#         block_querylist = []
-#         self.trial_querylist = []  
-#         for d in self.target_seats:
-#             block = self.create_block(demo) # (demo, tseat, eccent, angle, cate, N, S, R, V)
-#             SstepProcess(block).execute()
-#         Block.objects.bulk_create(block_querylist)
-#         Trial.objects.bulk_create(self.trial_querylist) #??              
-             
-             
-        # 动态敏感度            
-        #for d in self.target_seats:
-        #    block = self.create_block(demo) # (demo, tseat, eccent, angle, cate, N, S, R, V)
-        #    VstepProcess(block).execute()
-        
-        #批量保存block数据
-        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
+    def get_steps_value(self): #阈值具体的方法, 考虑重载
+        return float_list_to_str(self.board.get_road_spacings())
         
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 
         '''
-        #print '====================>B'
-        #print self.trial_querylist
-        #print '====================>E'  
         Trial.objects.bulk_create(self.trial_querylist)
         
         self.demo.time_cost = round(times.time_cost(self.demo.created_time))
@@ -152,7 +235,8 @@ class DemoThread(threading.Thread):
             
     def handle_judge(self, is_correct):
         '''用户判断后处理, called by key_pressed_method in gui
-        @param is_correct:  用户按键判断是否正确.
+        @param is_correct:  用户按键判断是否正确, True-判断正确, False-判断错误
+        
         is_left_algo: 表示阶梯值新值计算类型, True表示按流程图左侧算法进行计算, 否则按右侧算法.
         is_update_step_value: 是否更新阶梯变量值, 判断成功后该标记值取反, 判断失败后更新阶梯变量值
         
@@ -164,7 +248,7 @@ class DemoThread(threading.Thread):
             self.is_update_step_value = True    #需要更新阶梯变量, 以进行下一次刺激显示 
             self.is_left_algo = False           #按右侧方式更新阶梯变量值                
         
-    def is_judge_correct(self, is_real=True):
+    def is_judge_correct(self, is_real):
         '''确定用户按键判断是否正确. is_real为用户输入的判断值, 
             True: 用户判断为真路名, 
             False: 用户判断为假路名'''
@@ -185,7 +269,7 @@ class DemoThread(threading.Thread):
         demo.save()
         return demo   
     
-    def create_block(self, data): #TODO...
+    def create_block(self, data): 
         '''进入阶梯循环过程之前调用该方法, 根据调整后的时间复杂度, 立即save不会影响性能'''
         block = Block(**data)
         block.save()
@@ -195,7 +279,7 @@ class DemoThread(threading.Thread):
         '''暂存trial数据对象'''
         trial = Trial(**data)
         self.trial_querylist.append(trial)
-        self.current_trial = trial         #current_trial属性变化是否会影响到最终save DB的值?
+        self.current_trial = trial
         
     def wait(self):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  

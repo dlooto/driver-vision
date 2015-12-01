@@ -94,7 +94,7 @@ class GUI(Tk):
         
         #绘制所有路名
         for road in board.road_dict.values():
-            road_font = DEFAULT_ROAD_FONT[0], road.size
+            road_font = DEFAULT_ROAD_FONT[0], int(road.size)
             road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
@@ -148,7 +148,7 @@ class GUI(Tk):
         '''用户按下Y键, 判断目标项为真路名'''
         
         print '%s Pressed' % e.keysym
-        is_correct = self.demo_thread.is_judge_correct()
+        is_correct = self.demo_thread.is_judge_correct(is_real=True)
         self._extra_keypressed(is_correct)  
         
     def _press_n(self, e):
@@ -159,7 +159,7 @@ class GUI(Tk):
         self._extra_keypressed(is_correct)
         
     def _extra_keypressed(self, is_correct):
-        self.play_voice(is_correct)
+        #self.play_voice(is_correct)
         self.demo_thread.handle_judge(is_correct) #用户判断处理    
                   
         ## 唤醒线程, 中断1.6s的显示进入下一个1.6s

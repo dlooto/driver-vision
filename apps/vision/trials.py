@@ -11,6 +11,7 @@ import maths
 from config import *
 from vision.models import RoadModel
 import math
+import Queue
 
 
 class WatchPoint(object):
@@ -39,6 +40,7 @@ class Board(object):
     
     # 辅助变量
     his_seats = []              #已被设定过的目标项位置列表
+    road_que = Queue.Queue(maxsize=8)
     
     def __init__(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
         ''' 
@@ -59,7 +61,7 @@ class Board(object):
         return (x0 - e * math.cos(math.radians(a)), y0 - e * math.sin(math.radians(a)))
     
     def load_roads(self, road_seats, target_seat, road_size):
-        ''' 设置路牌上的所有路名. 每次从词库中重新随机选择'''
+        ''' 设置路牌上的所有路名. 每次从词库中重新随机选择, 路名位置将被重新初始化'''
         
         self.road_dict.clear()
         modeled_roads = self.generate_random_roads(len(road_seats))
@@ -165,6 +167,27 @@ class Board(object):
             poses.append(road.pos)
         return poses    
     
+    def update_flanker_numbers(self, is_left_algo):
+        '''更新干扰项的数量. 若减少干扰项数, 则将路名位置标记放入队列, 否则从队列取出路名位置标记
+        @param is_left_algo: 决定了干扰项数量是是+2还是-1
+        @return: 返回更新后的干扰项数量
+        '''
+        #self.road_que.put(item)
+        #self.get_target_road()
+        
+        return ['A', 'B']   #return new road num
+    
+    def update_road_size(self, is_left_algo):
+        '''更新路名尺寸.  
+        @param is_left_algo: 决定了尺寸*1.2 or *0.8
+        '''
+        for road in self.road_dict.values():
+            road.reset_size(is_left_algo)       
+    
+    def get_road_size(self):
+        '''返回路名当前尺寸'''
+        return self.get_target_road().size
+    
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
         erase()再draw(), 或者canvas.move(board)再canvas.move(roads)
@@ -249,7 +272,6 @@ class Board(object):
         
 class Road(object):
     name = ''           #路名   
-    size = 15           #默认路名尺寸, 指字体大小, 单位px
     pos = 0, 0          #路名中心点在路牌上的位置坐标, 坐标会不断变化
     is_target = False   #是否是目标路名
     is_real = False     #是否真名
@@ -286,6 +308,13 @@ class Road(object):
         x = x0 - r1*(x0-x)/r*1.0
         y = y0 - r1*(y0-y)/r*1.0
         self.pos = round(x,2), round(y,2)
+        
+    def reset_size(self, is_left_algo):
+        '''重设路名尺寸'''
+        if is_left_algo:
+            self.size *= 1.2 
+        else:
+            self.size *= 0.8     
     
 #     def draw(self, canvas):
 #         '''显示在屏幕上'''  #调用画布进行绘制...
