@@ -62,7 +62,7 @@ class DemoThread(threading.Thread):
         road_seats, target_seats = self.param.get_road_seats()
         
         # 关键间距        
-        #self.critical_spacing(road_seats, target_seats)
+        self.critical_spacing(road_seats, target_seats)
 
         # 数量阈值            
         #self.number_threshold(road_seats, target_seats)
