@@ -75,11 +75,11 @@ class GUI(Tk):
         
     def draw_all(self, board, wpoint):
         self.erase_all()
-        self.draw_wpoin(wpoint)
+        self.draw_wpoint(wpoint)
         self.draw_board(board)   
         self.cv.update()     
         
-    def draw_wpoin(self, wpoint):
+    def draw_wpoint(self, wpoint):
         '''绘制注视点'''
         wp_id = self.cv.create_circle(wpoint.pos[0], wpoint.pos[1], wpoint.radius, 
                                       fill=wpoint.fill, outline=wpoint.outline)
@@ -94,7 +94,7 @@ class GUI(Tk):
         
         #绘制所有路名
         for road in board.road_dict.values():
-            road_font = DEFAULT_ROAD_FONT[0], int(road.size)
+            road_font = DEFAULT_ROAD_FONT[0], int(round(road.size, 0))
             road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)

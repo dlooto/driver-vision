@@ -80,6 +80,7 @@ class Board(object):
         for mark in road_seats:
             road_model = random.choice(modeled_roads)
             self.road_dict[mark].name = road_model.name 
+            self.road_dict[mark].is_real = road_model.is_real
             self.road_dict[mark].is_target = True if mark == target_seat else False
             modeled_roads.remove(road_model)
         self.target_seat = target_seat            
@@ -181,8 +182,8 @@ class Board(object):
         '''更新路名尺寸.  
         @param is_left_algo: 决定了尺寸*1.2 or *0.8
         '''
-        for road in self.road_dict.values():
-            road.reset_size(is_left_algo)       
+        for road in self.road_dict.viewvalues():  #dict.values() Return a copy of the dictionary’s list of values
+            road.reset_size(is_left_algo)    
     
     def get_road_size(self):
         '''返回路名当前尺寸'''
@@ -196,8 +197,7 @@ class Board(object):
     
     def is_target_road_real(self):
         '''判断目标路名是否为真路名'''
-        target_road = self.road_dict[self.target_seat]
-        return target_road.is_real  
+        return self.get_target_road().is_real
     
     def get_target_road(self):
         return self.road_dict[self.target_seat]
@@ -312,9 +312,15 @@ class Road(object):
     def reset_size(self, is_left_algo):
         '''重设路名尺寸'''
         if is_left_algo:
-            self.size *= 1.2 
+            if self.size*1.2 < SIZE_BORDER[1]:
+                self.size *= 1.2  
+            else:
+                self.size = SIZE_BORDER[1]
         else:
-            self.size *= 0.8     
+            if self.size*0.8 >= SIZE_BORDER[0]:
+                self.size *= 0.8  
+            else: 
+                self.size = SIZE_BORDER[0]    
     
 #     def draw(self, canvas):
 #         '''显示在屏幕上'''  #调用画布进行绘制...

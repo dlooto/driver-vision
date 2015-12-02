@@ -25,12 +25,12 @@ class DemoThread(threading.Thread):
     
     param = None      #数据库读取的参数对象  
     wpoint = None     #注视点
-    board = None      #多路牌时为Board对象列表结构, 单路牌时为Board对象结构    
+    board = None      #多路牌时为Board对象列表结构, 单路牌时为Board对象结构
     
     #辅助结构
     demo = None
     trial_querylist = []            #缓存trial model对象, 用于批量存储数据
-    is_update_step_value = False    #是否更新阶梯变量值
+    is_update_step_value = True     #是否更新阶梯变量值, 默认更新阶梯变量(很重要)
     is_left_algo = True             #是否采用左侧算法   
     total_trials = 0                #总刺激显示次数
     total_correct_judge = 0         #总正确判断次数
@@ -100,7 +100,7 @@ class DemoThread(threading.Thread):
                     'steps_value':  self.get_steps_value(), 
                     'target_road':  self.board.get_target_road().name
                 }
-                self.append_trial(trial_data)
+                self.current_trial = self.append_trial(trial_data)
                 
                 self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
@@ -108,7 +108,7 @@ class DemoThread(threading.Thread):
                 
                 if not self.is_awakened(): #自然等待1.6s, 视为用户判断错误
                     self.current_trial.is_correct = False
-                    self.handle_judge(False) 
+                    self.handle_judge(is_correct=False) 
                 
                 #用户按键唤醒线程后刷新路名    
                 self.board.flash_road_names(road_seats, tseat)
@@ -151,7 +151,7 @@ class DemoThread(threading.Thread):
                     'steps_value':  len(self.board.get_flanker_roads()),  #Changed.
                     'target_road':  self.board.get_target_road().name
                 }
-                self.append_trial(trial_data)
+                self.current_trial = self.append_trial(trial_data)
                 
                 self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
@@ -159,7 +159,7 @@ class DemoThread(threading.Thread):
                 
                 if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
                     self.current_trial.is_correct = False
-                    self.handle_judge(False)
+                    self.handle_judge(is_correct=False)
                 
                 #用户按键唤醒线程后刷新路名    
                 self.board.flash_road_names(dynamic_road_seats, tseat) #TODO: 是否
@@ -171,7 +171,7 @@ class DemoThread(threading.Thread):
                 print 'Flankers:', 'N+2' if self.is_left_algo else 'N-1', len(self.board.get_flanker_roads())            
         
     def size_threshold(self, road_seats, target_seats): 
-        '''求尺寸阈值过程. 干扰项与目标项一同变化
+        '''求尺寸阈值过程. 干扰项与目标项尺寸一同变化
         '''
         logs.info('\n求尺寸阈值过程开始...')
         for tseat in target_seats:
@@ -191,7 +191,7 @@ class DemoThread(threading.Thread):
             
             # 阶梯变化开始
             for i in range(STEPS_COUNT):
-                if not self.is_started: break  
+                if not self.is_started: break
                 self.total_trials += 1
                 trial_data = {
                     'block':        block,  
@@ -199,7 +199,7 @@ class DemoThread(threading.Thread):
                     'steps_value':  self.board.get_road_size(),  #Changed.
                     'target_road':  self.board.get_target_road().name
                 }
-                self.append_trial(trial_data)
+                self.current_trial = self.append_trial(trial_data)
                 
                 self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
@@ -249,9 +249,10 @@ class DemoThread(threading.Thread):
             self.is_left_algo = False           #按右侧方式更新阶梯变量值                
         
     def is_judge_correct(self, is_real):
-        '''确定用户按键判断是否正确. is_real为用户输入的判断值, 
-            True: 用户判断为真路名, 
-            False: 用户判断为假路名'''
+        '''确定用户按键判断是否正确. is_real为用户输入的判断值, True: 用户判断为真路名, 
+            False: 用户判断为假路名
+        '''
+        #print 'judge:',is_real, 'road:',self.board.is_target_road_real()
         if is_real and self.board.is_target_road_real() or not is_real and not self.board.is_target_road_real(): #判断正确
             self.current_trial.is_correct = True
             self.total_correct_judge += 1
@@ -279,7 +280,7 @@ class DemoThread(threading.Thread):
         '''暂存trial数据对象'''
         trial = Trial(**data)
         self.trial_querylist.append(trial)
-        self.current_trial = trial
+        return trial
         
     def wait(self):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  

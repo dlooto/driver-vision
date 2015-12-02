@@ -24,6 +24,8 @@ STEPS_COUNT = 40                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
+SIZE_BORDER = 8, 40
+
 DEFAULT_ROAD_FONT = ("Helvetica", 15)
 TRIAL_END_FONT =    ("Helvetica", 35)      #试验结束文字字体
 
