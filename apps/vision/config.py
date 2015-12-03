@@ -14,13 +14,13 @@ import settings
 face_background = '#F3F9FF'     #主窗口背景颜色
 board_color = "#0866B9"         #路牌背景颜色
 DEFAULT_ROAD_COLOR = 'white'    #路名颜色
-TARGET_ROAD_COLOR = 'green'     #目标路名颜色
+TARGET_ROAD_COLOR = 'white'     #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
 SPACING_RIGHT_DELTA = 1         #间距变化右算法变化量
 
-STEPS_COUNT = 40                     #阶梯法默认循环次数
+STEPS_COUNT = 5                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
@@ -60,19 +60,26 @@ ROAD_SEAT = {
     'g_y':      70      #G位置路名中心点离路牌中心点的纵向距离
 }
 
-#试验提示信息
-TRIAL_START_PROMPT = { 
+TRIAL_START_PROMPT = { #试验开始提示信息 
     'text': u'点击"开始"按钮进行测试, "真" 为 "y"  假 为 "n" ', 
     'bg': face_background,
     'fg': '#1F90F2',
     'font': ("Helvetica", 30), 
 }
 
-TRIAL_END_PROMPT = {
+TRIAL_END_PROMPT = { #试验结束提示信息
     'text': u'测试结束', 
     'pos':  WATCH_POS,
     'font': ("Helvetica", 35),
     'fill': '#1F90F2'
+}
+
+TARGET_SEAT_PROMPT = {  #目标项位置提示
+    'text': u'下一个目标为: ', 
+    'pos':  (WATCH_POS[0], WATCH_POS[1]-300),
+    'font': ("Helvetica", 40),
+    'fill': '#1F90F2',
+    'interval': 3    #提示时间, 单位秒
 }
 
 START_BUTTON = {

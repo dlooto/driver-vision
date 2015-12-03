@@ -40,7 +40,7 @@ class Board(object):
     target_seat = None
     
     # 辅助变量
-    his_seats = []              #已被设定过的目标项位置列表
+    prompt_road_dict = {}
     road_que = Queue.Queue(maxsize=8)
     
     def __init__(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
@@ -54,7 +54,7 @@ class Board(object):
         self.height = height
         
     def clear_queue(self):
-        '''清空queue'''
+        '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
         if not self.road_que.empty():
             self.road_que.queue.clear()
         
@@ -80,6 +80,18 @@ class Board(object):
             modeled_roads.remove(road_model)
         self.target_seat = target_seat
         
+    def load_prompt_roads(self, road_size):
+        ''' 加载8个设置上的全部路名, 用于提示目标项位置.'''
+        
+        self.prompt_road_dict.clear()
+        modeled_roads = self.generate_random_roads(8)
+        for mark in ALLOWED_ROAD_SEATS:
+            road_model = random.choice(modeled_roads)
+            self.prompt_road_dict[mark] = Road('%s: %s' % (mark, road_model.name), self.pos_xx(mark, road_size), 
+                                        is_real=road_model.is_real, 
+                                        size=road_size)
+            modeled_roads.remove(road_model)
+        
     def flash_road_names(self, road_seats, target_seat):
         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
         modeled_roads = self.generate_random_roads(len(road_seats))
@@ -91,15 +103,6 @@ class Board(object):
             modeled_roads.remove(road_model)
         self.target_seat = target_seat            
     
-#     def next_target_seat(self):
-#         '''切换目标项位置, 从目标'A' --> 'B', 
-#         每调用一次, his_seats中添加一次已设置过的目标项位置, 如his_seats=['A', 'B']
-#         '''
-#         bak_targets = list(set(self.target_seats).difference(set(self.his_seats)))
-#         target = random.choice(bak_targets)
-#         self.his_seats.append(target)
-#         return target
-        
     def generate_random_roads(self, road_num):
         ''' 根据传入的路名数量, 生成不重复的随机路名列表.
          列表元素类型为Road Model(name, is_real).

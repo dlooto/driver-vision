@@ -73,6 +73,17 @@ class GUI(Tk):
         self.cv.widget_list = []
         self.cv.update()   
         
+    def draw_target_seat(self, target_seat, board):
+        self.erase_all()
+        tk_id1 = self.cv.create_text(TARGET_SEAT_PROMPT['pos'], text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
+                                    fill=TARGET_SEAT_PROMPT['fill'], font=TARGET_SEAT_PROMPT['font'])
+        self.cv.widget_list.append(tk_id1)
+        
+        tk_id2 = self.draw_prompt_board(board)
+        self.cv.widget_list.append(tk_id2)
+        
+        self.cv.update()
+        
     def draw_all(self, board, wpoint):
         self.erase_all()
         self.draw_wpoint(wpoint)
@@ -98,6 +109,20 @@ class GUI(Tk):
             road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
+            
+    def draw_prompt_board(self, board):
+        '''将路牌绘制在屏幕上'''  
+        tk_id = self.cv.create_rectangle_pro(
+            board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
+        )
+        self.cv.widget_list.append(tk_id)
+        
+        #绘制所有路名
+        for road in board.prompt_road_dict.values():
+            road_font = DEFAULT_ROAD_FONT[0], int(round(road.size, 0))
+            road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
+            tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
+            self.cv.widget_list.append(tk_id)            
         
         
     def draw_gameover(self):

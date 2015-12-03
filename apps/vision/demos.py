@@ -3,6 +3,7 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Nov 8, 2015, by Junn
 #
+import time
 '''
 试验线程类
 '''
@@ -60,7 +61,8 @@ class DemoThread(threading.Thread):
         
         self.demo = self.save_demo() #以备后用
         road_seats, target_seats = self.param.get_road_seats()
-        
+        self.board.load_prompt_roads(self.param.road_size)
+                
         # 关键间距        
         self.critical_spacing(road_seats, target_seats)
 
@@ -76,8 +78,13 @@ class DemoThread(threading.Thread):
         #批量保存block数据
         self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
 
+    def prompt_target_seat(self, target_seat):
+        '''绘制目标位置提示, 停留3秒'''
+        self.gui.draw_target_seat(target_seat, self.board)
+        time.sleep(TARGET_SEAT_PROMPT['interval'])
+
     def critical_spacing(self, road_seats, target_seats):
-        logs.info('\n求关键间距控制过程开始...')
+        print('\n求关键间距控制过程开始...')
         for tseat in target_seats:
             if not self.is_started: break
             self.board.load_roads(road_seats, tseat, self.param.road_size)
@@ -91,6 +98,7 @@ class DemoThread(threading.Thread):
             }
             block = self.create_block(block_data)
             
+            self.prompt_target_seat(tseat)
             for i in range(STEPS_COUNT):
                 if not self.is_started: break   
                 self.total_trials += 1
@@ -118,15 +126,15 @@ class DemoThread(threading.Thread):
                 # 更新阶梯变量: R
                 #self.board.update_flanker_poses(self.is_left_algo)
                 self.board.update_flanker_spacings(self.is_left_algo)
-                #print 'Spacing changed: ', self.is_left_algo, self.board.get_road_spacings()   #test...
-                print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()            
+                print 'Spacing changed: ', '0.5r' if self.is_left_algo else 'r+1', self.board.get_road_spacings()   #test...
+                #print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()            
 
     def number_threshold(self, road_seats, target_seats):
         '''求数量阈值过程. 干扰项数量进行阶梯变化--增加或减少
         @param road_seats: 路名位置列表, 如['A', 'B', 'G', 'E']
         @param target_seats: 可选的目标位置列表, 如['A', 'B', 'E']
         '''
-        logs.info('\n求数量阈值控制过程开始...')
+        print('\n求数量阈值控制过程开始...')
         for tseat in target_seats:
             if not self.is_started: break
             self.board.load_roads(road_seats, tseat, self.param.road_size)  #重新加载路名对象
@@ -143,6 +151,7 @@ class DemoThread(threading.Thread):
             block = self.create_block(block_data)
             
             # 阶梯变化开始
+            self.prompt_target_seat(tseat)
             dynamic_road_seats = road_seats[:]  #拷贝路名位置
             self.board.clear_queue() #清空辅助队列, 用于干扰路名增减
             for i in range(STEPS_COUNT):
@@ -176,7 +185,7 @@ class DemoThread(threading.Thread):
     def size_threshold(self, road_seats, target_seats): 
         '''求尺寸阈值过程. 干扰项与目标项尺寸一同变化
         '''
-        logs.info('\n求尺寸阈值过程开始...')
+        print('\n求尺寸阈值过程开始...')
         for tseat in target_seats:
             if not self.is_started: break
             self.board.load_roads(road_seats, tseat, self.param.road_size)  #加载路名
@@ -193,6 +202,7 @@ class DemoThread(threading.Thread):
             block = self.create_block(block_data)
             
             # 阶梯变化开始
+            self.prompt_target_seat(tseat)
             for i in range(STEPS_COUNT):
                 if not self.is_started: break
                 self.total_trials += 1
@@ -293,7 +303,8 @@ class DemoThread(threading.Thread):
         
     def is_awakened(self):
         '''线程是否被用户按键唤醒, 若刺激显示是自然等待1.6s开始下一帧则未被唤醒, 此时返回False. 
-        用户按键做判断后, 线程将被唤醒, 唤醒标识位设置为True, '''
+        用户按键做判断后, 线程将被唤醒, 唤醒标识位设置为True, 
+        '''
         return self.signal.is_set()           
         
     def awake(self):
