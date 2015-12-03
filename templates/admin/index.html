@@ -55,6 +55,7 @@ function checkMark(m) {
 function saveParams() {
     var board_type = $('#board_type').val();
     var demo_scheme = $('#demo_scheme').val();
+    var step_scheme = $('#step_scheme').val();
     var move_type = $("input[name='move_type']:checked").val();
     var road_num = $('#road_num').val();
     
@@ -89,6 +90,7 @@ function saveParams() {
         dataType:"json",
         data:      {"board_type":   board_type, 
                     "demo_scheme":  demo_scheme, 
+                    "step_scheme":  step_scheme, 
                     "move_type":    move_type, 
                     "road_num":     road_num,
                     "road_marks":   road_marks,
@@ -162,6 +164,20 @@ function setResult(res) {
             <input name="move_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
             <input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
             </div>
+    </div>
+</div></div>
+
+<!--阶梯过程-->
+<div class="control-group form-row"><div>
+    <div class="control-label">
+        <label class="required">阶梯过程:</label></div>
+    <div class="controls">
+        <select id="step_scheme" name="step_scheme">
+            <option value="R" selected="selected">关键间距</option>
+            <option value="S">尺寸阈值</option>
+            <option value="N">数量阈值</option>
+            <option value="V">动态敏感度</option>
+        </select>
     </div>
 </div></div>
 

@@ -61,6 +61,13 @@ DEMO_SCHEME_CHOICES = ( #试验模式
     ('D', u'动态'),
 )
 
+STEP_SCHEME_CHOICES = (  #阶梯类型
+    ('R', u'关键间距'),
+    ('N', u'数量阈值'),
+    ('S', u'尺寸阈值'),
+    ('V', u'动态敏感度'),                           
+)
+
 MOVE_TYPE_CHOICES = (  #运动模式
     ('C', u'圆周'),
     ('S', u'平滑'),
@@ -73,6 +80,7 @@ class TrialParam(BaseModel):
     
     board_type = models.CharField(u'路牌类型', max_length=1, choices=BOARD_CATE, default='S')#默认单路牌
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
+    step_scheme = models.CharField(u'阶梯过程', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
     move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True)#运动模式, 仅当试验模式为动态时有效
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #路牌尺寸 
     road_size = models.IntegerField(u'路名尺寸', default=15) 

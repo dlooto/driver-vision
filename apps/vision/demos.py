@@ -63,17 +63,18 @@ class DemoThread(threading.Thread):
         road_seats, target_seats = self.param.get_road_seats()
         self.board.load_prompt_roads(self.param.road_size)
                 
-        # 关键间距        
-        self.critical_spacing(road_seats, target_seats)
-
-        # 数量阈值            
-        self.number_threshold(road_seats, target_seats)
-        
-        # 尺寸阈值
-        self.size_threshold(road_seats, target_seats)
-        
-        # 动态敏感度            
-        #self.dynamic_sensitive() #
+        if self.param.step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % self.param.step_scheme)
+                  
+        if self.param.step_scheme == 'R':        
+            self.critical_spacing(road_seats, target_seats)
+        elif self.param.step_scheme == 'N':    
+            self.number_threshold(road_seats, target_seats)
+        elif self.param.step_scheme == 'S':
+            self.size_threshold(road_seats, target_seats)
+        else:
+            # 动态敏感度            
+            self.dynamic_sensitive(road_seats, target_seats) #
         
         #批量保存block数据
         self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
@@ -230,6 +231,9 @@ class DemoThread(threading.Thread):
                 # 更新阶梯变量   #Changed.
                 self.board.update_road_size(self.is_left_algo)
                 print 'Road size:', '*1.2' if self.is_left_algo else '*0.8', self.board.get_road_size()                       
+        
+    def dynamic_sensitive(self, road_seats, target_seats):
+        pass    
         
     def get_steps_value(self): #阈值具体的方法, 考虑重载
         return float_list_to_str(self.board.get_road_spacings())

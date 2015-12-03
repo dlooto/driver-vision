@@ -31,6 +31,7 @@ def set_params(req):
     
     board_type = req.POST.get('board_type')     #路牌类型: 单路牌或多路牌(S/M)
     demo_scheme = req.POST.get('demo_scheme')   #试验模式: 静态/动态(S/D)
+    step_scheme = req.POST.get('step_scheme')   #试验模式: 静态/动态(S/D)
     move_type = req.POST.get('move_type')       #动态模式: 圆周/平滑/混合/MOT(C/S/M/O)
     board_size = req.POST.get('board_size')     #路牌大小: 280,200/420,300
     road_size = req.POST.get('road_size')       #路名尺寸
@@ -52,8 +53,9 @@ def set_params(req):
         return http.failed(u'目标项 %s 不在设置的路名里 %s' % (target_list, mark_list))
     
     try:
-        params = {"board_type":   board_type, 
-                "demo_scheme":  demo_scheme, 
+        params = {"board_type": board_type, 
+                "demo_scheme":  demo_scheme,
+                "step_scheme":  step_scheme, 
                 "move_type":    move_type, 
                 "board_size":   board_size, 
                 "road_size":    int(road_size),
