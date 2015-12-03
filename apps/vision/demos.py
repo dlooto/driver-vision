@@ -71,7 +71,7 @@ class DemoThread(threading.Thread):
         self.size_threshold(road_seats, target_seats)
         
         # 动态敏感度            
-        #self.dynamic_sensitive()
+        #self.dynamic_sensitive() #
         
         #批量保存block数据
         self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
