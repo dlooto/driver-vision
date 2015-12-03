@@ -65,7 +65,7 @@ class DemoThread(threading.Thread):
         self.critical_spacing(road_seats, target_seats)
 
         # 数量阈值            
-        #self.number_threshold(road_seats, target_seats)
+        self.number_threshold(road_seats, target_seats)
         
         # 尺寸阈值
         self.size_threshold(road_seats, target_seats)
@@ -122,12 +122,14 @@ class DemoThread(threading.Thread):
                 print 'Poses changed:', self.is_left_algo, self.board.get_road_poses()            
 
     def number_threshold(self, road_seats, target_seats):
-        '''求数量阈值过程. 干扰项数量进行阶梯变化
+        '''求数量阈值过程. 干扰项数量进行阶梯变化--增加或减少
+        @param road_seats: 路名位置列表, 如['A', 'B', 'G', 'E']
+        @param target_seats: 可选的目标位置列表, 如['A', 'B', 'E']
         '''
         logs.info('\n求数量阈值控制过程开始...')
         for tseat in target_seats:
             if not self.is_started: break
-            self.board.load_roads(road_seats, tseat, self.param.road_size)  #加载路名
+            self.board.load_roads(road_seats, tseat, self.param.road_size)  #重新加载路名对象
             block_data = {
                 'demo':  self.demo, 
                 'tseat': tseat, 
@@ -141,7 +143,8 @@ class DemoThread(threading.Thread):
             block = self.create_block(block_data)
             
             # 阶梯变化开始
-            dynamic_road_seats = road_seats  #该值进行阶梯变化
+            dynamic_road_seats = road_seats[:]  #拷贝路名位置
+            self.board.clear_queue() #清空辅助队列, 用于干扰路名增减
             for i in range(STEPS_COUNT):
                 if not self.is_started: break  
                 self.total_trials += 1
@@ -167,7 +170,7 @@ class DemoThread(threading.Thread):
                     continue
                 
                 # 更新阶梯变量   #Changed.
-                dynamic_road_seats = self.board.update_flanker_numbers(self.is_left_algo)
+                dynamic_road_seats = self.board.update_flanker_numbers(self.is_left_algo, self.param.road_size)
                 print 'Flankers:', 'N+2' if self.is_left_algo else 'N-1', len(self.board.get_flanker_roads())            
         
     def size_threshold(self, road_seats, target_seats): 

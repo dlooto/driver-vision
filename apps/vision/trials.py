@@ -12,6 +12,7 @@ from config import *
 from vision.models import RoadModel
 import math
 import Queue
+from utils import logs
 
 
 class WatchPoint(object):
@@ -52,6 +53,11 @@ class Board(object):
         self.width = width
         self.height = height
         
+    def clear_queue(self):
+        '''清空queue'''
+        if not self.road_que.empty():
+            self.road_que.queue.clear()
+        
     def calc_pos(self, e, a, wp_pos):
         '''计算路牌中心坐标, 根据初始参数e和a值
         @param e: 路牌中心与注视点距离
@@ -61,7 +67,7 @@ class Board(object):
         return (x0 - e * math.cos(math.radians(a)), y0 - e * math.sin(math.radians(a)))
     
     def load_roads(self, road_seats, target_seat, road_size):
-        ''' 设置路牌上的所有路名. 每次从词库中重新随机选择, 路名位置将被重新初始化'''
+        ''' 设置路牌上的所有路名. 从词库中重新随机选择, 路名对象将被重新初始化'''
         
         self.road_dict.clear()
         modeled_roads = self.generate_random_roads(len(road_seats))
@@ -75,12 +81,12 @@ class Board(object):
         self.target_seat = target_seat
         
     def flash_road_names(self, road_seats, target_seat):
-        '''仅刷新路名, 不替换原有路名对象'''
+        '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
         modeled_roads = self.generate_random_roads(len(road_seats))
         for mark in road_seats:
             road_model = random.choice(modeled_roads)
             self.road_dict[mark].name = road_model.name 
-            self.road_dict[mark].is_real = road_model.is_real
+            self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
             self.road_dict[mark].is_target = True if mark == target_seat else False
             modeled_roads.remove(road_model)
         self.target_seat = target_seat            
@@ -100,6 +106,9 @@ class Board(object):
         算法规则: 若路名数量为偶数, 则真假路名各一半, 若为奇数, 则假名多1.
         
         '''
+        if road_num == 1:
+            return random.sample(cached_kana_roads, 1)
+            
         num = road_num / 2
         real_roads = random.sample(cached_real_roads, num) #先挑选一半的真路名列表
         if road_num % 2 == 1: #奇数
@@ -168,15 +177,54 @@ class Board(object):
             poses.append(road.pos)
         return poses    
     
-    def update_flanker_numbers(self, is_left_algo):
+    def update_flanker_numbers(self, is_left_algo, road_size):
         '''更新干扰项的数量. 若减少干扰项数, 则将路名位置标记放入队列, 否则从队列取出路名位置标记
         @param is_left_algo: 决定了干扰项数量是是+2还是-1
         @return: 返回更新后的干扰项数量
         '''
+        if is_left_algo: #+2
+            self.add_flankers(road_size)
+        else:
+            self.decr_flankers()
+            
+        #for m, road in self.road_dict:
+        #    if road.
+        #        self.road_dict.pop()    
         #self.road_que.put(item)
         #self.get_target_road()
         
-        return ['A', 'B']   #return new road num
+        return self.road_dict.keys()   #return road_seats
+    
+    def add_flankers(self, road_size):
+        '''增加干扰项数量'''
+        if self.road_que.qsize() < 2:
+            print('\nAlready max flankers on board: %s' % int(len(self.road_dict)-1))
+            return            
+        
+        seat1, seat2 = self.road_que.get(), self.road_que.get() 
+        road_model1, road_model2 = self.generate_random_roads(2)
+        self.road_dict[seat1] = Road(road_model1.name, 
+                                     self.pos_xx(seat1, road_size), 
+                                     is_real=road_model1.is_real, 
+                                     size=road_size
+                                )
+        self.road_dict[seat2] = Road(road_model2.name, 
+                                     self.pos_xx(seat2, road_size), 
+                                     is_real=road_model2.is_real, 
+                                     size=road_size
+                                )      
+        
+    def decr_flankers(self):
+        '''减少干扰项数量'''
+        if len(self.road_dict) == 2:
+            print('\nAlready min flankers on board: %s' % int(len(self.road_dict)-1))
+            return
+        for seat in self.road_dict.keys():
+            if seat != self.target_seat:  #干扰项
+                self.road_que.put(seat)
+                self.road_dict.pop(seat)
+                break
+        
     
     def update_road_size(self, is_left_algo):
         '''更新路名尺寸.  
