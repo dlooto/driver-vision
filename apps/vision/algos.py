@@ -14,11 +14,11 @@ class StepProcess(object):
         pass
 
 class NstepProcess(StepProcess):
-    '''数量阶梯算法'''
+    '''数量阶梯算法: 求数量阈值'''
     pass
 
 class SstepProcess(StepProcess):
-    '''尺寸阶梯算法'''
+    '''尺寸阶梯算法: 求尺寸阈值'''
     pass
 
 class RstepProcess(StepProcess):
@@ -36,5 +36,5 @@ class RstepProcess(StepProcess):
 #             self.wait()  
 
 class VstepProcess(StepProcess):
-    '''速度阶梯算法'''
+    '''速度阶梯算法: 动态敏感度'''
     pass

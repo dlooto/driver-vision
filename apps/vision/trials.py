@@ -364,7 +364,7 @@ class Road(object):
         '''重设路名尺寸'''
         if is_left_algo:
             if self.size*1.2 < SIZE_BORDER[1]:
-                self.size *= 1.2  
+                self.size *= 1.2
             else:
                 self.size = SIZE_BORDER[1]
         else:

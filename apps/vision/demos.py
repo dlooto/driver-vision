@@ -3,11 +3,8 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Nov 8, 2015, by Junn
 #
-import time
-'''
-试验线程类
-'''
 
+import time
 from vision.models import Demo, Block, Trial
 from vision.algos import StepProcess, RstepProcess, NstepProcess, SstepProcess,\
     VstepProcess
@@ -17,6 +14,9 @@ from config import *
 import threading
 from vision.trials import Board, WatchPoint
 
+'''
+试验线程类
+'''
 
 class DemoThread(threading.Thread):
     '''父类试验线程对象.  为初始参数, 路牌,注视点等的容器

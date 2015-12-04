@@ -75,7 +75,7 @@ TRIAL_END_PROMPT = { #试验结束提示信息
 }
 
 TARGET_SEAT_PROMPT = {  #目标项位置提示
-    'text': u'下一个目标为: ', 
+    'text': u'下一轮目标为: ', 
     'pos':  (WATCH_POS[0], WATCH_POS[1]-300),
     'font': ("Helvetica", 40),
     'fill': '#1F90F2',
