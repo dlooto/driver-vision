@@ -41,7 +41,7 @@ class Board(object):
     
     # 辅助变量
     prompt_road_dict = {}
-    road_que = Queue.Queue(maxsize=8)
+    road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
     
     def __init__(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
         ''' 

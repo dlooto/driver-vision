@@ -107,17 +107,17 @@ class DemoThread(threading.Thread):
                     'block':        block,  
                     'cate':         block.cate, 
                     'steps_value':  self.get_steps_value(), 
-                    'target_road':  self.board.get_target_road().name
+                    'target_road':  self.board.get_target_road().name,
+                    'created_time': times.now()
                 }
                 self.current_trial = self.append_trial(trial_data)
                 
-                self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
                 self.wait() #等待用户按键判断
                 
                 if not self.is_awakened(): #自然等待1.6s, 视为用户判断错误
                     self.current_trial.is_correct = False
-                    self.handle_judge(is_correct=False) 
+                    self.handle_judge(is_correct=False)
                 
                 #用户按键唤醒线程后刷新路名    
                 self.board.flash_road_names(road_seats, tseat)
@@ -162,11 +162,11 @@ class DemoThread(threading.Thread):
                     'block':        block,  
                     'cate':         block.cate, 
                     'steps_value':  len(self.board.get_flanker_roads()),  #Changed.
-                    'target_road':  self.board.get_target_road().name
+                    'target_road':  self.board.get_target_road().name,
+                    'created_time': times.now()
                 }
                 self.current_trial = self.append_trial(trial_data)
                 
-                self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
                 self.wait() #等待用户按键判断
                 
@@ -211,11 +211,11 @@ class DemoThread(threading.Thread):
                     'block':        block,  
                     'cate':         block.cate, 
                     'steps_value':  self.board.get_road_size(),  #Changed.
-                    'target_road':  self.board.get_target_road().name
+                    'target_road':  self.board.get_target_road().name, 
+                    'created_time': times.now()
                 }
                 self.current_trial = self.append_trial(trial_data)
                 
-                self.tmp_begin_time = times.now() #记录刺激显示开始时间
                 self.gui.draw_all(self.board, self.wpoint) #刺激显示
                 self.wait() #等待用户按键判断
                 
@@ -266,17 +266,16 @@ class DemoThread(threading.Thread):
             self.is_left_algo = False           #按右侧方式更新阶梯变量值                
         
     def is_judge_correct(self, is_real):
-        '''确定用户按键判断是否正确. is_real为用户输入的判断值, True: 用户判断为真路名, 
-            False: 用户判断为假路名
+        '''确定用户按键判断是否正确. 若用户的判断值与路名真实值匹配, 则返回True, 否则返回False
+        @param is_real: 为用户输入的判断值, True: 用户判断为真路名, False: 用户判断为假路名
         '''
-        #print 'judge:',is_real, 'road:',self.board.is_target_road_real()
         if is_real and self.board.is_target_road_real() or not is_real and not self.board.is_target_road_real(): #判断正确
             self.current_trial.is_correct = True
             self.total_correct_judge += 1
         else: #判断错误
-            self.current_trial.is_correct = False    
+            self.current_trial.is_correct = False
             
-        self.current_trial.resp_cost = times.time_cost(self.tmp_begin_time)
+        self.current_trial.resp_cost = times.time_cost(self.current_trial.created_time)
         return self.current_trial.is_correct                  
             
     def build_step_process(self):

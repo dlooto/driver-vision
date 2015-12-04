@@ -38,9 +38,9 @@ def set_is_coming(modeladmin, request, queryset):
 set_is_coming.short_description = u'设为可用' 
     
 class TrialParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'board_type', 'demo_scheme', 'road_num', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
+    list_display = ('id', 'board_type', 'demo_scheme', 'step_scheme', 'road_num', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
     search_fields = ('desc', )
-    list_filter = ('board_type', 'demo_scheme', 'move_type', 'is_coming')
+    list_filter = ('board_type', 'demo_scheme', 'step_scheme', 'move_type', 'is_coming')
     #fields = ('board_type', 'demo_scheme', )
     ordering = ('-created_time', 'is_coming')
     actions = [set_is_coming, ]

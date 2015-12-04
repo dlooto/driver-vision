@@ -59,13 +59,13 @@ class GUI(Tk):
         param.be_executed()
         
         if param.is_static() and param.is_single():
-            return StaticSingleDemoThread(self, param)
+            return StaticSingleDemoThread(self, param)   #静态单路牌
         if param.is_static() and not param.is_single():
-            return StaticMultiDemoThread(self, param)
+            return StaticMultiDemoThread(self, param)    #静态多路牌
         if not param.is_static() and param.is_single():
-            return DynamicSingleDemoThread(self, param)
+            return DynamicSingleDemoThread(self, param)  #动态单路牌
         
-        return DynamicMultiDemoThread(self, param)                    
+        return DynamicMultiDemoThread(self, param)       #动态多路牌             
         
     def erase_all(self):
         for tk_id in self.cv.widget_list:
@@ -79,8 +79,7 @@ class GUI(Tk):
                                     fill=TARGET_SEAT_PROMPT['fill'], font=TARGET_SEAT_PROMPT['font'])
         self.cv.widget_list.append(tk_id1)
         
-        tk_id2 = self.draw_prompt_board(board)
-        self.cv.widget_list.append(tk_id2)
+        self.cv.widget_list.append(self.draw_prompt_board(board))
         
         self.cv.update()
         
@@ -196,7 +195,6 @@ class GUI(Tk):
             subprocess.call(["afplay", AUD_PATH['T']])
         else:
             subprocess.call(["afplay", AUD_PATH['F']])
-#         pass
         
 ## 开始新的实验
 def run():

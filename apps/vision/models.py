@@ -80,12 +80,12 @@ class TrialParam(BaseModel):
     
     board_type = models.CharField(u'路牌类型', max_length=1, choices=BOARD_CATE, default='S')#默认单路牌
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
-    step_scheme = models.CharField(u'阶梯过程', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
+    step_scheme = models.CharField(u'阶梯类型', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
     move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True)#运动模式, 仅当试验模式为动态时有效
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #路牌尺寸 
     road_size = models.IntegerField(u'路名尺寸', default=15) 
     road_num = models.IntegerField(u'路名条数', default=3)
-    road_marks = models.CharField(u'路名位置标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
+    road_marks = models.CharField(u'路名位置标记|目标标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
     
     #该参数初始为离心率, 后改为路牌中心距, 即路牌中心离注视点的距离 
     eccent = models.FloatField(u'路牌中心距离', null=True, blank=True)
@@ -170,7 +170,7 @@ STEP_TYPE_CHOICES = {
 class Block(BaseModel):
     '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
     
-    demo = models.ForeignKey(Demo, verbose_name=u'所属试验')
+    demo = models.ForeignKey(Demo, verbose_name=u'所属Demo')
     tseat = models.CharField(u'目标位置(D)', max_length=1)     #如A/B/C/...
     ee = models.FloatField(u'离心率(E)', null=True, blank=True)                  
     angle = models.IntegerField(u'角度(@)')
@@ -202,8 +202,8 @@ class Trial(BaseModel):
     resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
     steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
-    
     target_road = models.CharField(u'目标路名', max_length=40, null=True, blank=True, default='')   #由此可知道用户按键情况
+    #start_time = models.DateTimeField(u'开始时间', )
     
     class Meta:
         db_table = 'vision_trial'
