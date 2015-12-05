@@ -1,0 +1,422 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+<style type="text/css">
+/* ============= 路牌1样式 ============ */
+input.road_h1 { /* 水平方向路名A,B,C */
+    width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px; /* 圆角 */
+    border: 1px solid #cccccc;
+}
+input.road_h2 { /* 水平方向路名D,E,F */
+    margin-left: 10px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+}
+input.road_v1 { /* 垂直方向路名G */
+    margin-left: 55px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+}
+input.road_v2 { /* 垂直方向路名H */
+    margin-left: 55px; margin-bottom: 10px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+}
+
+/* ============= 路牌2和3样式 ============ */
+input.road_h1_2 { /* 水平方向路名A,B,C */
+    margin-left: 20px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px; /* 圆角 */
+    border: 1px solid #cccccc;
+}
+input.road_v1_2 { /* 垂直方向路名G */
+    margin-left: 98px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+}
+input.road_v2_2 { /* 垂直方向路名H */
+    margin-left: 98px; margin-bottom: 10px; width: 60px; height: 22px;
+    background-color: #D3E9FF;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+}
+
+</style>
+
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/verify.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/jquery.cookie.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    $("#demo_scheme").change(function(){
+        var demo_schemo = $("#demo_scheme").val();
+        if(demo_schemo == 'S') { //静态
+            $("#move_type").hide();
+        } else {//动态
+            $("#move_type").show();
+        }
+    }); //end change()
+  
+    
+});
+function checkMark(m) {
+    var rm = m.toUpperCase();
+    if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
+        $("#"+m+"_pressed").css("background-color","#D3E9FF");
+        $("#"+m+"_pressed").val(m.toUpperCase());
+        $("#mark_"+m).attr("checked", false);
+        $("#"+m+"_as_target").attr("checked", false);  //
+    } else {  //未选中时点击
+        $("#"+m+"_pressed").css("background-color","#1F90F2");
+        $("#mark_"+m).attr("checked", 'checked');
+        $("#"+m+"_as_target").attr("checked", 'checked');
+    }
+}
+
+function saveParams() {
+    var demo_scheme = $('#demo_scheme').val();
+    var step_scheme = $('#step_scheme').val();
+    var move_type = $("input[name='move_type']:checked").val();
+    var road_num = $('#road_num').val();
+    
+    //var target_road = $('#target_road').val();
+    var eccent = $('#eccent').val();
+    var init_angle = $('#init_angle').val();
+    var road_size = $('#road_size').val();
+    var board_size = $('#board_size').val();
+    
+    var marks = new Array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+    var road_marks = '';
+    var target_seats = '';
+    for(i in marks) {
+        if($("#mark_"+marks[i]).attr("checked") == "checked") {
+            road_marks += marks[i].toUpperCase()+',';    
+        }
+        if($("#"+marks[i]+"_as_target").attr("checked") == "checked") {
+            target_seats += marks[i].toUpperCase()+',';
+        }
+    }
+    
+    if(isNull(road_marks)) {
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append('没有设置路名位置');
+        return;
+    }
+    
+    $.ajax({
+        url:     '/admin/vision/set_params',
+        type:    "POST",
+        dataType:"json",
+        data:      {"board_type":   'M', 
+                    "demo_scheme":  demo_scheme, 
+                    "step_scheme":  step_scheme, 
+                    "move_type":    move_type, 
+                    "road_num":     road_num,
+                    "road_marks":   road_marks,
+                    "target_seats": target_seats,
+                    "eccent":       eccent,
+                    "init_angle":   init_angle,
+                    "road_size":    road_size,
+                    "board_size":   board_size, 
+        }, 
+                    
+        success: function(res){
+            console.log(res);
+            setResult(res);
+        },
+        error:  function(e){
+            alert("提交异常")
+        },
+        beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFTOKEN", $.cookie('csrftoken'));
+        },
+        complete:   function(){},
+    });
+}
+
+function setResult(res) {
+    if(res.code == 1) {
+        $("#set_result").css('color', '#009900');
+        $("#set_result").html('');
+        //$("#set_result").append('参数设置成功');
+        window.location.href="/admin/vision/trialparam/";  //跳转到列表页面  
+    } else {
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append(res.msg);
+    }
+    
+}
+</script>
+{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+<div><p><label style="font-size: 25px">多路牌参数</label></p></div>
+
+<div class="tab-content tab-content-main">
+    
+<form id="params_form" method="post" action="##" class="form-horizontal">    
+{% csrf_token %}        
+
+<!--实验模式-->
+<div class="control-group form-row"><div>
+    <div class="control-label">
+        <label class="required">实验模式:</label></div>
+    <div class="controls">
+        <select id="demo_scheme" name="demo_scheme">
+            <option value="S" selected="selected">静态</option>
+            <option value="D">动态</option>
+        </select>&nbsp;&nbsp;
+            <div id="move_type" style="display: none;">
+            <input name="move_type" type="radio" checked="checked" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
+            <input name="move_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
+            <input name="move_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
+            <input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
+            </div>
+    </div>
+</div></div>
+
+<!--阶梯过程-->
+<div class="control-group form-row"><div>
+    <div class="control-label">
+        <label class="required">阶梯过程:</label></div>
+    <div class="controls">
+        <select id="step_scheme" name="step_scheme">
+            <option value="R" selected="selected">关键间距</option>
+            <option value="S">尺寸阈值</option>
+            <option value="N">数量阈值</option>
+            <option value="V">动态敏感度</option>
+        </select>
+    </div>
+</div></div>
+
+<!--路牌尺寸-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌尺寸:</label></div>
+    <div class="controls">
+        <select id="board_size" name="board_size">
+            <option value="140,100" selected="selected">140*100</option>
+            <option value="280,200">280*200</option>
+       </select>            
+    </div>
+</div></div> 
+
+<!--路牌尺寸比例-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌尺寸比例:</label></div>
+    <div class="controls">
+        <select id="board_scale" name="board_scale">
+            <option value="1" selected="selected">1</option>
+            <option value="0.7">0.7</option>
+       </select>            
+    </div>
+</div></div> 
+
+<!--路名尺寸-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名尺寸:</label></div>
+    <div class="controls">
+        <select id="road_size" name="road_size">
+            <option value="11">11</option>
+            <option value="15" selected="selected">15</option>
+            <option value="20">20</option>        
+        </select>
+    </div>
+</div></div> 
+
+<!--路名数量-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名数量:</label></div>
+    <div class="controls">
+        <select style="width: 70px;" id="road_num1" name="road_num1">
+            <option value="2" selected="selected">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
+        <select style="width: 70px;" id="road_num2" name="road_num2">
+            <option value="2" selected="selected">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
+        <select style="width: 70px;" id="road_num3" name="road_num3">
+            <option value="2" selected="selected">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
+    </div>
+</div></div>
+    
+<!--路牌排列形式-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌排列:</label></div>
+    <div class="controls">
+        <select id="board_arrange_type" name="board_arrange_type">
+            <option value="H" selected="selected">横列</option>
+            <option value="V">纵列</option>        
+        </select>
+    </div>
+</div></div>     
+
+<!--路牌间距-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌间距:</label></div>
+    <div class="controls">
+        <select id="board_space" name="board_space">
+            <option value="30" selected="selected">30</option>
+            <option value="60">60</option>
+            <option value="100">100</option>        
+        </select>
+    </div>
+</div></div>   
+    
+<!--路名位置设置-->    
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路名位置:<br />(勾选后作为目标项)</label></div>
+    <div class="controls">
+        <input onclick="checkMark('g');" type="button" value="G" id="g1_pressed" class="road_v1" /><!--G1-->
+        <input id="g1_as_target" name="g1_as_target" type="checkbox">
+        <input onclick="checkMark('g');" type="button" value="G" id="g2_pressed" class="road_v1_2" /><!--G2-->
+        <input id="g2_as_target" name="g2_as_target" type="checkbox">
+        <input onclick="checkMark('g');" type="button" value="G" id="g3_pressed" class="road_v1_2" /><!--G3-->
+        <input id="g3_as_target" name="g3_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('h');" type="button" value="H" id="h1_pressed" class="road_v2" /><!--H1-->
+        <input id="h1_as_target" name="h1_as_target" type="checkbox">
+        <input onclick="checkMark('h');" type="button" value="H" id="h2_pressed" class="road_v2_2" /><!--H2-->
+        <input id="h2_as_target" name="h2_as_target" type="checkbox">
+        <input onclick="checkMark('h');" type="button" value="H" id="h3_pressed" class="road_v2_2" /><!--H3-->
+        <input id="h3_as_target" name="h3_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('a');" type="button" value="A" id="a1_pressed" class="road_h1" /><!--A1-->
+        <input id="a1_as_target" name="a1_as_target" type="checkbox">
+        <input onclick="checkMark('d');" type="button" value="D" id="d1_pressed" class="road_h2" /><!--D1-->
+        <input id="d1_as_target" name="d1_as_target" type="checkbox">
+        <input onclick="checkMark('a');" type="button" value="A" id="a2_pressed" class="road_h1_2" /><!--A2-->
+        <input id="a2_as_target" name="a2_as_target" type="checkbox">
+        <input onclick="checkMark('d');" type="button" value="D" id="d2_pressed" class="road_h2" /><!--D2-->
+        <input id="d2_as_target" name="d2_as_target" type="checkbox">
+        <input onclick="checkMark('a');" type="button" value="A" id="a3_pressed" class="road_h1_2" /><!--A3-->
+        <input id="a3_as_target" name="a3_as_target" type="checkbox">
+        <input onclick="checkMark('d');" type="button" value="D" id="d3_pressed" class="road_h2" /><!--D3-->
+        <input id="d3_as_target" name="d3_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('b');" type="button" value="B" id="b1_pressed" class="road_h1" /><!--B1-->
+        <input id="b1_as_target" name="b1_as_target" type="checkbox" />
+        <input onclick="checkMark('e');" type="button" value="E" id="e1_pressed" class="road_h2" /><!--E1-->
+        <input id="e1_as_target" name="e1_as_target" type="checkbox">
+        <input onclick="checkMark('b');" type="button" value="B" id="b2_pressed" class="road_h1_2" /><!--B2-->
+        <input id="b2_as_target" name="b2_as_target" type="checkbox" />
+        <input onclick="checkMark('e');" type="button" value="E" id="e2_pressed" class="road_h2" /><!--E2-->
+        <input id="e2_as_target" name="e2_as_target" type="checkbox">
+        <input onclick="checkMark('b');" type="button" value="B" id="b3_pressed" class="road_h1_2" /><!--B3-->
+        <input id="b3_as_target" name="b3_as_target" type="checkbox" />
+        <input onclick="checkMark('e');" type="button" value="E" id="e3_pressed" class="road_h2" /><!--E3-->
+        <input id="e3_as_target" name="e3_as_target" type="checkbox"><br />
+        
+        <input onclick="checkMark('c');" type="button" value="C" id="c1_pressed" class="road_h1" /><!--C1-->
+        <input id="c1_as_target" name="c1_as_target" type="checkbox">
+        <input onclick="checkMark('f');" type="button" value="F" id="f1_pressed" class="road_h2" /><!--F1-->
+        <input id="f1_as_target" name="f1_as_target" type="checkbox">
+        <input onclick="checkMark('c');" type="button" value="C" id="c2_pressed" class="road_h1_2" /><!--C2-->
+        <input id="c2_as_target" name="c2_as_target" type="checkbox">
+        <input onclick="checkMark('f');" type="button" value="F" id="f2_pressed" class="road_h2" /><!--F2-->
+        <input id="f2_as_target" name="f2_as_target" type="checkbox">
+        <input onclick="checkMark('c');" type="button" value="C" id="c3_pressed" class="road_h1_2" /><!--C3-->
+        <input id="c3_as_target" name="c3_as_target" type="checkbox">
+        <input onclick="checkMark('f');" type="button" value="F" id="f3_pressed" class="road_h2" /><!--F3-->
+        <input id="f3_as_target" name="f3_as_target" type="checkbox"><br />
+    
+        <div id="group1" style="display: none;">
+            a<input id="mark_a1" name="mark_a1" type="checkbox" value="A">
+            b<input id="mark_b1" name="mark_b1" type="checkbox" value="B">
+            c<input id="mark_c1" name="mark_c1" type="checkbox" value="C">
+            d<input id="mark_d1" name="mark_d1" type="checkbox" value="D">
+            e<input id="mark_e1" name="mark_e1" type="checkbox" value="E">
+            f<input id="mark_f1" name="mark_f1" type="checkbox" value="F">
+            g<input id="mark_g1" name="mark_g1" type="checkbox" value="G">
+            h<input id="mark_h1" name="mark_h1" type="checkbox" value="H">
+            |&nbsp;&nbsp;
+            a<input id="mark_a2" name="mark_a2" type="checkbox" value="A">
+            b<input id="mark_b2" name="mark_b2" type="checkbox" value="B">
+            c<input id="mark_c2" name="mark_c2" type="checkbox" value="C">
+            d<input id="mark_d2" name="mark_d2" type="checkbox" value="D">
+            e<input id="mark_e2" name="mark_e2" type="checkbox" value="E">
+            f<input id="mark_f2" name="mark_f2" type="checkbox" value="F">
+            g<input id="mark_g2" name="mark_g2" type="checkbox" value="G">
+            h<input id="mark_h2" name="mark_h2" type="checkbox" value="H">
+            |&nbsp;&nbsp;
+            a<input id="mark_a3" name="mark_a3" type="checkbox" value="A">
+            b<input id="mark_b3" name="mark_b3" type="checkbox" value="B">
+            c<input id="mark_c3" name="mark_c3" type="checkbox" value="C">
+            d<input id="mark_d3" name="mark_d3" type="checkbox" value="D">
+            e<input id="mark_e3" name="mark_e3" type="checkbox" value="E">
+            f<input id="mark_f3" name="mark_f3" type="checkbox" value="F">
+            g<input id="mark_g3" name="mark_g3" type="checkbox" value="G">
+            h<input id="mark_h3" name="mark_h3" type="checkbox" value="H">
+        </div>
+    </div>
+</div></div>   
+
+<!--目标项-->
+<!-- <div class="control-group form-row"><div>
+    <div class="control-label"><label>目标项:</label></div>
+    <div class="controls">
+        <select id="target_road" name="target_road">
+            <option value="A" selected="selected">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+        </select>
+    </div>
+</div></div>  -->
+
+<!--路牌中心距-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌中心距:<br />(路牌中心与注视点的距离)</label></div>
+    <div class="controls">
+        <input name="eccent" class="vTextField" id="eccent" type="text" value="160">
+    </div>
+</div></div>
+
+<!--初始角度-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>初始角度(角度值):</label></div>
+    <div class="controls">
+        <input name="init_angle" class="vTextField" id="init_angle" type="text" value="0">
+    </div>
+</div></div> 
+
+
+<br />
+<input onclick="saveParams();" value="保存参数" class="btn btn-success" name="save_params" type="button" />    
+&nbsp;&nbsp;<span id="set_result"></span>
+
+</form>
+</div>
+
+{% endblock %}
