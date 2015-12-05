@@ -183,9 +183,10 @@ function setResult(res) {
 
 <!--路牌大小-->
 <div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌大小:</label></div>
+    <div class="control-label"><label>路牌尺寸:</label></div>
     <div class="controls">
         <select id="board_size" name="board_size">
+            <option value="140,100" selected="selected">140*100</option>
             <option value="280,200" selected="selected">280*200</option>
             <option value="420,300">420*300</option>
        </select>            
@@ -277,15 +278,15 @@ function setResult(res) {
 
 <!--路牌中心距-->
 <div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌中心距:</label></div>
+    <div class="control-label"><label>路牌中心距:<br />(路牌中心与注视点的距离)</label></div>
     <div class="controls">
-        <input name="eccent" class="vTextField" id="eccent" type="text" value="6">
+        <input name="eccent" class="vTextField" id="eccent" type="text" value="160">
     </div>
 </div></div>
 
 <!--初始角度-->
 <div class="control-group form-row"><div>
-    <div class="control-label"><label>初始角度:</label></div>
+    <div class="control-label"><label>初始角度(角度值):</label></div>
     <div class="controls">
         <input name="init_angle" class="vTextField" id="init_angle" type="text" value="0">
     </div>

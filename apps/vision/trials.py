@@ -53,6 +53,13 @@ class Board(object):
         self.width = width
         self.height = height
         
+        if self.width == 280:
+            self.road_seat_refer = ROAD_SEAT
+        elif self.width == 140:
+            self.road_seat_refer = ROAD_SEAT_S
+        else:
+            self.road_seat_refer = ROAD_SEAT_B
+        
     def clear_queue(self):
         '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
         if not self.road_que.empty():
@@ -269,26 +276,26 @@ class Board(object):
         return getattr(self, mt)(s)    
     
     def pos_a(self, s=0):#带默认值可不传, 为便于里pos_xx调用的一致性
-        return self.pos[0]-ROAD_SEAT['left_x'], self.pos[1]+ROAD_SEAT['a_y']
+        return self.pos[0]-self.road_seat_refer['left_x'], self.pos[1]+self.road_seat_refer['a_y']
     def pos_b(self, s):
         x, y = self.pos_a(s)
-        return x, y+s+ROAD_SEAT['blank_y']
+        return x, y+s+self.road_seat_refer['blank_y']
     def pos_c(self, s):
         x, y = self.pos_b(s)
-        return x, y+s+ROAD_SEAT['blank_y']
+        return x, y+s+self.road_seat_refer['blank_y']
     def pos_d(self, s=0):
-        return self.pos[0]+ROAD_SEAT['right_x'], self.pos[1]+ROAD_SEAT['a_y']
+        return self.pos[0]+self.road_seat_refer['right_x'], self.pos[1]+self.road_seat_refer['a_y']
     def pos_e(self, s):
         x, y = self.pos_d(s)
-        return x, y+s+ROAD_SEAT['blank_y']
+        return x, y+s+self.road_seat_refer['blank_y']
     def pos_f(self, s):
         x, y = self.pos_e(s)
-        return x, y+s+ROAD_SEAT['blank_y']
+        return x, y+s+self.road_seat_refer['blank_y']
     def pos_g(self, s):
-        return self.pos[0], self.pos[1]-ROAD_SEAT['g_y']
+        return self.pos[0], self.pos[1]-self.road_seat_refer['g_y']
     def pos_h(self, s):
         x, y = self.pos_g(s)
-        return x, y+s+ROAD_SEAT['blank_y']
+        return x, y+s+self.road_seat_refer['blank_y']
     
     
 #     def draw(self, canvas):

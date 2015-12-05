@@ -52,7 +52,7 @@ class DemoThread(threading.Thread):
         
     def build_board(self):
         '''需要子类重载'''
-        return Board(self.param.eccent, self.param.init_angle)  
+        return Board(self.param.eccent, self.param.init_angle, width=self.param.get_board_size()[0], height=self.param.get_board_size()[1])  
     
     def control_demo(self):
         '''控制刺激过程. 阶梯过程包括: 数量阈值, 尺寸阈值, 关键间距, 动态敏感度

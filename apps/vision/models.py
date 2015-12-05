@@ -127,7 +127,7 @@ class TrialParam(BaseModel):
         
     def get_board_size(self):
         size = self.board_size.split(',')
-        return size[0], size[1]
+        return int(size[0]), int(size[1])
         
     def get_road_seats(self):# TODO...
         '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 ['A', 'B', 'D'], ['B', 'D'] 
