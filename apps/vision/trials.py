@@ -65,6 +65,13 @@ class Board(object):
         if not self.road_que.empty():
             self.road_que.queue.clear()
         
+        # 单路牌求数量阈值: 路名上限为8, 初始路名显示条数为设定的值
+        rest_seats = set(ALLOWED_ROAD_SEATS) - set(self.road_dict.keys())
+        #print 'self.road_dict.keys(): ',  self.road_dict.keys()
+        #print 'rest_seats: ',  rest_seats
+        for s in rest_seats:
+            self.road_que.put(s)
+        
     def calc_pos(self, e, a, wp_pos):
         '''计算路牌中心坐标, 根据初始参数e和a值
         @param e: 路牌中心与注视点距离
