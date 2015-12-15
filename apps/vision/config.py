@@ -19,14 +19,14 @@ show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
 SPACING_RIGHT_DELTA = 1         #间距变化右算法变化量
 
-STEPS_COUNT = 5                     #阶梯法默认循环次数
+STEPS_COUNT = 10                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
-SIZE_BORDER = 8, 40
+SIZE_BORDER = 8, 40     #路名尺寸最小值和最大值边界(求尺寸阈值时需要) 
 
-DEFAULT_ROAD_FONT = ("Helvetica", 15)
-TRIAL_END_FONT =    ("Helvetica", 35)      #试验结束文字字体
+DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
+TRIAL_END_FONT =    ('Microsoft Yahei', 35)      #试验结束文字字体
 
 # 试验界面窗口默认尺寸
 FACE_SIZE = {
@@ -62,23 +62,23 @@ ROAD_SEAT = { #280*200路牌尺寸
 ROAD_SEAT_S = { #140*100路牌尺寸
     'left_x':   40,     #路牌中心点左侧路名与中心点横向距离
     'right_x':  40,     #路牌中心点右侧路名与中心点横向距离
-    'a_y':      5,     #A位置路名中心点离路牌中心点的纵向距离
-    'blank_y':  5,     #纵向相邻路名间的空白间距, 以路名上下边缘计算  
+    'a_y':      5,      #A位置路名中心点离路牌中心点的纵向距离
+    'blank_y':  5,      #纵向相邻路名间的空白间距, 以路名上下边缘计算  
     'g_y':      35      #G位置路名中心点离路牌中心点的纵向距离
 }
 
-ROAD_SEAT_B = { #140*100路牌尺寸
+ROAD_SEAT_B = { #420*300路牌尺寸
     'left_x':   120,     #路牌中心点左侧路名与中心点横向距离
     'right_x':  120,     #路牌中心点右侧路名与中心点横向距离
-    'a_y':      15,     #A位置路名中心点离路牌中心点的纵向距离
-    'blank_y':  15,     #纵向相邻路名间的空白间距, 以路名上下边缘计算  
+    'a_y':      15,      #A位置路名中心点离路牌中心点的纵向距离
+    'blank_y':  15,      #纵向相邻路名间的空白间距, 以路名上下边缘计算  
     'g_y':      105      #G位置路名中心点离路牌中心点的纵向距离
 }
 
 TRIAL_START_PROMPT = { #试验开始提示信息 
     'text': u'点击"开始"按钮进行测试, "真" 为 "y"  假 为 "n" ', 
-    'bg': face_background,
-    'fg': '#1F90F2',
+    'bg':   face_background,
+    'fg':   '#1F90F2',
     'font': ("Helvetica", 30), 
 }
 
@@ -90,11 +90,11 @@ TRIAL_END_PROMPT = { #试验结束提示信息
 }
 
 TARGET_SEAT_PROMPT = {  #目标项位置提示
-    'text': u'下一轮目标为: ', 
-    'pos':  (WATCH_POS[0], WATCH_POS[1]-300),
+    'text': u'下一轮目标位置为: ', 
+    'pos':  (WATCH_POS[0], WATCH_POS[1]-300),    #提示文字默认位置
     'font': ("Helvetica", 40),
     'fill': '#1F90F2',
-    'interval': 3    #提示时间, 单位秒
+    'interval': 3       #提示停留时间, 单位秒
 }
 
 START_BUTTON = {

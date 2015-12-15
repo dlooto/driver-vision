@@ -12,6 +12,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.decorators import api_view
 from vision.models import TrialParam
 
+
 admin_view = admin.site.admin_view
 
 
@@ -74,5 +75,6 @@ def set_params(req):
         return http.failed(u'参数设置失败')
     
     return http.ok()
+    
     
         

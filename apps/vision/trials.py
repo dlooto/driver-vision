@@ -88,7 +88,7 @@ class Board(object):
         self.target_seat = target_seat
         
     def load_prompt_roads(self, road_size):
-        ''' 加载8个设置上的全部路名, 用于提示目标项位置.'''
+        ''' 加载8个位置上的全部路名, 用于提示目标项位置.'''
         
         self.prompt_road_dict.clear()
         modeled_roads = self.generate_random_roads(8)
@@ -370,15 +370,16 @@ class Road(object):
     def reset_size(self, is_left_algo):
         '''重设路名尺寸'''
         if is_left_algo:
+            if self.size*0.8 >= SIZE_BORDER[0]:
+                self.size *= 0.8 
+            else: 
+                self.size = SIZE_BORDER[0]  
+        else:
             if self.size*1.2 < SIZE_BORDER[1]:
                 self.size *= 1.2
             else:
                 self.size = SIZE_BORDER[1]
-        else:
-            if self.size*0.8 >= SIZE_BORDER[0]:
-                self.size *= 0.8  
-            else: 
-                self.size = SIZE_BORDER[0]    
+              
     
 #     def draw(self, canvas):
 #         '''显示在屏幕上'''  #调用画布进行绘制...

@@ -75,7 +75,11 @@ class GUI(Tk):
         
     def draw_target_seat(self, target_seat, board):
         self.erase_all()
-        tk_id1 = self.cv.create_text(TARGET_SEAT_PROMPT['pos'], text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
+        prompt_pos = board.pos[0], board.pos[1]-board.height/2-30  #字体尺寸为40, 所以上移30
+        if prompt_pos[1] < 25:
+            prompt_pos = board.pos[0], board.height + 30
+            
+        tk_id1 = self.cv.create_text(prompt_pos, text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
                                     fill=TARGET_SEAT_PROMPT['fill'], font=TARGET_SEAT_PROMPT['font'])
         self.cv.widget_list.append(tk_id1)
         
