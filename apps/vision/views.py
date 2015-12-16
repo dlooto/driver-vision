@@ -40,7 +40,7 @@ def set_params(req):
     road_marks = req.POST.get('road_marks')     #路名设置: 'A,B,C,D,A'
     target_seats = req.POST.get('target_seats') #待选目标项: 'A,B,D'
     
-    eccent = req.POST.get('eccent')#离心率
+    eccent = req.POST.get('eccent')#路牌中心距
     init_angle = req.POST.get('init_angle')#初始角度
     
     # check params
@@ -63,8 +63,8 @@ def set_params(req):
                 "road_num":     int(road_num),
                 
                 "road_marks":   road_marks[0:-1]+'|'+target_seats[0:-1],  #组装成: 'A,B,C,D|A,D'
-                "eccent":       int(eccent),
-                "init_angle":   int(init_angle),
+                "eccent":       eccent,
+                "init_angle":   init_angle,
         }
     
         TrialParam.objects.set_not_coming()

@@ -31,12 +31,12 @@ def angle(p1, p2):
             return 270
             
     if dx > 0: #二三象限
-        return (math.pi + math.atan(dy/dx*1.0) ) * 180/math.pi
+        return round((math.pi + math.atan(dy/dx*1.0) ) * 180/math.pi, 2)
     
     #一四象限 dx < 0 
     if dy < 0:
-        return math.atan(dy/dx*1.0) * 180/math.pi
+        return round(math.atan(dy/dx*1.0) * 180/math.pi, 2)
     if dy > 0:
-        return (2*math.pi + math.atan(dy/dx*1.0)) * 180/math.pi
+        return round((2*math.pi + math.atan(dy/dx*1.0)) * 180/math.pi, 2)
     
 

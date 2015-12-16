@@ -87,10 +87,10 @@ class TrialParam(BaseModel):
     road_num = models.IntegerField(u'路名条数', default=3)
     road_marks = models.CharField(u'路名位置标记|目标标记', max_length=40)  #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名
     
-    #该参数初始为离心率, 后改为路牌中心距, 即路牌中心离注视点的距离 
-    eccent = models.FloatField(u'路牌中心距离', null=True, blank=True)
-    #路牌中心-注视点连线与水平线的夹角. 顺时针方向旋转为角度增大 
-    init_angle = models.IntegerField(u'初始角度', null=True, blank=True, default=0)
+    # 路牌中心距, 即路牌中心离注视点的距离. 最多3个值, 各值间以,分隔
+    eccent = models.CharField(u'路牌中心距离', max_length=40, null=True, blank=True)
+    #路牌中心-注视点连线与水平线的夹角. 顺时针方向旋转为角度增大. 最多3个值, 各值间以,分隔
+    init_angle = models.CharField(u'初始角度', max_length=40, null=True, blank=True)
 
     trialed_count = models.IntegerField(u'执行次数', null=True, blank=True, default=0) #数据被执行次数
     
@@ -141,6 +141,15 @@ class TrialParam(BaseModel):
         self.trialed_count += 1
         self.save()
         
+    def get_eccents(self):
+        '''返回路牌中心距列表(浮点值列表)''' 
+        return [float(e) for e in self.eccent.split(',')]
+    
+    def get_angles(self):
+        '''返回初始角度值列表(浮点值列表)''' 
+        return [float(a) for a in self.init_angle.split(',')]
+               
+        
         
 class Demo(BaseModel):
     '''一次完整试验记录'''
@@ -171,9 +180,9 @@ class Block(BaseModel):
     '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
     
     demo = models.ForeignKey(Demo, verbose_name=u'所属Demo')
-    tseat = models.CharField(u'目标位置(D)', max_length=1)     #如A/B/C/...
-    ee = models.FloatField(u'离心率(E)', null=True, blank=True)                  
-    angle = models.IntegerField(u'角度(@)')
+    tseat = models.CharField(u'目标位置(D)', max_length=1)      #如A/B/C/...
+    ee = models.FloatField(u'离心率(E)', null=True, blank=True)   #目标项与注视点距离               
+    angle = models.IntegerField(u'角度(@)') #目标项与注视点连线夹角                   
     
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
                          

@@ -74,15 +74,15 @@ class GUI(Tk):
         self.cv.update()   
         
     def draw_target_seat(self, target_seat, board):
+        '''绘制目标提示信息'''
         self.erase_all()
-        prompt_pos = board.pos[0], board.pos[1]-board.height/2-30  #字体尺寸为40, 所以上移30
-        if prompt_pos[1] < 25:
-            prompt_pos = board.pos[0], board.height + 30
+        txt_pos = board.prompt_pos[0], board.prompt_pos[1]-board.height/2-40  #字体尺寸为40, 所以上移30
+        #if txt_pos[1] < 25:
+        #    txt_pos = board.prompt_pos[0], board.height + 30
             
-        tk_id1 = self.cv.create_text(prompt_pos, text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
+        tk_id1 = self.cv.create_text(txt_pos, text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
                                     fill=TARGET_SEAT_PROMPT['fill'], font=TARGET_SEAT_PROMPT['font'])
         self.cv.widget_list.append(tk_id1)
-        
         self.cv.widget_list.append(self.draw_prompt_board(board))
         
         self.cv.update()
@@ -116,7 +116,7 @@ class GUI(Tk):
     def draw_prompt_board(self, board):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
-            board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
+            board.prompt_pos[0], board.prompt_pos[1], board.width, board.height, fill=board_color, outline=board_color
         )
         self.cv.widget_list.append(tk_id)
         

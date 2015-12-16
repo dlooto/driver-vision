@@ -16,7 +16,7 @@
     {% get_menu request as app_list %}
     {% if app_list %}
       {% for app in app_list %}
-      {% if app.name == 'vision' %} <!--added by junn for customized-->
+      {% if app.name == 'vision' %} <!-- added by junn for customized -->
         {% if app.separator %}
           <li class="separator"></li>
         {% else %}

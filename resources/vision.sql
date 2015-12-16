@@ -10,3 +10,7 @@ alter table vision_demo drop column end_time;
 
 /* 2015-12-3 */
 alter table vision_trialparam add column `step_scheme` varchar(1) NOT NULL;
+
+/* 2015-12-16 */
+alter table vision_trialparam modify column `eccent` varchar(40);
+alter table vision_trialparam modify column `init_angle` varchar(40);

@@ -2,6 +2,11 @@
 
 {% block extrahead %}
 <style type="text/css">
+.prompt-text {
+    font-size: 11px;
+    color:     #999999;
+}
+
 /* ============= 路牌1样式 ============ */
 input.road_h1 { /* 水平方向路名A,B,C */
     width: 60px; height: 22px;
@@ -263,6 +268,7 @@ function setResult(res) {
             <option value="7">7</option>
             <option value="8">8</option>
         </select>
+        <span class="prompt-text">(分别设置3个路牌上的路名数量)</span>
     </div>
 </div></div>
     
@@ -377,7 +383,8 @@ function setResult(res) {
 <div class="control-group form-row"><div>
     <div class="control-label"><label>路牌中心距:<br />(路牌中心与注视点的距离)</label></div>
     <div class="controls">
-        <input name="eccent" class="vTextField" id="eccent" type="text" value="160">
+        <input name="eccent" class="vTextField" id="eccent" type="text" value="" placeholder="d1,d2,d3" >
+        <span class="prompt-text">(最多设置3个值, 各值间以 , 分隔)</span>
     </div>
 </div></div>
 
@@ -385,7 +392,8 @@ function setResult(res) {
 <div class="control-group form-row"><div>
     <div class="control-label"><label>初始角度(角度值):</label></div>
     <div class="controls">
-        <input name="init_angle" class="vTextField" id="init_angle" type="text" value="90">
+        <input name="init_angle" class="vTextField" id="init_angle" type="text" value="" placeholder="a1,a2,a3" >
+        <span class="prompt-text">(最多设置3个值, 各值间以 , 分隔)</span>
     </div>
 </div></div> 
 

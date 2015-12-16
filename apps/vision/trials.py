@@ -43,22 +43,48 @@ class Board(object):
     prompt_road_dict = {}
     road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
     
-    def __init__(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
-        ''' 
-        e: 路牌中心与注视点距离, 
-        a: 路牌中心-注视点连线的水平夹角的角度值, 
+    def __init__(self, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+#         ''' 
+#         e: 路牌中心距(路牌中心与注视点距离) 
+#         a: 路牌中心点与注视点连线的水平夹角(角度值)
+#         wp_pos: 注视点坐标
+#         '''
+#         self.pos = self.calc_pos(e, a, wp_pos)
+#         self.width = width
+#         self.height = height
+#         
+#         # 根据尺寸确定各路名位置坐标参考系
+#         if self.width == 280:
+#             self.road_seat_refer = ROAD_SEAT
+#         elif self.width == 140:
+#             self.road_seat_refer = ROAD_SEAT_S
+#         else:
+#             self.road_seat_refer = ROAD_SEAT_B
+        self.reset_pos(0, 0, width=width, height=height)
+        self.pos = WATCH_POS
+        
+        self.prompt_pos = WATCH_POS
+        self._load_prompt_roads(road_size)  #各路名坐标计算依赖于self.pos
+        
+    def reset_pos(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+        ''' 重置路牌坐标.
+        
+        e: 路牌中心距(路牌中心与注视点距离) 
+        a: 路牌中心点与注视点连线的水平夹角(角度值) 
         wp_pos: 注视点坐标
         '''
         self.pos = self.calc_pos(e, a, wp_pos)
         self.width = width
         self.height = height
         
+        # 根据尺寸确定各路名位置坐标参考系
         if self.width == 280:
             self.road_seat_refer = ROAD_SEAT
         elif self.width == 140:
             self.road_seat_refer = ROAD_SEAT_S
         else:
             self.road_seat_refer = ROAD_SEAT_B
+                                
         
     def clear_queue(self):
         '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
@@ -75,7 +101,7 @@ class Board(object):
     def calc_pos(self, e, a, wp_pos):
         '''计算路牌中心坐标, 根据初始参数e和a值
         @param e: 路牌中心与注视点距离
-        @param a: 路牌中心-注视点连线的水平夹角的角度值 
+        @param a: 路牌中心点/注视点连线的水平夹角(角度值)
         '''
         x0, y0 = wp_pos
         return (x0 - e * math.cos(math.radians(a)), y0 - e * math.sin(math.radians(a)))
@@ -94,7 +120,7 @@ class Board(object):
             modeled_roads.remove(road_model)
         self.target_seat = target_seat
         
-    def load_prompt_roads(self, road_size):
+    def _load_prompt_roads(self, road_size):
         ''' 加载8个位置上的全部路名, 用于提示目标项位置.'''
         
         self.prompt_road_dict.clear()
@@ -137,12 +163,12 @@ class Board(object):
     def get_ee(self, target_seat, wpoint):
         '''离心率: 根据目标项位置及注视点对象计算离心率
         @param target_seat: 目标项位置标记, 如'A'
-        @param wpoint: 注视点对象  
+        @param wpoint: 注视点对象
         '''
         return maths.dist(self.road_dict[target_seat].pos, wpoint.pos)
     
     def get_angle(self, target_seat, wpoint):
-        '''角度: 根据目标项位置及注视点对象计算两者角度
+        '''返回目标项与注视点连线夹角, 顺时针方向计算
         @param target_seat: 目标项位置标记, 如'A'
         @param wpoint: 注视点对象  
         '''
