@@ -132,16 +132,26 @@ class Board(object):
                                         size=road_size)
             modeled_roads.remove(road_model)
         
-    def flash_road_names(self, road_seats, target_seat):
+#     def flash_road_names(self, road_seats, target_seat):
+#         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
+#         modeled_roads = self.generate_random_roads(len(road_seats))
+#         for mark in road_seats:
+#             road_model = random.choice(modeled_roads)
+#             self.road_dict[mark].name = road_model.name 
+#             self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
+#             self.road_dict[mark].is_target = True if mark == target_seat else False
+#             modeled_roads.remove(road_model)
+#         self.target_seat = target_seat  
+        
+    def flash_road_names(self):
         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
+        road_seats = self.road_dict.keys()
         modeled_roads = self.generate_random_roads(len(road_seats))
         for mark in road_seats:
             road_model = random.choice(modeled_roads)
             self.road_dict[mark].name = road_model.name 
             self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
-            self.road_dict[mark].is_target = True if mark == target_seat else False
             modeled_roads.remove(road_model)
-        self.target_seat = target_seat            
     
     def generate_random_roads(self, road_num):
         ''' 根据传入的路名数量, 生成不重复的随机路名列表.
@@ -281,6 +291,9 @@ class Board(object):
     def get_road_size(self):
         '''返回路名当前尺寸'''
         return self.get_target_road().size
+    
+    def get_road_seats(self):
+        return self.road_dict.keys()
     
     def move(self, dx, dy):
         '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.

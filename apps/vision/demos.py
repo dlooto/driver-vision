@@ -274,13 +274,13 @@ class DemoThread(threading.Thread):
          
         step_algo = None          
         if self.param.step_scheme == 'R':        
-            step_algo = SpaceStepAlgo(self.board, param)
+            step_algo = SpaceStepAlgo(self.board)
         elif self.param.step_scheme == 'N':    
-            step_algo = NumberStepAlgo(self.board, param)
+            step_algo = NumberStepAlgo(self.board)
         elif self.param.step_scheme == 'S':
-            step_algo = SizeStepAlgo(self.board, param)
+            step_algo = SizeStepAlgo(self.board)
         else:
-            step_algo = VelocityStepAlgo(self.board, param)    #动态敏感度
+            step_algo = VelocityStepAlgo(self.board)    #动态敏感度
         
         # init params
         road_seats, target_seats = param.get_road_seats()
@@ -308,7 +308,6 @@ class DemoThread(threading.Thread):
                     print 'Block: ', block_data
                     
                     # 阶梯变化开始
-                    dynamic_road_seats = step_algo.get_dynamic_road_seats(road_seats) # 求数量阈值时, 列表值被拷贝一份
                     step_algo.prepare_steping()
                     for i in range(STEPS_COUNT):
                         if not self.is_started: break  
@@ -330,12 +329,12 @@ class DemoThread(threading.Thread):
                             self.handle_judge(is_correct=False)
                         
                         #用户按键唤醒线程后刷新路名    
-                        self.board.flash_road_names(dynamic_road_seats, tseat) 
+                        self.board.flash_road_names() 
                         if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
                             continue
                         
                         # 更新阶梯变量
-                        dynamic_road_seats = step_algo.update_vars(road_seats, self.is_left_algo)
+                        step_algo.update_vars(self.is_left_algo)
                               
         
     def get_steps_value(self): #阈值具体的方法, 考虑重载
