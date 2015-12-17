@@ -67,7 +67,7 @@ class Board(object):
         self._load_prompt_roads(road_size)  #各路名坐标计算依赖于self.pos
         
     def reset_pos(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
-        ''' 重置路牌坐标.
+        ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
         
         e: 路牌中心距(路牌中心与注视点距离) 
         a: 路牌中心点与注视点连线的水平夹角(角度值) 
@@ -99,7 +99,7 @@ class Board(object):
             self.road_que.put(s)
         
     def calc_pos(self, e, a, wp_pos):
-        '''计算路牌中心坐标, 根据初始参数e和a值
+        '''根据初始参数e和a值, 计算路牌中心坐标
         @param e: 路牌中心与注视点距离
         @param a: 路牌中心点/注视点连线的水平夹角(角度值)
         '''
@@ -221,7 +221,9 @@ class Board(object):
         return poses    
     
     def update_flanker_numbers(self, is_left_algo, road_size):
-        '''更新干扰项的数量. 若减少干扰项数, 则将路名位置标记放入队列, 否则从队列取出路名位置标记
+        '''
+        更新干扰项的数量. 该方法将修改road_dict字典对象. 
+        若减少干扰项数, 则将路名位置标记放入队列, 否则从队列取出路名位置标记
         @param is_left_algo: 决定了干扰项数量是是+2还是-1
         @return: 返回更新后的干扰项数量
         '''

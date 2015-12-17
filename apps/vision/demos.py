@@ -6,13 +6,13 @@
 
 import time
 from vision.models import Demo, Block, Trial
-from vision.algos import StepProcess, RstepProcess, NstepProcess, SstepProcess,\
-    VstepProcess
 from utils import times, eggs, logs
 from utils.eggs import float_list_to_str
 from config import *
 import threading
 from vision.trials import Board, WatchPoint
+from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
+    VelocityStepAlgo
 
 '''
 试验线程类
@@ -166,7 +166,6 @@ class DemoThread(threading.Thread):
                         'ee':    self.board.get_ee(tseat, self.wpoint), 
                         'angle': self.board.get_angle(tseat, self.wpoint), 
                         
-                        # Changed
                         'cate':  'N', #求数量阈值
                         'S': param.road_size, 'V': 0.0   # 'R': 应该为空, 因间距个数不确定
                     }
@@ -264,10 +263,80 @@ class DemoThread(threading.Thread):
                         self.board.update_road_size(self.is_left_algo)
                         print 'Road size:', '*1.2' if self.is_left_algo else '*0.8', self.board.get_road_size()                       
         
-        
-        
     def dynamic_sensitive(self, road_seats, target_seats):
         pass    
+    
+    def step_process(self, param):
+        '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
+        '''
+        if self.param.step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % self.param.step_scheme)
+         
+        step_algo = None          
+        if self.param.step_scheme == 'R':        
+            step_algo = SpaceStepAlgo(self.board, param)
+        elif self.param.step_scheme == 'N':    
+            step_algo = NumberStepAlgo(self.board, param)
+        elif self.param.step_scheme == 'S':
+            step_algo = SizeStepAlgo(self.board, param)
+        else:
+            step_algo = VelocityStepAlgo(self.board, param)    #动态敏感度
+        
+        # init params
+        road_seats, target_seats = param.get_road_seats()
+        width, height = param.get_board_size()
+        eccent_list = param.get_eccents()
+        angle_list = param.get_angles()
+        
+        step_algo.print_prompt()
+        for tseat in target_seats:
+            if not self.is_started: break
+            
+            self.prompt_target_seat(tseat)
+            for eccent in eccent_list:
+                for angle in angle_list:            
+                    self.board.reset_pos(eccent, angle, width=width, height=height)
+                    self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
+                    block_data = {
+                        'demo':  self.demo, 
+                        'tseat': tseat, 
+                        'ee':    self.board.get_ee(tseat, self.wpoint), 
+                        'angle': self.board.get_angle(tseat, self.wpoint), 
+                    }
+                    step_algo.extend_block_data(block_data)
+                    block = self.create_block(block_data)
+                    print 'Block: ', block_data
+                    
+                    # 阶梯变化开始
+                    dynamic_road_seats = step_algo.get_dynamic_road_seats(road_seats) # 求数量阈值时, 列表值被拷贝一份
+                    step_algo.prepare_steping()
+                    for i in range(STEPS_COUNT):
+                        if not self.is_started: break  
+                        self.total_trials += 1
+                        trial_data = {
+                            'block':        block,  
+                            'cate':         block.cate, 
+                            'steps_value':  step_algo.get_steps_value(),
+                            'target_road':  self.board.get_target_road().name,
+                            'created_time': times.now()
+                        }
+                        self.current_trial = self.append_trial(trial_data)
+                        
+                        self.gui.draw_all(self.board, self.wpoint) #刺激显示
+                        self.wait() #等待用户按键判断
+                        
+                        if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                            self.current_trial.is_correct = False
+                            self.handle_judge(is_correct=False)
+                        
+                        #用户按键唤醒线程后刷新路名    
+                        self.board.flash_road_names(dynamic_road_seats, tseat) 
+                        if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                            continue
+                        
+                        # 更新阶梯变量
+                        dynamic_road_seats = step_algo.update_vars(road_seats, self.is_left_algo)
+                              
         
     def get_steps_value(self): #阈值具体的方法, 考虑重载
         return float_list_to_str(self.board.get_road_spacings())
@@ -277,7 +346,7 @@ class DemoThread(threading.Thread):
         '''
         Trial.objects.bulk_create(self.trial_querylist)
         
-        self.demo.time_cost = round(times.time_cost(self.demo.created_time))
+        self.demo.time_cost = round(times.time_cost(self.demo.created_time), 1)
         self.demo.correct_rate = round(self.total_correct_judge*1.0/self.total_trials, 2)
         self.demo.is_break = is_break
         self.demo.save()
@@ -313,7 +382,8 @@ class DemoThread(threading.Thread):
         return self.current_trial.is_correct                  
             
     def build_step_process(self):
-        return StepProcess()            
+        #return StepProcess()      
+        pass
     
     def save_demo(self):
         demo = Demo(param=self.param)

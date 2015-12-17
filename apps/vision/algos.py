@@ -3,38 +3,133 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Nov 8, 2015, by Junn
 #
-from vision.config import STEPS_COUNT
+from utils.eggs import float_list_to_str
 
-step_count = STEPS_COUNT 
-
-class StepProcess(object):
-    '''阶梯算法父类'''
+class StepAlgo(object):
+    '''阶梯算法过程基类'''
     
-    def execute(self):
+    def __init__(self, board, param):
+        self.board = board
+        self.param = param
+        
+    def print_prompt(self):
         pass
 
-class NstepProcess(StepProcess):
-    '''数量阶梯算法: 求数量阈值'''
-    pass
+    def extend_block_data(self, road_seats, block_data):
+        pass
+    
+    def get_dynamic_road_seats(self, road_seats):
+        return road_seats
 
-class SstepProcess(StepProcess):
-    '''尺寸阶梯算法: 求尺寸阈值'''
-    pass
-
-class RstepProcess(StepProcess):
+    def prepare_steping(self):
+        pass
+    
+    def get_steps_value(self):
+        '''返回阶梯变化值'''
+        pass
+    
+    def update_vars(self, road_seats, is_left_algo):
+        '''
+        更新阶梯变量. 除求数量阈值情况需要返回更新变化后的road_seats列表, 其他阈值情况road_seats
+        列表无变化, 因而原样返回.  
+        '''
+        pass
+            
+class SpaceStepAlgo(StepAlgo):
     '''关键间距阶梯算法'''
     
-    def __init__(self, demo, block):
-        self.demo = demo
-        self.block = block
-        
-#     def execute(self):        
-#         for i in range(step_count):
-#             # calc r1, r2, r3, r4, r5, 
-#             self.demo.change_params(d, self.board.get_eccent(), self.board.get_angle())     
-#             self.demo.draw(self.board)
-#             self.wait()  
+    def print_prompt(self):
+        print('\n求关键间距控制过程开始...')
 
-class VstepProcess(StepProcess):
+    def extend_block_data(self, road_seats, block_data):
+        extra_data = {
+            'cate':  'R', 
+            'N':     len(road_seats)-1, 'S': self.param.road_size, 'V': 0.0
+        }
+        block_data.update(extra_data)
+    
+    def get_steps_value(self):
+        '''返回阶梯变化值'''
+        return float_list_to_str(self.board.get_road_spacings())
+    
+    def update_vars(self, road_seats, is_left_algo):
+        '''更新阶梯变量. 默认返回值为road_seats'''
+        self.board.update_flanker_spacings(is_left_algo)
+        print 'Spacing changed: ', '0.5r' if is_left_algo else 'r+1', self.board.get_road_spacings()
+        return road_seats #为适应求数量阈值返回该值               
+            
+class NumberStepAlgo(StepAlgo):
+    '''数量阶梯算法: 求数量阈值'''
+    
+    def print_prompt(self): #打印提示信息
+        print('\n求数量阈值控制过程开始...')
+        
+    def extend_block_data(self, road_seats, block_data):
+        extra_data = {
+            'cate': 'N', 
+            'S': self.param.road_size, 'V': 0.0   # 'R': 应该为空, 因间距个数不确定
+        }
+        block_data.update(extra_data)
+        
+    def get_dynamic_road_seats(self, road_seats):
+        return road_seats[:]  #拷贝一份路名位置        
+        
+    def prepare_steping(self):
+        self.board.clear_queue() #清空辅助队列, 用于干扰路名增减
+        
+    def get_steps_value(self):
+        '''返回阶梯变化值. 此处为干扰项数量'''
+        return len(self.board.get_flanker_roads())
+        
+    def update_vars(self, road_seats, is_left_algo):
+        dynamic_road_seats = self.board.update_flanker_numbers(is_left_algo, self.param.road_size)
+        print 'Flankers:', 'N+2' if is_left_algo else 'N-1', len(self.board.get_flanker_roads())    
+        return dynamic_road_seats    
+            
+        
+class SizeStepAlgo(StepAlgo):
+    '''尺寸阶梯算法: 求尺寸阈值'''
+    
+    def print_prompt(self):
+        print('\n求尺寸阈值过程开始...')
+
+    def extend_block_data(self, road_seats, block_data):
+        extra_data = {
+            'cate':  'S', #求尺寸阈值
+            'N': len(road_seats)-1, 'V': 0.0   # 'R': 置空, 间距随路名尺寸变化而变化
+        }
+        block_data.update(extra_data)
+    
+    def get_steps_value(self):
+        '''返回阶梯变化值'''
+        return self.board.get_road_size()
+    
+    def update_vars(self, road_seats, is_left_algo):
+        '''更新阶梯变量. 默认返回值为road_seats'''
+        # ##
+        self.board.update_road_size(is_left_algo)
+        print 'Road size:', '*1.2' if is_left_algo else '*0.8', self.board.get_road_size()
+        return road_seats 
+
+class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
-    pass
+    def print_prompt(self):
+        pass
+
+    def extend_block_data(self, road_seats, block_data):
+        pass
+    
+    def get_dynamic_road_seats(self, road_seats):
+        return road_seats
+
+    def prepare_steping(self):
+        pass
+    
+    def get_steps_value(self):
+        '''返回阶梯变化值'''
+        pass
+    
+    def update_vars(self, road_seats, is_left_algo):
+        '''更新阶梯变量. 默认返回值为road_seats'''
+        # TODO...
+        return road_seats  
