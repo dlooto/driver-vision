@@ -88,8 +88,8 @@ class SizeStepAlgo(StepAlgo):
 
     def extend_block_data(self, block_data):
         extra_data = {
-            'cate':  'S', #求尺寸阈值
-            'N': len(self.board.get_road_seats())-1, 'V': 0.0   # 'R': 置空, 间距随路名尺寸变化而变化
+            'cate': 'S', #求尺寸阈值
+            'N':    len(self.board.get_road_seats())-1, 'V': 0.0   # 'R': 置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
     
@@ -101,7 +101,7 @@ class SizeStepAlgo(StepAlgo):
         '''更新阶梯变量. 默认返回值为road_seats'''
         # ##
         self.board.update_road_size(is_left_algo)
-        print 'Road size:', '*1.2' if is_left_algo else '*0.8', self.board.get_road_size()
+        print 'Road size:', '*0.8' if is_left_algo else '*1.2', self.board.get_road_size()
 
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''

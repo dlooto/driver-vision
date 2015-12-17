@@ -46,8 +46,14 @@ class DemoThread(threading.Thread):
         
     def run(self):
         print('Demo thread started')
-        self.is_started = True              #实验进行状态, 默认为未开始
-        self.control_demo()
+        
+        self.is_started = True          #实验进行状态, 默认为未开始
+        self.new_demo()                 #以备后用
+        self.step_process(self.param)
+        
+        #批量保存block数据, is_started=True则试验未被中断, 否则被中断
+        self.end_demo(is_break=not self.is_started)
+        
         print('Demo thread ended')
         
     def build_board(self, param):
@@ -61,20 +67,8 @@ class DemoThread(threading.Thread):
         首先以 静态单路牌 为例...
         '''
         
-        self.demo = self.save_demo() #以备后用
-        
-        if self.param.step_scheme not in ('R', 'S', 'N', 'V'):
-            raise Exception('Unknown step scheme: %s' % self.param.step_scheme)
-                  
-        if self.param.step_scheme == 'R':        
-            self.critical_spacing(self.param)
-        elif self.param.step_scheme == 'N':    
-            self.number_threshold(self.param)
-        elif self.param.step_scheme == 'S':
-            self.size_threshold(self.param)
-        else:
-            # 动态敏感度            
-            self.dynamic_sensitive(self.param) #
+        self.new_demo(self.param) #以备后用
+        self.step_process(self.param)
         
         #批量保存block数据
         self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
@@ -269,15 +263,16 @@ class DemoThread(threading.Thread):
     def step_process(self, param):
         '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
         '''
-        if self.param.step_scheme not in ('R', 'S', 'N', 'V'):
-            raise Exception('Unknown step scheme: %s' % self.param.step_scheme)
+        
+        if param.step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % param.step_scheme)
          
         step_algo = None          
-        if self.param.step_scheme == 'R':        
+        if param.step_scheme == 'R':        
             step_algo = SpaceStepAlgo(self.board)
-        elif self.param.step_scheme == 'N':    
+        elif param.step_scheme == 'N':    
             step_algo = NumberStepAlgo(self.board)
-        elif self.param.step_scheme == 'S':
+        elif param.step_scheme == 'S':
             step_algo = SizeStepAlgo(self.board)
         else:
             step_algo = VelocityStepAlgo(self.board)    #动态敏感度
@@ -380,14 +375,10 @@ class DemoThread(threading.Thread):
         self.current_trial.resp_cost = times.time_cost(self.current_trial.created_time)
         return self.current_trial.is_correct                  
             
-    def build_step_process(self):
-        #return StepProcess()      
-        pass
-    
-    def save_demo(self):
+    def new_demo(self):
         demo = Demo(param=self.param)
         demo.save()
-        return demo   
+        self.demo =  demo   
     
     def create_block(self, data): 
         '''进入阶梯循环过程之前调用该方法, 根据调整后的时间复杂度, 立即save不会影响性能'''

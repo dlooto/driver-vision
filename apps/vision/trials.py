@@ -92,9 +92,7 @@ class Board(object):
             self.road_que.queue.clear()
         
         # 单路牌求数量阈值: 路名上限为8, 初始路名显示条数为设定的值
-        rest_seats = set(ALLOWED_ROAD_SEATS) - set(self.road_dict.keys())
-        #print 'self.road_dict.keys(): ',  self.road_dict.keys()
-        #print 'rest_seats: ',  rest_seats
+        rest_seats = set(ALLOWED_ROAD_SEATS) - set(self.get_road_seats())
         for s in rest_seats:
             self.road_que.put(s)
         
@@ -145,7 +143,7 @@ class Board(object):
         
     def flash_road_names(self):
         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
-        road_seats = self.road_dict.keys()
+        road_seats = self.get_road_seats()
         modeled_roads = self.generate_random_roads(len(road_seats))
         for mark in road_seats:
             road_model = random.choice(modeled_roads)
@@ -205,7 +203,7 @@ class Board(object):
                 以目标项为原点, 连线方向指向干扰项.
         '''
         target_road = self.road_dict[self.target_seat]
-        road_seats = self.road_dict.keys()
+        road_seats = self.get_road_seats()
         road_seats.remove(self.target_seat)
         
         for flanker_seat in road_seats:
@@ -247,8 +245,6 @@ class Board(object):
         #        self.road_dict.pop()    
         #self.road_que.put(item)
         #self.get_target_road()
-        
-        return self.road_dict.keys()   #return road_seats
     
     def add_flankers(self, road_size):
         '''增加干扰项数量'''
@@ -274,7 +270,7 @@ class Board(object):
         if len(self.road_dict) == 2:
             print('\nAlready min flankers on board: %s' % int(len(self.road_dict)-1))
             return
-        for seat in self.road_dict.keys():
+        for seat in self.get_road_seats():
             if seat != self.target_seat:  #干扰项
                 self.road_que.put(seat)
                 self.road_dict.pop(seat)
@@ -292,7 +288,7 @@ class Board(object):
         '''返回路名当前尺寸'''
         return self.get_target_road().size
     
-    def get_road_seats(self):
+    def get_road_seats(self): #路名位置标记列表
         return self.road_dict.keys()
     
     def move(self, dx, dy):
