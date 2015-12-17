@@ -14,3 +14,11 @@ alter table vision_trialparam add column `step_scheme` varchar(1) NOT NULL;
 /* 2015-12-16 */
 alter table vision_trialparam modify column `eccent` varchar(40);
 alter table vision_trialparam modify column `init_angle` varchar(40);
+
+/* 2015-12-17 */
+alter table vision_trialparam add column `board_scale` double precision;
+alter table vision_trialparam add column `board_range` varchar(1);
+alter table vision_trialparam add column `board_space` double precision;
+
+alter table vision_trialparam drop column `road_num`;
+alter table vision_trialparam modify column `road_marks` varchar(100) NOT NULL;

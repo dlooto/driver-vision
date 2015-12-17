@@ -12,7 +12,6 @@ from config import *
 from vision.models import RoadModel
 import math
 import Queue
-from utils import logs
 
 
 class WatchPoint(object):

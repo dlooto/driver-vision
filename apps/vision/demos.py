@@ -48,7 +48,7 @@ class DemoThread(threading.Thread):
         print('Demo thread started')
         
         self.is_started = True          #实验进行状态, 默认为未开始
-        self.new_demo()                 #以备后用
+        self.new_demo()                 #阶梯过程中使用
         self.step_process(self.param)
         
         #批量保存block数据, is_started=True则试验未被中断, 否则被中断
@@ -77,6 +77,77 @@ class DemoThread(threading.Thread):
         '''绘制目标位置提示, 停留3秒'''
         self.gui.draw_target_seat(target_seat, self.board)
         time.sleep(TARGET_SEAT_PROMPT['interval'])
+
+    def step_process(self, param):
+        '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
+        '''
+        
+        if param.step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % param.step_scheme)
+         
+        step_algo = None          
+        if param.step_scheme == 'R':        
+            step_algo = SpaceStepAlgo(self.board)
+        elif param.step_scheme == 'N':    
+            step_algo = NumberStepAlgo(self.board)
+        elif param.step_scheme == 'S':
+            step_algo = SizeStepAlgo(self.board)
+        else:
+            step_algo = VelocityStepAlgo(self.board)    #动态敏感度
+        
+        # init params
+        road_seats, target_seats = param.get_road_seats()
+        width, height = param.get_board_size()
+        eccent_list = param.get_eccents()
+        angle_list = param.get_angles()
+        
+        step_algo.print_prompt()
+        for tseat in target_seats:
+            if not self.is_started: break
+            
+            self.prompt_target_seat(tseat)
+            for eccent in eccent_list:
+                for angle in angle_list:            
+                    self.board.reset_pos(eccent, angle, width=width, height=height)
+                    self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
+                    block_data = {
+                        'demo':  self.demo, 
+                        'tseat': tseat, 
+                        'ee':    self.board.get_ee(tseat, self.wpoint), 
+                        'angle': self.board.get_angle(tseat, self.wpoint), 
+                    }
+                    step_algo.extend_block_data(block_data)
+                    block = self.create_block(block_data)
+                    print 'Block: ', block_data
+                    
+                    # 阶梯变化开始
+                    step_algo.prepare_steping()
+                    for i in range(STEPS_COUNT):
+                        if not self.is_started: break  
+                        self.total_trials += 1
+                        trial_data = {
+                            'block':        block,  
+                            'cate':         block.cate, 
+                            'steps_value':  step_algo.get_steps_value(),
+                            'target_road':  self.board.get_target_road().name,
+                            'created_time': times.now()
+                        }
+                        self.current_trial = self.append_trial(trial_data)
+                        
+                        self.gui.draw_all(self.board, self.wpoint) #刺激显示
+                        self.wait() #等待用户按键判断
+                        
+                        if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                            self.current_trial.is_correct = False
+                            self.handle_judge(is_correct=False)
+                        
+                        #用户按键唤醒线程后刷新路名    
+                        self.board.flash_road_names() 
+                        if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                            continue
+                        
+                        # 更新阶梯变量
+                        step_algo.update_vars(self.is_left_algo)
 
     def critical_spacing(self, param):
         road_seats, target_seats = param.get_road_seats()
@@ -260,77 +331,6 @@ class DemoThread(threading.Thread):
     def dynamic_sensitive(self, road_seats, target_seats):
         pass    
     
-    def step_process(self, param):
-        '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
-        '''
-        
-        if param.step_scheme not in ('R', 'S', 'N', 'V'):
-            raise Exception('Unknown step scheme: %s' % param.step_scheme)
-         
-        step_algo = None          
-        if param.step_scheme == 'R':        
-            step_algo = SpaceStepAlgo(self.board)
-        elif param.step_scheme == 'N':    
-            step_algo = NumberStepAlgo(self.board)
-        elif param.step_scheme == 'S':
-            step_algo = SizeStepAlgo(self.board)
-        else:
-            step_algo = VelocityStepAlgo(self.board)    #动态敏感度
-        
-        # init params
-        road_seats, target_seats = param.get_road_seats()
-        width, height = param.get_board_size()
-        eccent_list = param.get_eccents()
-        angle_list = param.get_angles()
-        
-        step_algo.print_prompt()
-        for tseat in target_seats:
-            if not self.is_started: break
-            
-            self.prompt_target_seat(tseat)
-            for eccent in eccent_list:
-                for angle in angle_list:            
-                    self.board.reset_pos(eccent, angle, width=width, height=height)
-                    self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
-                    block_data = {
-                        'demo':  self.demo, 
-                        'tseat': tseat, 
-                        'ee':    self.board.get_ee(tseat, self.wpoint), 
-                        'angle': self.board.get_angle(tseat, self.wpoint), 
-                    }
-                    step_algo.extend_block_data(block_data)
-                    block = self.create_block(block_data)
-                    print 'Block: ', block_data
-                    
-                    # 阶梯变化开始
-                    step_algo.prepare_steping()
-                    for i in range(STEPS_COUNT):
-                        if not self.is_started: break  
-                        self.total_trials += 1
-                        trial_data = {
-                            'block':        block,  
-                            'cate':         block.cate, 
-                            'steps_value':  step_algo.get_steps_value(),
-                            'target_road':  self.board.get_target_road().name,
-                            'created_time': times.now()
-                        }
-                        self.current_trial = self.append_trial(trial_data)
-                        
-                        self.gui.draw_all(self.board, self.wpoint) #刺激显示
-                        self.wait() #等待用户按键判断
-                        
-                        if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
-                            self.current_trial.is_correct = False
-                            self.handle_judge(is_correct=False)
-                        
-                        #用户按键唤醒线程后刷新路名    
-                        self.board.flash_road_names() 
-                        if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
-                            continue
-                        
-                        # 更新阶梯变量
-                        step_algo.update_vars(self.is_left_algo)
-                              
         
     def get_steps_value(self): #阈值具体的方法, 考虑重载
         return float_list_to_str(self.board.get_road_spacings())

@@ -211,18 +211,7 @@ function setResult(res) {
         <select id="board_size" name="board_size">
             <option value="140,100" selected="selected">140*100</option>
             <option value="280,200">280*200</option>
-       </select>            
-    </div>
-</div></div> 
-
-<!--路牌尺寸比例-->
-<div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌尺寸比例:</label></div>
-    <div class="controls">
-        <select id="board_scale" name="board_scale">
-            <option value="1" selected="selected">1</option>
-            <option value="0.7">0.7</option>
-       </select>            
+       </select><span class="prompt-text">(所设为最大路牌尺寸, 其他路牌按比例依次缩放)</span>            
     </div>
 </div></div> 
 
@@ -237,8 +226,38 @@ function setResult(res) {
     </div>
 </div></div> 
 
-<!--路名数量-->
+<!--路牌尺寸比例-->
 <div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌尺寸比例:</label></div>
+    <div class="controls">
+        <select id="board_scale" name="board_scale">
+            <option value="1" selected="selected">1</option>
+            <option value="0.7">0.7</option>
+       </select>            
+    </div>
+</div></div> 
+
+<!--路牌排列形式-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌排列:</label></div>
+    <div class="controls">
+        <select id="board_arrange_type" name="board_arrange_type">
+            <option value="H" selected="selected">横列</option>
+            <option value="V">纵列</option>        
+        </select>
+    </div>
+</div></div>     
+
+<!--路牌间距-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>路牌间距:</label></div>
+    <div class="controls">
+        <input name="board_space" class="vTextField" id="board_space" type="text" value="160">
+    </div>
+</div></div>   
+  
+<!--路名数量-->
+<!-- <div class="control-group form-row"><div>
     <div class="control-label"><label>路名数量:</label></div>
     <div class="controls">
         <select style="width: 70px;" id="road_num1" name="road_num1">
@@ -270,26 +289,7 @@ function setResult(res) {
         </select>
         <span class="prompt-text">(分别设置3个路牌上的路名数量)</span>
     </div>
-</div></div>
-    
-<!--路牌排列形式-->
-<div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌排列:</label></div>
-    <div class="controls">
-        <select id="board_arrange_type" name="board_arrange_type">
-            <option value="H" selected="selected">横列</option>
-            <option value="V">纵列</option>        
-        </select>
-    </div>
-</div></div>     
-
-<!--路牌间距-->
-<div class="control-group form-row"><div>
-    <div class="control-label"><label>路牌间距:</label></div>
-    <div class="controls">
-        <input name="board_space" class="vTextField" id="board_space" type="text" value="160">
-    </div>
-</div></div>   
+</div></div>   -->
     
 <!--路名位置设置-->    
 <div class="control-group form-row"><div>
@@ -394,6 +394,14 @@ function setResult(res) {
     <div class="controls">
         <input name="init_angle" class="vTextField" id="init_angle" type="text" value="" placeholder="a1,a2,a3" >
         <span class="prompt-text">(最多设置3个值, 各值间以 , 分隔)</span>
+    </div>
+</div></div> 
+
+<!--描述信息-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>描述:</label></div>
+    <div class="controls">
+        <input name="desc" class="vTextField" id="desc" type="text" value="" placeholder="描述信息" >
     </div>
 </div></div> 
 

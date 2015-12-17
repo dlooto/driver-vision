@@ -69,48 +69,64 @@ function saveParams() {
     var demo_scheme = $('#demo_scheme').val();
     var step_scheme = $('#step_scheme').val();
     var move_type = $("input[name='move_type']:checked").val();
-    var road_num = $('#road_num').val();
     
     //var target_road = $('#target_road').val();
     var eccent = $('#eccent').val();
     var init_angle = $('#init_angle').val();
     var road_size = $('#road_size').val();
     var board_size = $('#board_size').val();
+    var desc = $('#desc').val();
     
     var marks = new Array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
-    var road_marks = '';
-    var target_seats = '';
+    var road_marks = new Array();
+    var target_seats = new Array();
     for(i in marks) {
         if($("#mark_"+marks[i]).attr("checked") == "checked") {
-            road_marks += marks[i].toUpperCase()+',';    
+            //road_marks += marks[i].toUpperCase()+',';  
+            road_marks.push(marks[i].toUpperCase());  
         }
         if($("#"+marks[i]+"_as_target").attr("checked") == "checked") {
-            target_seats += marks[i].toUpperCase()+',';
+            //target_seats += marks[i].toUpperCase()+',';
+            target_seats.push(marks[i].toUpperCase());
         }
     }
     
-    if(isNull(road_marks)) {
+    if( road_marks.length < 2 || target_seats.length < 1 ) {
         $("#set_result").css('color', 'red');
         $("#set_result").html('');
-        $("#set_result").append('没有设置路名位置');
+        $("#set_result").append('路名数量小于2, 目标项数量小于1');
+        return;           
+    }
+    road_marks = road_marks.join(",") + "|" + target_seats.join(","); 
+    
+    if(isNull(eccent)) {
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append('请设置路牌中心距');
+        return;
+    }        
+    
+    if(isNull(init_angle)) {
+        $("#set_result").css('color', 'red');
+        $("#set_result").html('');
+        $("#set_result").append('请设置初始角度');
         return;
     }
     
     $.ajax({
-        url:     '/admin/vision/set_params',
-        type:    "POST",
-        dataType:"json",
+        url:        '/admin/vision/set_params',
+        type:       "POST",
+        dataType:   "json",
         data:      {"board_type":   'S', 
                     "demo_scheme":  demo_scheme, 
                     "step_scheme":  step_scheme, 
                     "move_type":    move_type, 
-                    "road_num":     road_num,
                     "road_marks":   road_marks,
-                    "target_seats": target_seats,
                     "eccent":       eccent,
                     "init_angle":   init_angle,
                     "road_size":    road_size,
                     "board_size":   board_size, 
+                    "desc":         desc,
         }, 
                     
         success: function(res){
@@ -220,7 +236,7 @@ function setResult(res) {
 </div></div> 
 
 <!--路名数量-->
-<div class="control-group form-row"><div>
+<!-- <div class="control-group form-row"><div>
     <div class="control-label"><label>路名数量:</label></div>
     <div class="controls">
         <select id="road_num" name="road_num">
@@ -233,7 +249,7 @@ function setResult(res) {
             <option value="8">8</option>
         </select>
     </div>
-</div></div>
+</div></div> -->
     
 <!--路名位置设置-->    
 <div class="control-group form-row"><div>
@@ -305,6 +321,14 @@ function setResult(res) {
     <div class="controls">
         <input name="init_angle" class="vTextField" id="init_angle" type="text" value="" placeholder="a1,a2,a3" >
         <span class="prompt-text">(最多设置3个值, 各值间以 , 分隔)</span>
+    </div>
+</div></div> 
+
+<!--描述信息-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>描述:</label></div>
+    <div class="controls">
+        <input name="desc" class="vTextField" id="desc" type="text" value="" placeholder="描述信息" >
     </div>
 </div></div> 
 
