@@ -77,16 +77,15 @@ function saveParams() {
     var board_size = $('#board_size').val();
     var desc = $('#desc').val();
     
+    //构造 road_marks参数
     var marks = new Array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
     var road_marks = new Array();
     var target_seats = new Array();
     for(i in marks) {
         if($("#mark_"+marks[i]).attr("checked") == "checked") {
-            //road_marks += marks[i].toUpperCase()+',';  
             road_marks.push(marks[i].toUpperCase());  
         }
         if($("#"+marks[i]+"_as_target").attr("checked") == "checked") {
-            //target_seats += marks[i].toUpperCase()+',';
             target_seats.push(marks[i].toUpperCase());
         }
     }
@@ -94,7 +93,7 @@ function saveParams() {
     if( road_marks.length < 2 || target_seats.length < 1 ) {
         $("#set_result").css('color', 'red');
         $("#set_result").html('');
-        $("#set_result").append('路名数量小于2, 目标项数量小于1');
+        $("#set_result").append('路名数量小于2, 或目标项数量小于1');
         return;           
     }
     road_marks = road_marks.join(",") + "|" + target_seats.join(","); 
@@ -129,12 +128,12 @@ function saveParams() {
                     "desc":         desc,
         }, 
                     
-        success: function(res){
+        success: function(res) {
             console.log(res);
             setResult(res);
         },
         error:  function(e){
-            alert("提交异常")
+            alert("提交异常");
         },
         beforeSend: function(xhr) {
                 xhr.setRequestHeader("X-CSRFTOKEN", $.cookie('csrftoken'));

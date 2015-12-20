@@ -41,9 +41,6 @@ class ParamsSetView(CustomAPIView):
         
         return True, ''
     
-#     def get_roads_num(self, road_marks):
-#         return '%s' % len(road_marks.split('|')[0].split(','))
-    
     def extend_params(self, req, params):
         pass
     
@@ -99,6 +96,8 @@ class MultiBoardParamsSetView(ParamsSetView):
         '''多路牌情况
         @param road_marks: 路名设置, 如 A,B,C,D,A|A,B,D::B,D,E,A|D,E
         '''
+        if not road_marks:
+            return False, 'road_marks is null'
         roads_str_list = road_marks.split('::')
         for roads_str in roads_str_list: #for every 'B,D,E,A|D,E'
             road_str, target_str = roads_str.split('|')
@@ -109,15 +108,6 @@ class MultiBoardParamsSetView(ParamsSetView):
                 return False, u'目标项 %s 不在设置的路名里 %s' % (target_list, road_list)
         
         return True, ''
-    
-#     def get_roads_num(self, road_marks):
-#         '''@param road_marks:  like  A,B,C,D,A|A,B,D::B,D,E,A|D,E
-#         '''
-#         nums = []
-#         roads_str_list = road_marks.split('::')
-#         for roads_str in roads_str_list:
-#             nums.append(len(roads_str.split('|')[0].split(',')))
-#         return ','.join(nums)
     
     def extend_params(self, req, params):
         board_scale = req.POST.get('board_scale')   #多路牌缩放比例       
