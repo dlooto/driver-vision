@@ -23,7 +23,7 @@ class RoadManager(BaseManager):
 class TrialParamManager(BaseManager):
     
     def latest_coming(self):
-        '''获取最新一条可用的参数数据'''
+        '''获取最新一条可用的初始参数'''
         return self.filter(is_coming=True).order_by('-created_time')[0]
     
     def set_not_coming(self):

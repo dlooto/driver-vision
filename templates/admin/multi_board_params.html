@@ -76,7 +76,7 @@ function checkMark(m) {
     //var rm = m.toUpperCase();
     if($("#mark_"+m).attr("checked") == "checked") { //已选中时再点击
         $("#"+m+"_pressed").css("background-color","#D3E9FF");
-        $("#"+m+"_pressed").val(m.toUpperCase());
+        $("#"+m+"_pressed").val(m.substring(0, 1).toUpperCase());
         $("#mark_"+m).attr("checked", false);
         $("#"+m+"_as_target").attr("checked", false);  //
     } else {  //未选中时点击
@@ -330,57 +330,57 @@ function setResult(res) {
 <div class="control-group form-row"><div>
     <div class="control-label"><label>路名位置:<br />(勾选后作为目标项)</label></div>
     <div class="controls">
-        <input id="g1_pressed" onclick="checkMark('g1');" type="button" value="G1" class="road_v1" /><!--G1-->
+        <input id="g1_pressed" onclick="checkMark('g1');" type="button" value="G" class="road_v1" /><!--G1-->
         <input id="g1_as_target" name="g1_as_target" type="checkbox">
-        <input id="g2_pressed" onclick="checkMark('g2');" type="button" value="G2" class="road_v1_2" /><!--G2-->
+        <input id="g2_pressed" onclick="checkMark('g2');" type="button" value="G" class="road_v1_2" /><!--G2-->
         <input id="g2_as_target" name="g2_as_target" type="checkbox">
-        <input id="g3_pressed" onclick="checkMark('g3');" type="button" value="G3" class="road_v1_2" /><!--G3-->
+        <input id="g3_pressed" onclick="checkMark('g3');" type="button" value="G" class="road_v1_2" /><!--G3-->
         <input id="g3_as_target" name="g3_as_target" type="checkbox"><br />
         
-        <input id="h1_pressed" onclick="checkMark('h1');" type="button" value="H1" class="road_v2" /><!--H1-->
+        <input id="h1_pressed" onclick="checkMark('h1');" type="button" value="H" class="road_v2" /><!--H1-->
         <input id="h1_as_target" name="h1_as_target" type="checkbox">
-        <input id="h2_pressed" onclick="checkMark('h2');" type="button" value="H2" class="road_v2_2" /><!--H2-->
+        <input id="h2_pressed" onclick="checkMark('h2');" type="button" value="H" class="road_v2_2" /><!--H2-->
         <input id="h2_as_target" name="h2_as_target" type="checkbox">
-        <input id="h3_pressed" onclick="checkMark('h3');" type="button" value="H3" class="road_v2_2" /><!--H3-->
+        <input id="h3_pressed" onclick="checkMark('h3');" type="button" value="H" class="road_v2_2" /><!--H3-->
         <input id="h3_as_target" name="h3_as_target" type="checkbox"><br />
         
-        <input id="a1_pressed" onclick="checkMark('a1');" type="button" value="A1" class="road_h1" /><!--A1-->
+        <input id="a1_pressed" onclick="checkMark('a1');" type="button" value="A" class="road_h1" /><!--A1-->
         <input id="a1_as_target" name="a1_as_target" type="checkbox">
-        <input id="d1_pressed" onclick="checkMark('d1');" type="button" value="D1" class="road_h2" /><!--D1-->
+        <input id="d1_pressed" onclick="checkMark('d1');" type="button" value="D" class="road_h2" /><!--D1-->
         <input id="d1_as_target" name="d1_as_target" type="checkbox">
-        <input id="a2_pressed" onclick="checkMark('a2');" type="button" value="A2" class="road_h1_2" /><!--A2-->
+        <input id="a2_pressed" onclick="checkMark('a2');" type="button" value="A" class="road_h1_2" /><!--A2-->
         <input id="a2_as_target" name="a2_as_target" type="checkbox">
-        <input id="d2_pressed" onclick="checkMark('d2');" type="button" value="D2" class="road_h2" /><!--D2-->
+        <input id="d2_pressed" onclick="checkMark('d2');" type="button" value="D" class="road_h2" /><!--D2-->
         <input id="d2_as_target" name="d2_as_target" type="checkbox">
-        <input id="a3_pressed" onclick="checkMark('a3');" type="button" value="A3" class="road_h1_2" /><!--A3-->
+        <input id="a3_pressed" onclick="checkMark('a3');" type="button" value="A" class="road_h1_2" /><!--A3-->
         <input id="a3_as_target" name="a3_as_target" type="checkbox">
-        <input id="d3_pressed" onclick="checkMark('d3');" type="button" value="D3" class="road_h2" /><!--D3-->
+        <input id="d3_pressed" onclick="checkMark('d3');" type="button" value="D" class="road_h2" /><!--D3-->
         <input id="d3_as_target" name="d3_as_target" type="checkbox"><br />
         
-        <input id="b1_pressed" onclick="checkMark('b1');" type="button" value="B1" class="road_h1" /><!--B1-->
+        <input id="b1_pressed" onclick="checkMark('b1');" type="button" value="B" class="road_h1" /><!--B1-->
         <input id="b1_as_target" name="b1_as_target" type="checkbox" />
-        <input id="e1_pressed" onclick="checkMark('e1');" type="button" value="E1" class="road_h2" /><!--E1-->
+        <input id="e1_pressed" onclick="checkMark('e1');" type="button" value="E" class="road_h2" /><!--E1-->
         <input id="e1_as_target" name="e1_as_target" type="checkbox">
-        <input id="b2_pressed" onclick="checkMark('b2');" type="button" value="B2" class="road_h1_2" /><!--B2-->
+        <input id="b2_pressed" onclick="checkMark('b2');" type="button" value="B" class="road_h1_2" /><!--B2-->
         <input id="b2_as_target" name="b2_as_target" type="checkbox" />
-        <input id="e2_pressed" onclick="checkMark('e2');" type="button" value="E2" class="road_h2" /><!--E2-->
+        <input id="e2_pressed" onclick="checkMark('e2');" type="button" value="E" class="road_h2" /><!--E2-->
         <input id="e2_as_target" name="e2_as_target" type="checkbox">
-        <input id="b3_pressed" onclick="checkMark('b3');" type="button" value="B3" class="road_h1_2" /><!--B3-->
+        <input id="b3_pressed" onclick="checkMark('b3');" type="button" value="B" class="road_h1_2" /><!--B3-->
         <input id="b3_as_target" name="b3_as_target" type="checkbox" />
-        <input id="e3_pressed" onclick="checkMark('e3');" type="button" value="E3" class="road_h2" /><!--E3-->
+        <input id="e3_pressed" onclick="checkMark('e3');" type="button" value="E" class="road_h2" /><!--E3-->
         <input id="e3_as_target" name="e3_as_target" type="checkbox"><br />
         
-        <input id="c1_pressed" onclick="checkMark('c1');" type="button" value="C1" class="road_h1" /><!--C1-->
+        <input id="c1_pressed" onclick="checkMark('c1');" type="button" value="C" class="road_h1" /><!--C1-->
         <input id="c1_as_target" name="c1_as_target" type="checkbox">
-        <input id="f1_pressed" onclick="checkMark('f1');" type="button" value="F1" class="road_h2" /><!--F1-->
+        <input id="f1_pressed" onclick="checkMark('f1');" type="button" value="F" class="road_h2" /><!--F1-->
         <input id="f1_as_target" name="f1_as_target" type="checkbox">
-        <input id="c2_pressed" onclick="checkMark('c2');" type="button" value="C2" class="road_h1_2" /><!--C2-->
+        <input id="c2_pressed" onclick="checkMark('c2');" type="button" value="C" class="road_h1_2" /><!--C2-->
         <input id="c2_as_target" name="c2_as_target" type="checkbox">
-        <input id="f2_pressed" onclick="checkMark('f2');" type="button" value="F2" class="road_h2" /><!--F2-->
+        <input id="f2_pressed" onclick="checkMark('f2');" type="button" value="F" class="road_h2" /><!--F2-->
         <input id="f2_as_target" name="f2_as_target" type="checkbox">
-        <input id="c3_pressed" onclick="checkMark('c3');" type="button" value="C3" class="road_h1_2" /><!--C3-->
+        <input id="c3_pressed" onclick="checkMark('c3');" type="button" value="C" class="road_h1_2" /><!--C3-->
         <input id="c3_as_target" name="c3_as_target" type="checkbox">
-        <input id="f3_pressed" onclick="checkMark('f3');" type="button" value="F3" class="road_h2" /><!--F3-->
+        <input id="f3_pressed" onclick="checkMark('f3');" type="button" value="F" class="road_h2" /><!--F3-->
         <input id="f3_as_target" name="f3_as_target" type="checkbox"><br />
     
         <div id="group1" style="display: none;"> <!--用隐藏域指代路名按钮的选中与否-->

@@ -10,6 +10,7 @@ from django.views.generic.base import TemplateView
 from django.utils.decorators import method_decorator
 from vision.models import TrialParam
 from core.views import CustomAPIView
+import traceback
 
 
 admin_view = admin.site.admin_view
@@ -85,7 +86,7 @@ class ParamsSetView(CustomAPIView):
             trial_param = TrialParam(**params)
             trial_param.save()
         except Exception, e:
-            logs.error(e)
+            traceback.print_exc()
             return http.failed(u'参数设置失败')
         
         return http.ok()        
@@ -97,15 +98,17 @@ class MultiBoardParamsSetView(ParamsSetView):
         @param road_marks: 路名设置, 如 A,B,C,D,A|A,B,D::B,D,E,A|D,E
         '''
         if not road_marks:
-            return False, 'road_marks is null'
+            return False, 'road_marks NULL'
         roads_str_list = road_marks.split('::')
+        i = 0
         for roads_str in roads_str_list: #for every 'B,D,E,A|D,E'
+            i += 1
             road_str, target_str = roads_str.split('|')
             road_list = road_str.split(',')
             target_list = target_str.split(',')
             if not set(target_list).issubset(set(road_list)): #若不是子集关系
-                logs.inf(__name__, eggs.lineno(), target_list, road_list)
-                return False, u'目标项 %s 不在设置的路名里 %s' % (target_list, road_list)
+                logs.err(__name__, eggs.lineno(), '%s not in %s' % (target_list, road_list))
+                return False, u'路牌-%s: 目标项 %s 不在设定的路名里 %s' % (i, target_list, road_list)
         
         return True, ''
     
