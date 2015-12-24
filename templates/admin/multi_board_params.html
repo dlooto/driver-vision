@@ -128,7 +128,7 @@ function saveMultiParams() {
         if( road_marks.length < 2 || target_seats.length < 1 ) {
             $("#set_result").css('color', 'red');
             $("#set_result").html('');
-            $("#set_result").append('路名数量小于2, 或目标项数量小于1');
+            $("#set_result").append('路牌-'+(++k)+": " + '路名数量小于2, 或目标项数量小于1');
             return;   
         }
         
@@ -246,7 +246,7 @@ function setResult(res) {
         <select id="board_size" name="board_size">
             <option value="140,100" selected="selected">140*100</option>
             <option value="280,200">280*200</option>
-       </select><span class="prompt-text">(所设为最大路牌尺寸, 其他路牌按比例依次缩放)</span>            
+       </select><span class="prompt-text"> (所设为最大路牌尺寸, 其他路牌按比例依次缩放)</span>            
     </div>
 </div></div> 
 
@@ -413,6 +413,19 @@ function setResult(res) {
         </div>
     </div>
 </div></div>   
+
+<!--初始路牌显示个数-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>初始路牌数:</label></div>
+    <div class="controls">
+        <select id="init_board_num" name="init_board_num">
+            <option value="1">1</option>
+            <option value="2">2</option>        
+            <option value="3" selected="selected">3</option>
+        </select>
+        <span class="prompt-text"> (试验开始后路牌初始显示个数)</span>
+    </div>
+</div></div> 
 
 <!--路牌中心距-->
 <div class="control-group form-row"><div>

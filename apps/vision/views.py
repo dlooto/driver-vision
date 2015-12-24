@@ -81,11 +81,12 @@ class ParamsSetView(CustomAPIView):
             }
         
             self.extend_params(req, params)
+            print '\n', params, '\n'
         
             TrialParam.objects.set_not_coming()
             trial_param = TrialParam(**params)
             trial_param.save()
-        except Exception, e:
+        except Exception:
             traceback.print_exc()
             return http.failed(u'参数设置失败')
         

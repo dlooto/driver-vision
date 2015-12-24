@@ -31,12 +31,12 @@ cached_kana_roads = RoadModel.objects.all_kana_roads()
 class Board(object):
     '''路牌'''
     
-    pos = None                  #中心点坐标, 即路牌位置
+    pos = None                  #路牌中心点坐标
     width = 280                 #路牌宽度
     height = 200                #路牌高度
     
     road_dict = {}              #路名字典, key/value: 'A'/Road()
-    target_seat = None
+    target_seat = None          #目标路名位置
     
     # 辅助变量
     prompt_road_dict = {}
@@ -368,7 +368,23 @@ class Board(object):
 #     def erase(self, canvas):
 #         '''擦除路牌, 开始下一个1.6s的显示. 擦除路牌同时擦除所有路名'''
 #         self._erase_roads(canvas)
-#         canvas.delete(self.tk_id)    
+#         canvas.delete(self.tk_id)   
+
+class MultiBoard(object):
+    '''相当于一个路牌容器, 内部管理着多个路牌'''
+    
+    
+    board_dict = {} #路牌字典, {'B1':Board1, 'B2':Board2, 'B3':Board3} 
+    
+    board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
+    
+    def __init__(self, ):
+        '''设置提示路牌坐标及路名数据'''
+        
+    def load_boards(self):
+        '''路牌数量增减, 尺寸变化, 间距变化后路牌重新加载...'''
+        pass    
+    
     
         
 class Road(object):

@@ -71,7 +71,7 @@ class GUI(Tk):
         for tk_id in self.cv.widget_list:
             self.cv.delete(tk_id)
         self.cv.widget_list = []
-        self.cv.update()   
+        self.cv.update()
         
     def draw_target_seat(self, target_seat, board):
         '''绘制目标提示信息'''
@@ -90,7 +90,7 @@ class GUI(Tk):
     def draw_all(self, board, wpoint):
         self.erase_all()
         self.draw_wpoint(wpoint)
-        self.draw_board(board)   
+        self.draw_board(board)
         self.cv.update()     
         
     def draw_wpoint(self, wpoint):

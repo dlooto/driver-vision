@@ -77,7 +77,7 @@ class NumberStepAlgo(StepAlgo):
         
     def update_vars(self, is_left_algo):
         self.board.update_flanker_numbers(is_left_algo, self.board.get_road_size())
-        print 'Flankers:', 'N+2' if is_left_algo else 'N-1', len(self.board.get_flanker_roads())    
+        print 'Flankers:', 'N+2' if is_left_algo else 'N-1', len(self.board.get_flanker_roads())
             
         
 class SizeStepAlgo(StepAlgo):

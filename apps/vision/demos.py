@@ -10,7 +10,7 @@ from utils import times, eggs, logs
 from utils.eggs import float_list_to_str
 from config import *
 import threading
-from vision.trials import Board, WatchPoint
+from vision.trials import Board, WatchPoint, MultiBoard
 from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
 
@@ -38,6 +38,9 @@ class DemoThread(threading.Thread):
     total_trials = 0                #总刺激显示次数
     total_correct_judge = 0         #总正确判断次数
     
+    def str(self):
+        return u'视觉测试试验'
+    
     def __init__(self, gui, param):
         threading.Thread.__init__(self)
         
@@ -45,58 +48,48 @@ class DemoThread(threading.Thread):
         self.param = param
         
         self.wpoint = WatchPoint()
-        self.board = self.build_board(param)
+        self.board = self.build_board()
         
     def run(self):
-        print('Demo thread started')
+        print('Demo thread started: %s' % self.str())
         
-        self.is_started = True          #实验进行状态, 默认为未开始
-        self.new_demo()                 #先构造demo数据对象, 以备阶梯过程中使用
-        self.step_process(self.param)
+        self.is_started = True              #实验进行状态, 默认为未开始
+        self.new_demo_model()               #先构造demo数据对象, 以备阶梯过程中使用
+        
+        step_algo = self.build_step_algo(self.param.step_scheme)
+        self.step_process(self.param, step_algo)
         
         #批量保存block数据, is_started=True则试验未被中断, 否则被中断
         self.end_demo(is_break=not self.is_started)
         
         print('Demo thread ended')
         
-    def build_board(self, param):
+    def build_board(self):
         '''需要子类重载'''
         #return Board(self.param.eccent, self.param.init_angle, width=width, height=height)
         width, height = self.param.get_board_size()
         return Board(self.param.road_size, width=width, height=height)
     
-    def control_demo(self):
-        '''控制刺激过程. 阶梯过程包括: 数量阈值, 尺寸阈值, 关键间距, 动态敏感度
-        首先以 静态单路牌 为例...
-        '''
-        
-        self.new_demo(self.param) #以备后用
-        self.step_process(self.param)
-        
-        #批量保存block数据
-        self.end_demo(is_break=not self.is_started)  #is_started=True则试验未被中断, 否则被中断        
-
     def prompt_target_seat(self, target_seat):
         '''绘制目标位置提示, 停留3秒'''
         self.gui.draw_target_seat(target_seat, self.board)
         time.sleep(TARGET_SEAT_PROMPT['interval'])
 
-    def step_process(self, param):
+    def build_step_algo(self, step_scheme):
+        if step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % step_scheme)
+         
+        if step_scheme == 'R':        
+            return SpaceStepAlgo(self.board)
+        if step_scheme == 'N':    
+            return NumberStepAlgo(self.board)
+        if step_scheme == 'S':
+            return SizeStepAlgo(self.board)
+        return VelocityStepAlgo(self.board)    #动态敏感度        
+
+    def step_process(self, param, step_algo):
         '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
         '''
-        
-        if param.step_scheme not in ('R', 'S', 'N', 'V'):
-            raise Exception('Unknown step scheme: %s' % param.step_scheme)
-         
-        step_algo = None          
-        if param.step_scheme == 'R':        
-            step_algo = SpaceStepAlgo(self.board)
-        elif param.step_scheme == 'N':    
-            step_algo = NumberStepAlgo(self.board)
-        elif param.step_scheme == 'S':
-            step_algo = SizeStepAlgo(self.board)
-        else:
-            step_algo = VelocityStepAlgo(self.board)    #动态敏感度
         
         # init params
         road_seats, target_seats = param.get_road_seats()
@@ -152,16 +145,14 @@ class DemoThread(threading.Thread):
                         # 更新阶梯变量
                         step_algo.update_vars(self.is_left_algo)
 
-    def get_steps_value(self): #阈值具体的方法, 考虑重载
-        return float_list_to_str(self.board.get_road_spacings())
-        
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 
         '''
         Trial.objects.bulk_create(self.trial_querylist)
         
         self.demo.time_cost = round(times.time_cost(self.demo.created_time), 1)
-        self.demo.correct_rate = round(self.total_correct_judge*1.0/self.total_trials, 2)
+        rate = self.total_correct_judge*1.0/self.total_trials if self.total_trials else 0
+        self.demo.correct_rate = round(rate, 2)
         self.demo.is_break = is_break
         self.demo.save()
         
@@ -176,7 +167,7 @@ class DemoThread(threading.Thread):
         
         '''
         if is_correct:
-            self.is_update_step_value = not self.is_update_step_value 
+            self.is_update_step_value = not self.is_update_step_value
             self.is_left_algo = True
         else:
             self.is_update_step_value = True    #需要更新阶梯变量, 以进行下一次刺激显示 
@@ -195,7 +186,7 @@ class DemoThread(threading.Thread):
         self.current_trial.resp_cost = times.time_cost(self.current_trial.created_time)
         return self.current_trial.is_correct                  
             
-    def new_demo(self):
+    def new_demo_model(self):
         demo = Demo(param=self.param)
         demo.save()
         self.demo =  demo   
@@ -232,23 +223,34 @@ class DemoThread(threading.Thread):
 class StaticSingleDemoThread(DemoThread):
     '''静态单路牌'''
     
-    pass
+    def str(self):
+        return u'静态单路牌试验'
 
 class StaticMultiDemoThread(DemoThread):
     '''静态多路牌'''
     
-    def build_board(self):
+    def str(self):
+        return u'静态多路牌试验'    
+    
+    def build_board(self, param):
         #TODO... build multi boards
         return Board()
     
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
-    pass
+    
+    def str(self):
+        return u'动态单路牌试验'    
 
 class DynamicMultiDemoThread(DemoThread):
     '''动态多路牌'''
-    pass
-
+    
+    def str(self):
+        return u'动态多路牌试验'        
+    
+    def build_board(self):
+        return MultiBoard()
+    
 
     
         

@@ -18,7 +18,7 @@ class RoadManager(BaseManager):
     
     def all_kana_roads(self):
         '''返回所有假路名'''
-        return self.filter(is_real=False, is_valid=True) 
+        return self.filter(is_real=False, is_valid=True)
     
 class TrialParamManager(BaseManager):
     
