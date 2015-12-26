@@ -15,7 +15,7 @@ from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
 
 '''
-试验线程类
+单路牌试验线程类
 '''
 
 class DemoThread(threading.Thread):
@@ -48,7 +48,7 @@ class DemoThread(threading.Thread):
         self.param = param
         
         self.wpoint = WatchPoint()
-        self.board = self.build_board()
+        self.board = self.build_board()  #考虑单路牌/多路牌通用
         
     def run(self):
         print('Demo thread started: %s' % self.str())
@@ -59,7 +59,7 @@ class DemoThread(threading.Thread):
         step_algo = self.build_step_algo(self.param.step_scheme)
         self.step_process(self.param, step_algo)
         
-        #批量保存block数据, is_started=True则试验未被中断, 否则被中断
+        #批量保存block数据, is_started=True 则试验未被中断, 否则被中断
         self.end_demo(is_break=not self.is_started)
         
         print('Demo thread ended')
@@ -68,18 +68,23 @@ class DemoThread(threading.Thread):
         '''需要子类重载'''
         #return Board(self.param.eccent, self.param.init_angle, width=width, height=height)
         width, height = self.param.get_board_size()
-        return Board(self.param.road_size, width=width, height=height)
+        return Board(0, 0, self.param.road_size, width=width, height=height)
     
     def prompt_target_seat(self, target_seat):
         '''绘制目标位置提示, 停留3秒'''
         self.gui.draw_target_seat(target_seat, self.board)
         time.sleep(TARGET_SEAT_PROMPT['interval'])
+        
+    def prompt_target_multi(self, target_board_key): 
+        '''提示目标项位置: 所在路牌及路名'''
+        self.gui.draw_target_board(target_board_key, self.board)  #self.board相当于多个路牌的容器
+        time.sleep(TARGET_SEAT_PROMPT['interval'])        
 
     def build_step_algo(self, step_scheme):
         if step_scheme not in ('R', 'S', 'N', 'V'):
             raise Exception('Unknown step scheme: %s' % step_scheme)
          
-        if step_scheme == 'R':        
+        if step_scheme == 'R':       
             return SpaceStepAlgo(self.board)
         if step_scheme == 'N':    
             return NumberStepAlgo(self.board)
@@ -93,7 +98,7 @@ class DemoThread(threading.Thread):
         
         # init params
         road_seats, target_seats = param.get_road_seats()
-        width, height = param.get_board_size()
+        #width, height = param.get_board_size()
         eccent_list = param.get_eccents()
         angle_list = param.get_angles()
         
@@ -104,7 +109,7 @@ class DemoThread(threading.Thread):
             self.prompt_target_seat(tseat)
             for eccent in eccent_list:
                 for angle in angle_list:            
-                    self.board.reset_pos(eccent, angle, width=width, height=height)
+                    self.board.reset_pos(eccent, angle)
                     self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
                     block_data = {
                         'demo':  self.demo, 
@@ -226,31 +231,11 @@ class StaticSingleDemoThread(DemoThread):
     def str(self):
         return u'静态单路牌试验'
 
-class StaticMultiDemoThread(DemoThread):
-    '''静态多路牌'''
-    
-    def str(self):
-        return u'静态多路牌试验'    
-    
-    def build_board(self, param):
-        #TODO... build multi boards
-        return Board()
-    
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
     
     def str(self):
         return u'动态单路牌试验'    
-
-class DynamicMultiDemoThread(DemoThread):
-    '''动态多路牌'''
-    
-    def str(self):
-        return u'动态多路牌试验'        
-    
-    def build_board(self):
-        return MultiBoard()
-    
 
     
         

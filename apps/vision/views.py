@@ -58,12 +58,15 @@ class ParamsSetView(CustomAPIView):
         road_size = req.POST.get('road_size')       #路名尺寸
         road_marks = req.POST.get('road_marks')     #路名设置: 'A,B,C,D,A|A,B,D::B,D,E,A|D,E'
         
-        eccent = req.POST.get('eccent')#路牌中心距
-        init_angle = req.POST.get('init_angle')#初始角度
+        eccent = req.POST.get('eccent')             #路牌中心距
+        init_angle = req.POST.get('init_angle')     #初始角度
         
         correct, msg = self.check_roads_set(road_marks)
         if not correct:
             return http.failed(msg)
+        
+        if demo_scheme == 'S':
+            move_type = ''
         
         try:
             params = {
@@ -117,11 +120,13 @@ class MultiBoardParamsSetView(ParamsSetView):
         board_scale = req.POST.get('board_scale')   #多路牌缩放比例       
         board_range = req.POST.get('board_range')   #多路牌排列
         board_space = req.POST.get('board_space')   #多路牌间距
+        pre_board_num = req.POST.get('pre_board_num') #初始路牌显示数
         
         extras = {
             "board_scale":  float(board_scale),
             "board_range":  board_range,
             "board_space":  float(board_space),
+            "pre_board_num":int(pre_board_num),
         }
         params.update(extras)
 

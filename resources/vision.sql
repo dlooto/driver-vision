@@ -22,3 +22,6 @@ alter table vision_trialparam add column `board_space` double precision;
 
 alter table vision_trialparam drop column `road_num`;
 alter table vision_trialparam modify column `road_marks` varchar(100) NOT NULL;
+
+/* 2015-12-25 Christmas */
+alter table vision_trialparam add column `pre_board_num` integer;

@@ -4,9 +4,9 @@
 # Created on Oct 19, 2015, by Junn
 #
 
-from core.models import BaseModel
 from django.db import models
 from utils import eggs, logs
+from core.models import BaseModel
 from config import *
 from core.managers import BaseManager
 
@@ -94,6 +94,7 @@ class TrialParam(BaseModel):
     board_scale = models.FloatField(u'路牌缩放比例', default=1.0, null=True, blank=True) #多路牌使用  
     board_range = models.CharField(u'路牌排列', max_length=1, choices=BOARD_RANGE_CHOICES, default='H', null=True, blank=True)#多路牌使用
     board_space = models.FloatField(u'路牌间距', null=True, blank=True) #多路牌使用
+    pre_board_num = models.IntegerField(u'初始路牌显示数', null=True, blank=True)
     
     #多路牌时多个数量以逗号间隔, 形如: 3,5,7
     #road_num = models.CharField(u'路名数量', max_length=10, default='3')   
@@ -151,6 +152,10 @@ class TrialParam(BaseModel):
         roads_str, targets_str = self.road_marks.split('|')
         return roads_str.split(','), targets_str.split(',')
     
+    def get_multi_road_seats(self):
+        '''返回路名标记列表, 形如 [([A,B,D], [A,B]), ([B,C,D], [C,D]), ]'''
+        return []
+    
     def be_executed(self):
         '''被执行一次, 执行次数加1'''
         self.trialed_count += 1
@@ -195,9 +200,15 @@ class Block(BaseModel):
     '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
     
     demo = models.ForeignKey(Demo, verbose_name=u'所属Demo')
-    tseat = models.CharField(u'目标位置(D)', max_length=1)      #如A/B/C/...
-    ee = models.FloatField(u'离心率(E)', null=True, blank=True)   #目标项与注视点距离               
-    angle = models.IntegerField(u'角度(@)') #目标项与注视点连线夹角                   
+    
+    # 单路牌时值如A/B/C/..., 多路牌时形如 B1,A (B1为目标路牌标记, A为目标路名标记, 以逗号分隔)
+    tseat = models.CharField(u'目标位置(D)', max_length=1)      
+    
+    # 目标项与注视点距离. 单路牌为目标路名, 多路牌为目标路牌    
+    ee = models.FloatField(u'离心率(E)', null=True, blank=True)
+    
+    # 目标项与注视点连线夹角                  
+    angle = models.IntegerField(u'角度(@)')                    
     
     cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
                          
@@ -226,7 +237,9 @@ class Trial(BaseModel):
     resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
     steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
-    target_road = models.CharField(u'目标路名', max_length=40, null=True, blank=True, default='')   #由此可知道用户按键情况
+    
+    # 单路牌时如'视觉路', 多路牌时如'B2,视觉路'(目标路牌,目标路名). 由此可知道用户按键情况    
+    target_road = models.CharField(u'目标路名', max_length=40, null=True, blank=True, default='')
     #start_time = models.DateTimeField(u'开始时间', )
     
     class Meta:

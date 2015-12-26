@@ -42,37 +42,13 @@ class Board(object):
     prompt_road_dict = {}
     road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
     
-    def __init__(self, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
-#         ''' 
-#         e: 路牌中心距(路牌中心与注视点距离) 
-#         a: 路牌中心点与注视点连线的水平夹角(角度值)
-#         wp_pos: 注视点坐标
-#         '''
-#         self.pos = self.calc_pos(e, a, wp_pos)
-#         self.width = width
-#         self.height = height
-#         
-#         # 根据尺寸确定各路名位置坐标参考系
-#         if self.width == 280:
-#             self.road_seat_refer = ROAD_SEAT
-#         elif self.width == 140:
-#             self.road_seat_refer = ROAD_SEAT_S
-#         else:
-#             self.road_seat_refer = ROAD_SEAT_B
-        self.reset_pos(0, 0, width=width, height=height)
-        self.pos = WATCH_POS
-        
-        self.prompt_pos = WATCH_POS
-        self._load_prompt_roads(road_size)  #各路名坐标计算依赖于self.pos
-        
-    def reset_pos(self, e, a, wp_pos=WATCH_POS, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
-        ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
-        
-        e: 路牌中心距(路牌中心与注视点距离) 
-        a: 路牌中心点与注视点连线的水平夹角(角度值) 
-        wp_pos: 注视点坐标
+    def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+        ''' 
+        @param e: 路牌中心距(路牌中心与注视点距离) 
+        @param a: 路牌中心点与注视点连线的水平夹角(角度值)
+        @param road_size: 路名尺寸
         '''
-        self.pos = self.calc_pos(e, a, wp_pos)
+#         self.pos = self.calc_pos(e, a, wp_pos)
         self.width = width
         self.height = height
         
@@ -83,6 +59,38 @@ class Board(object):
             self.road_seat_refer = ROAD_SEAT_S
         else:
             self.road_seat_refer = ROAD_SEAT_B
+        
+        self.reset_pos(e, a)
+        self.prompt_pos = WATCH_POS
+        self._load_prompt_roads(road_size)  #各路名坐标计算依赖于self.pos
+        
+    def reset_pos(self, e, a, wp_pos=WATCH_POS):
+        ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
+        
+        e: 路牌中心距(路牌中心与注视点距离) 
+        a: 路牌中心点与注视点连线的水平夹角(角度值) 
+        wp_pos: 注视点坐标
+        '''
+        self.pos = self.calc_pos(e, a, wp_pos)
+        
+        #self.width = width
+        #self.height = height
+        
+#         # 根据尺寸确定各路名位置坐标参考系
+#         if self.width == 280:
+#             self.road_seat_refer = ROAD_SEAT
+#         elif self.width == 140:
+#             self.road_seat_refer = ROAD_SEAT_S
+#         else:
+#             self.road_seat_refer = ROAD_SEAT_B
+                                
+    def reset_pos_xy(self, pos):
+        ''' 重置路牌中心点坐标. 为reset_pos()的替代方法, 直接传入路牌中心点坐标.  
+        路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
+        
+        @param pos: (x, y)元组形式坐标值 
+        '''
+        self.pos = pos
                                 
         
     def clear_queue(self):
@@ -102,6 +110,13 @@ class Board(object):
         '''
         x0, y0 = wp_pos
         return (x0 - e * math.cos(math.radians(a)), y0 - e * math.sin(math.radians(a)))
+    
+    def set_spared_road_seats(self, road_seats_item):
+        '''设置待轮询的目标路名列表
+        多路牌试验中添加该方法
+        '''
+        self.spared_road_seats = road_seats_item[0]    #路牌上路名标记 
+        self.spared_target_seats = road_seats_item[1]  #待轮询的目标路名列表
     
     def load_roads(self, road_seats, target_seat, road_size):
         ''' 设置路牌上的所有路名. 从词库中重新随机选择, 路名对象将被重新初始化'''
@@ -219,13 +234,6 @@ class Board(object):
                 road_spacings[i] += SPACING_RIGHT_DELTA
                   
         self.update_flanker_poses(is_left_algo)    
-    
-    def get_road_poses(self):
-        '''返回所有路名坐标, Test...'''
-        poses = []
-        for road in self.road_dict.values():
-            poses.append(road.pos)
-        return poses    
     
     def update_flanker_numbers(self, is_left_algo, road_size):
         '''
@@ -371,21 +379,147 @@ class Board(object):
 #         canvas.delete(self.tk_id)   
 
 class MultiBoard(object):
-    '''相当于一个路牌容器, 内部管理着多个路牌'''
+    '''路牌容器, 内部管理着多个路牌'''
     
     
     board_dict = {} #路牌字典, {'B1':Board1, 'B2':Board2, 'B3':Board3} 
     
+    prompt_board_dict = {}  #辅助变量, 用于提示目标项, 结构与board_dict相同
     board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
     
-    def __init__(self, ):
-        '''设置提示路牌坐标及路名数据'''
+    
+    def __init__(self, param):
+        '''初始化.  
+        @param board_size:     3块路牌中的最大尺寸, 元组形式: (w, h) 
+        @param board_range:    路牌排列形式, H-横, V-纵
+        @param road_size:      路名尺寸
+        @param pre_board_num: 求数量阈值时初始路牌显示数量
+        @param board_space:   路牌间距
+        @param board_scale:   路牌缩放比例, 默认1
         
-    def load_boards(self):
-        '''路牌数量增减, 尺寸变化, 间距变化后路牌重新加载...'''
-        pass    
+        说明: 
+            初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名,
+        '''
+        
+        self.board_size = param.board_size
+        self.board_range = param.board_range
+        self.pre_board_num = param.pre_board_num
+        self.road_size = param.road_size
+        self.board_space = param.board_space
+        self.board_scale = param.board_scale
+        
+        self.board_dict = self._generate_boards(param)      #初始化路牌
+        
+        self._init_prompt_boards(param.board_size, param.board_range, param.road_size, 
+                                 param.board_space, param.board_scale)
+
+
+    def reset_boards(self, eccent, angle): #TODO
+        '''重新加载路牌: 路牌数量增减, 尺寸变化, 间距变化后路牌重新加载.
+        包括: 重置各路牌坐标, 重新加载路牌上的路名对象.传入参数主要为目标路牌
+        '''
+        for k, b in self.board_dict.items():
+            pass
+        
+    def _init_prompt_boards(self, board_size, board_range, road_size, board_space, board_scale):
+        '''初始化3块提示路牌, 及加载路牌上相应的路名'''
+        
+        self.prompt_board_dict.clear()
+        prev_board = None
+        for i in range(3):
+            width, height = board_size[0] * board_scale**i, board_size[1] * board_scale**i
+            road_size = road_size * board_scale**i
+            curr_board = Board(200, 0, road_size, width=width, height=height)  #第1个路牌注视点左移200
+            if prev_board: #若当前为第2个/第3个路牌
+                curr_board.reset_pos_xy(self._next_board_pos(
+                                            prev_board.pos, 
+                                            board_range, 
+                                            board_space
+                                        ))
+                curr_board._load_prompt_roads(road_size)
+            self.prompt_board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
+            
+            prev_board = curr_board #指针下移
+            
+    def _generate_boards(self, param):
+        '''根据初始参数设置, 生成路牌列表. '''
+        board_dict = {}
+        prev_board = None
+        
+        road_seats_list = param.get_multi_road_seats()
+        for i in range(len(road_seats_list)):
+            width = param.board_size[0] * param.board_scale**i
+            height = param.board_size[1] * param.board_scale**i
+            road_size = param.road_size * param.board_scale**i
+            curr_board = Board(200, 0, road_size, width=width, height=height)  #第1个路牌注视点左移200
+            if prev_board: #若当前为第2个/第3个路牌
+                curr_board.reset_pos_xy(self._next_board_pos(
+                                            prev_board.pos, 
+                                            param.board_range, 
+                                            param.board_space
+                                        ))
+                curr_board.set_spared_road_seats(road_seats_list[i])
+            board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
+            
+            prev_board = curr_board #指针下移   
+                
+        return board_dict                 
+        
+        
+    def _next_board_pos(self, prev_board_pos, board_range, board_space):
+        '''初始路牌排列时, 根据传入的前一个路牌坐标生成下一个路牌坐标
+        @param prev_board_pos: 上一个生成的路牌中心坐标 
+        @param board_range: 路牌排列方式, H-横, V-纵
+        @param board_space: 路牌间距 
+        
+        @return: 返回下一个路牌中心坐标, (x,y)形式
+        
+        '''
+        if board_range == 'H': #横
+            return prev_board_pos[0]+board_space, prev_board_pos[1]
+        else: #纵
+            return prev_board_pos[0], prev_board_pos[1]+board_space
+            
+        
+    def calc_ee(self, target_board, wpoint):
+        '''计算目标路牌离心率: 根据目标项位置及注视点对象计算离心率
+        @param target_board: 目标项位置标记, 如'A'
+        @param wpoint: 注视点对象
+        '''
+        #return maths.dist(self.road_dict[target_seat].pos, wpoint.pos)
     
+    def calc_angle(self, target_board, wpoint):
+        '''计算目标路牌角度: 目标项与注视点连线夹角, 顺时针方向计算
+        @param target_board: 目标项位置标记, 如'A'
+        @param wpoint: 注视点对象  
+        '''
+        #return maths.angle(self.road_dict[target_seat].pos, wpoint.pos)       
     
+    def set_target_board(self, board_key):
+        '''B1/B2/B3'''
+        self.target_board_key = board_key
+    
+    def get_target_board(self):
+        '''获取目标路牌'''
+        return self.target_board_key, self.board_dict[self.target_board_key]
+            
+            
+    def get_target_road(self):
+        '''获取目标路牌上的目标路名'''
+        key, board = self.get_target_board()
+        return board.get_target_road()            
+            
+    def get_target_name(self):
+        key, board = self.get_target_board()
+        return '%s,%s' % (key, board.get_target_road().name)
+            
+    def get_flanker_boards(self):
+        pass     
+    
+    def flash_road_names(self):
+        '''刷新所有路牌上的路名, 不替换路名对象'''
+        for board in self.board_dict.values():
+            board.flash_road_names()
         
 class Road(object):
     name = ''           #路名   

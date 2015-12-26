@@ -93,6 +93,7 @@ function saveMultiParams() {
     var board_scale = $('#board_scale').val(); //缩放比例
     var board_range = $('#board_range').val(); //排列形式: 横/纵  
     var board_space = $('#board_space').val(); //路牌间距
+    var pre_board_num = $('#pre_board_num').val(); //初始路牌显示数
     
     var eccent =     $('#eccent').val();
     var init_angle = $('#init_angle').val();
@@ -163,6 +164,7 @@ function saveMultiParams() {
                     "board_range":  board_range,    
                     "board_space":  board_space,
                     "board_size":   board_size,
+                    "pre_board_num":pre_board_num,
                     "road_size":    road_size,  
                     "road_marks":   res_road_marks.join("::"),              
                     "eccent":       eccent,
@@ -418,9 +420,9 @@ function setResult(res) {
 <div class="control-group form-row"><div>
     <div class="control-label"><label>初始路牌数:</label></div>
     <div class="controls">
-        <select id="init_board_num" name="init_board_num">
+        <select id="pre_board_num" name="pre_board_num">
             <option value="1">1</option>
-            <option value="2">2</option>        
+            <option value="2">2</option>    
             <option value="3" selected="selected">3</option>
         </select>
         <span class="prompt-text"> (试验开始后路牌初始显示个数)</span>

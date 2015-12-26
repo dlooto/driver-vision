@@ -1,6 +1,6 @@
 #coding=utf-8
 #
-# Copyright (C) 2014  NianNian TECH Co., Ltd. All rights reserved.
+# Copyright (C) 2014  NianNian TECH Co., Ltd. All Rights Reserved.
 # Created on Oct 24, 2015, by Junn
 #
 import settings
@@ -49,6 +49,7 @@ WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #注视点坐标默认值
 BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #路牌中心点坐标默认值,  bp_x, bp_y
 
 ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
+ALLOWED_BOARD_MARKS = ('B1', 'B2', 'B3')  #路牌位置标记, 多路牌试验使用
 
 # 路名默认坐标设置
 ROAD_SEAT = { #280*200路牌尺寸
