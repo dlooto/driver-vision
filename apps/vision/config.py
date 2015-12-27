@@ -13,7 +13,7 @@ import settings
 face_background = '#F3F9FF'     #主窗口背景颜色
 board_color = "#0866B9"         #路牌背景颜色
 DEFAULT_ROAD_COLOR = 'white'    #路名颜色
-TARGET_ROAD_COLOR = 'white'     #目标路名颜色
+TARGET_ROAD_COLOR = '#ff6600'     #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
@@ -90,13 +90,15 @@ TRIAL_END_PROMPT = { #试验结束提示信息
     'fill': '#1F90F2'
 }
 
-TARGET_SEAT_PROMPT = {  #目标项位置提示
+TARGET_ITEM_PROMPT = {  #目标项位置提示
     'text': u'下一轮目标位置为: ', 
     'pos':  (WATCH_POS[0], WATCH_POS[1]-300),    #提示文字默认位置
     'font': ("Helvetica", 40),
     'fill': '#1F90F2',
-    'interval': 3       #提示停留时间, 单位秒
+    'interval': 10       #提示停留时间, 单位秒
 }
+
+PROMPT_POS = WATCH_POS  #目标项提示文字坐标
 
 START_BUTTON = {
     'bg':   '#009900',

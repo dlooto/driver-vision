@@ -25,8 +25,8 @@ class DynamicMultiDemoThread(DemoThread):
     def build_board(self):
         return MultiBoard(self.param)
     
-    def build_step_algo(self):   #使用父类方法
-        pass
+    #def build_step_algo(self, step_scheme):   #使用父类方法
+    #    pass
     
     def step_process(self, param, step_algo):
         '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
@@ -47,7 +47,7 @@ class DynamicMultiDemoThread(DemoThread):
             for tseat in iboard.spared_target_seats:         #====目标路名循环
                 if not self.is_started: break
                 
-                self.prompt_target_multi(bkey)  #TODO
+                self.prompt_target_multi(bkey, tseat)
                 for eccent in eccent_list:                  #====离心率循环
                     for angle in angle_list:                #====角度循环     
                         self.board.reset_boards(eccent, angle)  #TODO  重设各路牌坐标, 路名是否需要重新加载?  
@@ -56,15 +56,15 @@ class DynamicMultiDemoThread(DemoThread):
                         block_data = {
                             'demo':  self.demo, 
                             'tseat': '%s:%s' % (bkey, tseat),   #路牌key:目标路名
-                            'ee':    self.board.calc_ee(iboard, self.wpoint),  #TODO
-                            'angle': self.board.calc_angle(iboard, self.wpoint), #TODO
+                            'ee':    self.board.calc_ee(iboard, self.wpoint),   #TODO
+                            'angle': self.board.calc_angle(iboard, self.wpoint),#TODO
                         }
                         step_algo.extend_block_data(block_data)     #TODO
                         block = self.create_block(block_data)
                         print 'Block: ', block_data
                         
                         # 阶梯变化开始
-                        step_algo.prepare_steping()     #TODO
+                        step_algo.prepare_steping()                 #TODO
                         for i in range(STEPS_COUNT):
                             if not self.is_started: break  
                             
@@ -105,7 +105,7 @@ class StaticMultiDemoThread(DemoThread):
     
     def build_board(self):
         #TODO... build multi boards
-        return Board()    
+        return MultiBoard(self.param)
 
     
         

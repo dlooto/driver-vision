@@ -70,16 +70,32 @@ class DemoThread(threading.Thread):
         width, height = self.param.get_board_size()
         return Board(0, 0, self.param.road_size, width=width, height=height)
     
-    def prompt_target_seat(self, target_seat):
+    def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
-        self.gui.draw_target_seat(target_seat, self.board)
-        time.sleep(TARGET_SEAT_PROMPT['interval'])
+        self.board.reset_pos_xy(WATCH_POS)
         
-    def prompt_target_multi(self, target_board_key): 
-        '''提示目标项位置: 所在路牌及路名'''
-        self.gui.draw_target_board(target_board_key, self.board)  #self.board相当于多个路牌的容器
-        time.sleep(TARGET_SEAT_PROMPT['interval'])        
-
+        for road in self.board.prompt_road_dict.values():
+            road.is_target = False
+        self.board.prompt_road_dict[tseat].is_target = True  #便于目标路名红色标注
+        
+        self.gui.draw_target_seat(tseat, self.board)
+        time.sleep(TARGET_ITEM_PROMPT['interval'])
+        
+    def prompt_target_multi(self, tboard_key, tseat): 
+        '''提示目标项位置: 所在路牌及路名
+        @param tboard_key: 目标路牌标识, B1/B2/B3
+        '''
+        print tboard_key, tseat
+        
+        # set target road
+        for iboard in self.board.board_dict.values():
+            for road in iboard.road_dict.values():
+                road.is_target = False
+        self.board.prompt_board_dict[tboard_key].prompt_road_dict[tseat].is_target = True
+        
+        self.gui.draw_target_board(self.board, tboard_key, tseat)  #self.board相当于多个路牌的容器
+        time.sleep(TARGET_ITEM_PROMPT['interval'])
+ 
     def build_step_algo(self, step_scheme):
         if step_scheme not in ('R', 'S', 'N', 'V'):
             raise Exception('Unknown step scheme: %s' % step_scheme)

@@ -154,7 +154,7 @@ class TrialParam(BaseModel):
     
     def get_multi_road_seats(self):
         '''返回路名标记列表, 形如 [([A,B,D], [A,B]), ([B,C,D], [C,D]), ]'''
-        return []
+        return [(['A','B','D'], ['A','B']), (['B','C','D'], ['C','D']),]
     
     def be_executed(self):
         '''被执行一次, 执行次数加1'''

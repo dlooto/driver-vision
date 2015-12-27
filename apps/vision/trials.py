@@ -31,15 +31,8 @@ cached_kana_roads = RoadModel.objects.all_kana_roads()
 class Board(object):
     '''路牌'''
     
-    pos = None                  #路牌中心点坐标
-    width = 280                 #路牌宽度
-    height = 200                #路牌高度
-    
-    road_dict = {}              #路名字典, key/value: 'A'/Road()
-    target_seat = None          #目标路名位置
     
     # 辅助变量
-    prompt_road_dict = {}
     road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
     
     def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
@@ -48,7 +41,10 @@ class Board(object):
         @param a: 路牌中心点与注视点连线的水平夹角(角度值)
         @param road_size: 路名尺寸
         '''
-#         self.pos = self.calc_pos(e, a, wp_pos)
+        self.pos = None                  #路牌中心点坐标
+        self.road_dict = {}              #路名字典, key/value: 'A'/Road()
+        self.target_seat = None          #目标路名位置
+        
         self.width = width
         self.height = height
         
@@ -61,8 +57,13 @@ class Board(object):
             self.road_seat_refer = ROAD_SEAT_B
         
         self.reset_pos(e, a)
-        self.prompt_pos = WATCH_POS
-        self._load_prompt_roads(road_size)  #各路名坐标计算依赖于self.pos
+        #self.prompt_pos = WATCH_POS
+        
+        self.prompt_road_dict = {}
+        self._load_prompt_roads(road_size)  #提示路牌上的各路名坐标计算依赖于self.pos
+        
+    def __str__(self):
+        return '%s, (%s, %s)' % (self.pos, self.width, self.height)    
         
     def reset_pos(self, e, a, wp_pos=WATCH_POS):
         ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
@@ -381,19 +382,14 @@ class Board(object):
 class MultiBoard(object):
     '''路牌容器, 内部管理着多个路牌'''
     
-    
-    board_dict = {} #路牌字典, {'B1':Board1, 'B2':Board2, 'B3':Board3} 
-    
-    prompt_board_dict = {}  #辅助变量, 用于提示目标项, 结构与board_dict相同
     board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
-    
     
     def __init__(self, param):
         '''初始化.  
         @param board_size:     3块路牌中的最大尺寸, 元组形式: (w, h) 
         @param board_range:    路牌排列形式, H-横, V-纵
         @param road_size:      路名尺寸
-        @param pre_board_num: 求数量阈值时初始路牌显示数量
+        @param pre_board_num:  求数量阈值时初始路牌显示数量
         @param board_space:   路牌间距
         @param board_scale:   路牌缩放比例, 默认1
         
@@ -401,28 +397,32 @@ class MultiBoard(object):
             初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名,
         '''
         
-        self.board_size = param.board_size
+        self.prompt_board_dict = {} #辅助变量, 用于提示目标项, 结构与board_dict相同
+        
+        self.board_size = param.get_board_size()
         self.board_range = param.board_range
         self.pre_board_num = param.pre_board_num
         self.road_size = param.road_size
         self.board_space = param.board_space
         self.board_scale = param.board_scale
         
-        self.board_dict = self._generate_boards(param)      #初始化路牌
+        #初始化路牌字典, {'B1':Board1, 'B2':Board2, 'B3':Board3}
+        self.board_dict = self._generate_boards(param)      
         
-        self._init_prompt_boards(param.board_size, param.board_range, param.road_size, 
+        self._init_prompt_boards(param.get_board_size(), param.board_range, param.road_size, 
                                  param.board_space, param.board_scale)
 
 
     def reset_boards(self, eccent, angle): #TODO
         '''重新加载路牌: 路牌数量增减, 尺寸变化, 间距变化后路牌重新加载.
-        包括: 重置各路牌坐标, 重新加载路牌上的路名对象.传入参数主要为目标路牌
+        
+            重置各路牌坐标, 重新加载路牌上的路名对象. 传入的参数主要为目标路牌
         '''
         for k, b in self.board_dict.items():
             pass
         
     def _init_prompt_boards(self, board_size, board_range, road_size, board_space, board_scale):
-        '''初始化3块提示路牌, 及加载路牌上相应的路名'''
+        '''初始化每一次阶梯算法的目标提示路牌, 并加载路牌上相应的路名'''
         
         self.prompt_board_dict.clear()
         prev_board = None
@@ -436,7 +436,7 @@ class MultiBoard(object):
                                             board_range, 
                                             board_space
                                         ))
-                curr_board._load_prompt_roads(road_size)
+            curr_board._load_prompt_roads(road_size) #路牌坐标重设后重新加载路名
             self.prompt_board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
             
             prev_board = curr_board #指针下移
@@ -447,9 +447,10 @@ class MultiBoard(object):
         prev_board = None
         
         road_seats_list = param.get_multi_road_seats()
+        board_size = param.get_board_size()
         for i in range(len(road_seats_list)):
-            width = param.board_size[0] * param.board_scale**i
-            height = param.board_size[1] * param.board_scale**i
+            width = board_size[0] * param.board_scale**i
+            height = board_size[1] * param.board_scale**i
             road_size = param.road_size * param.board_scale**i
             curr_board = Board(200, 0, road_size, width=width, height=height)  #第1个路牌注视点左移200
             if prev_board: #若当前为第2个/第3个路牌
@@ -458,7 +459,7 @@ class MultiBoard(object):
                                             param.board_range, 
                                             param.board_space
                                         ))
-                curr_board.set_spared_road_seats(road_seats_list[i])
+            curr_board.set_spared_road_seats(road_seats_list[i])
             board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
             
             prev_board = curr_board #指针下移   
@@ -534,8 +535,8 @@ class Road(object):
         self.is_target = is_target
         self.is_real = is_real
 
-    def __unicode__(self):
-        return self.name, self.pos, self.is_target    
+    def __str__(self):
+        return u'%s, %s, %s' % (self.name, self.pos, self.is_target)    
     
     def dist_with(self, a_road):
         '''计算路名间距, 结果取2位小数'''

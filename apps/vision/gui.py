@@ -10,8 +10,8 @@ from Tkinter import *           # 导入 Tkinter 库
 import maths
 from config import *
 import subprocess
-from vision.demos import StaticSingleDemoThread,\
-    StaticMultiDemoThread, DynamicSingleDemoThread, DynamicMultiDemoThread
+from vision.demos import StaticSingleDemoThread, DynamicSingleDemoThread
+from vision.multi_demos import StaticMultiDemoThread, DynamicMultiDemoThread
 from vision.models import TrialParam
 from vision.trials import Board
 
@@ -75,21 +75,37 @@ class GUI(Tk):
         self.cv.update()
         
     def draw_target_seat(self, target_seat, board):
-        '''绘制目标提示信息'''
+        '''绘制目标路名提示信息'''
         self.erase_all()
-        txt_pos = board.prompt_pos[0], board.prompt_pos[1]-board.height/2-40  #字体尺寸为40, 所以上移30
-        #if txt_pos[1] < 25:
-        #    txt_pos = board.prompt_pos[0], board.height + 30
-            
-        tk_id1 = self.cv.create_text(txt_pos, text='%s%s' % (TARGET_SEAT_PROMPT['text'], target_seat), 
-                                    fill=TARGET_SEAT_PROMPT['fill'], font=TARGET_SEAT_PROMPT['font'])
+        #绘制文字
+        txt_pos = PROMPT_POS[0], PROMPT_POS[1]-board.height/2-40  #字体尺寸为40, 所以上移30
+        tk_id1 = self.cv.create_text(txt_pos, text='%s%s' % (TARGET_ITEM_PROMPT['text'], target_seat), 
+                                    fill=TARGET_ITEM_PROMPT['fill'], font=TARGET_ITEM_PROMPT['font'])
         self.cv.widget_list.append(tk_id1)
-        self.cv.widget_list.append(self.draw_prompt_board(board))
+        
+        #绘制路牌及路名
+        self.draw_prompt_board(board)
         
         self.cv.update()
         
-    def draw_target_board(self, target_board, board):
-        pass    
+    def draw_target_board(self, multi_board, board_key, tseat):
+        '''多路牌时绘制出目标路牌提示
+        @param board_key:     目标路牌标识
+        @param multi_board:   多路牌对象
+        @param tseat: 目标路名位置
+        '''
+        self.erase_all()
+        txt_pos = PROMPT_POS[0], PROMPT_POS[1]-150
+        tk_id1 = self.cv.create_text(txt_pos, text='%s%s-%s' % (TARGET_ITEM_PROMPT['text'], board_key, tseat), 
+                                    fill=TARGET_ITEM_PROMPT['fill'], font=TARGET_ITEM_PROMPT['font'])
+        self.cv.widget_list.append(tk_id1)        
+        
+        #绘制多路牌
+        for iboard in multi_board.prompt_board_dict.values():
+            self.draw_prompt_board(iboard)
+        
+        self.cv.update()
+        
         
     def draw_all(self, board, wpoint):
         self.erase_all()
@@ -119,7 +135,7 @@ class GUI(Tk):
         #绘制所有路名
         for road in board.road_dict.values():
             road_font = DEFAULT_ROAD_FONT[0], int(round(road.size, 0))
-            road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
+            road_color = DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
             
@@ -129,7 +145,7 @@ class GUI(Tk):
     def draw_prompt_board(self, board):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
-            board.prompt_pos[0], board.prompt_pos[1], board.width, board.height, 
+            board.pos[0], board.pos[1], board.width, board.height, 
             fill=board_color, outline=board_color
         )
         self.cv.widget_list.append(tk_id)
@@ -142,8 +158,12 @@ class GUI(Tk):
             self.cv.widget_list.append(tk_id)
             
            
-    def draw_prompt_multi_board(self, multi_board):
+    def draw_multi_board_prompt(self, multi_board):
         for board in multi_board.prompt_board_dict.values():
+            print board
+            for k, v in board.prompt_road_dict.items():
+                print '%s, %s' % (k, v)
+                
             self.draw_prompt_board(board)
         
         
