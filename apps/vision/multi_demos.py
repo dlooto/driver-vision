@@ -33,14 +33,13 @@ class DynamicMultiDemoThread(DemoThread):
             @override 重写父类方法
         '''
         
-        # init params
         #road_seats_list = param.get_multi_road_seats()
         eccent_list = param.get_eccents()
         angle_list = param.get_angles()
         
         step_algo.print_prompt()
         
-        for bkey, iboard in self.board.board_dict.items():    #====路牌循环
+        for bkey, iboard in self.board.board_dict.items():    #====路牌循环, 各路牌轮询作为目标路牌
             if not self.is_started: break
             self.board.set_target_board(bkey)
             
@@ -50,21 +49,22 @@ class DynamicMultiDemoThread(DemoThread):
                 self.prompt_target_multi(bkey, tseat)
                 for eccent in eccent_list:                  #====离心率循环
                     for angle in angle_list:                #====角度循环     
-                        self.board.reset_boards(eccent, angle)  #TODO  重设各路牌坐标, 路名是否需要重新加载?  
+                        self.board.reset_boards(eccent, angle)
+                        self.board.load_roads(bkey, tseat)
                         
                         # Save Block data
                         block_data = {
                             'demo':  self.demo, 
-                            'tseat': '%s:%s' % (bkey, tseat),   #路牌key:目标路名
-                            'ee':    self.board.calc_ee(iboard, self.wpoint),   #TODO
-                            'angle': self.board.calc_angle(iboard, self.wpoint),#TODO
+                            'tseat': '%s:%s' % (bkey, tseat),   #目标项- 路牌key:目标路名seat
+                            'ee':    self.board.calc_ee(iboard, self.wpoint),   
+                            'angle': self.board.calc_angle(iboard, self.wpoint),
                         }
-                        step_algo.extend_block_data(block_data)     #TODO
+                        step_algo.extend_block_data(block_data)
                         block = self.create_block(block_data)
                         print 'Block: ', block_data
                         
                         # 阶梯变化开始
-                        step_algo.prepare_steping()                 #TODO
+                        step_algo.prepare_steping()                 #TODO----
                         for i in range(STEPS_COUNT):
                             if not self.is_started: break  
                             
@@ -73,14 +73,14 @@ class DynamicMultiDemoThread(DemoThread):
                             trial_data = {
                                 'block':        block,  
                                 'cate':         block.cate, 
-                                'steps_value':  step_algo.get_steps_value(),    #TODO
+                                'steps_value':  step_algo.get_steps_value(),    #TODO---
                                 'target_road':  self.board.get_target_name(),   
                                 'created_time': times.now()
                             }
                             self.current_trial = self.append_trial(trial_data)
                             
                             #刺激显示
-                            self.gui.draw_all(self.board, self.wpoint)  #TODO
+                            self.gui.draw_all(self.board, self.wpoint)
                             self.wait() #等待用户按键判断
                             
                             if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误

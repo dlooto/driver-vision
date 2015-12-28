@@ -84,7 +84,7 @@ class GUI(Tk):
         self.cv.widget_list.append(tk_id1)
         
         #绘制路牌及路名
-        self.draw_prompt_board(board)
+        self.draw_prompt_boards(board)
         
         self.cv.update()
         
@@ -102,7 +102,7 @@ class GUI(Tk):
         
         #绘制多路牌
         for iboard in multi_board.prompt_board_dict.values():
-            self.draw_prompt_board(iboard)
+            self.draw_prompt_boards(iboard)
         
         self.cv.update()
         
@@ -126,23 +126,25 @@ class GUI(Tk):
         else:
             self._draw_multi_board(board)    
             
+    def _draw_multi_board(self, multi_board):
+        for iboard in multi_board.board_dict.values():
+            self._draw_single_board(iboard)            
+            
     def _draw_single_board(self, board):
+        # 绘制路牌面板
         tk_id = self.cv.create_rectangle_pro(
             board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
         )
         self.cv.widget_list.append(tk_id)
         
-        #绘制所有路名
+        # 绘制所有路名
         for road in board.road_dict.values():
             road_font = DEFAULT_ROAD_FONT[0], int(round(road.size, 0))
             road_color = DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
             
-    def _draw_multi_board(self, multi_board):
-        pass            
-            
-    def draw_prompt_board(self, board):
+    def draw_prompt_boards(self, board):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
             board.pos[0], board.pos[1], board.width, board.height, 
@@ -158,15 +160,6 @@ class GUI(Tk):
             self.cv.widget_list.append(tk_id)
             
            
-    def draw_multi_board_prompt(self, multi_board):
-        for board in multi_board.prompt_board_dict.values():
-            print board
-            for k, v in board.prompt_road_dict.items():
-                print '%s, %s' % (k, v)
-                
-            self.draw_prompt_board(board)
-        
-        
     def draw_gameover(self):
         gover = TRIAL_END_PROMPT   
         tk_id = self.cv.create_text(gover['pos'], text=gover['text'], 

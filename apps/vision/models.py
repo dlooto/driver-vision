@@ -152,7 +152,7 @@ class TrialParam(BaseModel):
         roads_str, targets_str = self.road_marks.split('|')
         return roads_str.split(','), targets_str.split(',')
     
-    def get_multi_road_seats(self):
+    def get_multi_road_seats(self): #TODO
         '''返回路名标记列表, 形如 [([A,B,D], [A,B]), ([B,C,D], [C,D]), ]'''
         return [(['A','B','D'], ['A','B']), (['B','C','D'], ['C','D']),]
     
@@ -214,10 +214,10 @@ class Block(BaseModel):
                          
     
     ## 以下参数根据求不同的阈值时不同时存在. 如求数量阈值时, N的阶梯变化值将记录在Trial模型中, 
-    # 而此时Block中N字段将为空
+    # 而此时Block中N字段将为空(或无效), 其他参数类同.
     N = models.SmallIntegerField(u'干扰项数量(N)', null=True, blank=True, default=1)
-    S = models.FloatField(u'路名尺寸(S)', null=True, blank=True)
-    R = models.CharField(u'目干间距(R)', max_length=40, null=True, blank=True)    #目标与干扰项间距, 多个间距以逗号分隔, 如:r1,r2,r3
+    S = models.CharField(u'路名/路牌尺寸(S)', max_length=40, null=True, blank=True) #单路牌时为路名尺寸, 多路牌时为路牌尺寸
+    R = models.CharField(u'目干间距(R)', max_length=40, null=True, blank=True)   #目标与干扰项间距, 多个间距以逗号分隔, 如:r1,r2,r3
     V = models.FloatField(u'目标项速度(V)', null=True, blank=True, default=0.0)  
     
     class Meta:
