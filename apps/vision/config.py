@@ -5,8 +5,9 @@
 #
 import settings
 
-'''
-视觉测试默认参数设置
+'''#########################
+        视觉测试系统参数设置
+   ########################
 '''
 
 
@@ -16,6 +17,8 @@ DEFAULT_ROAD_COLOR = 'white'    #路名颜色
 TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
+
+STEPS_COUNT = 10                #阶梯算法循环次数
 
 #求关键间距阶梯算法参数
 SPACING_PARAM = {
@@ -38,12 +41,12 @@ NUM_PARAM = {
     'right': 1                         
 }
 
-
-STEPS_COUNT = 10                     #阶梯法默认循环次数
-DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
+DEFAULT_ECCENTS = (60, 100, 140, 160)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
-SIZE_BORDER = 8, 40     #路名尺寸最小值和最大值边界(求尺寸阈值时需要) 
+### 边界值
+SIZE_BORDER = 8, 40     #路名尺寸最小值和最大值边界(求尺寸阈值时需要)
+ 
 
 DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
 TRIAL_END_FONT =    ('Microsoft Yahei', 35)      #试验结束文字字体
