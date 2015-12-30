@@ -47,14 +47,11 @@ class Board(object):
         
         self.width = width
         self.height = height
+        self.road_size = road_size
         
-        # 根据尺寸确定各路名位置坐标参考系
-        if self.width == 280:
-            self.road_seat_refer = ROAD_SEAT
-        elif self.width == 140:
-            self.road_seat_refer = ROAD_SEAT_S
-        else:
-            self.road_seat_refer = ROAD_SEAT_B
+        # 根据尺寸确定各路名位置坐标参考系. 以140宽为基准
+        factor = width/140.0   
+        self.road_seat_refer = scale_refer(factor)
         
         self.reset_pos(e, a)
         #self.prompt_pos = WATCH_POS
@@ -74,8 +71,8 @@ class Board(object):
         '''
         self.pos = self.calc_pos(e, a, wp_pos)
         
-        #self.width = width
-        #self.height = height
+#         self.width = width
+#         self.height = height
         
 #         # 根据尺寸确定各路名位置坐标参考系
 #         if self.width == 280:
@@ -217,7 +214,7 @@ class Board(object):
         return self.road_spacings  
     
     def get_item_spacings(self):
-        '''与multiBoard形成多态'''
+        '''返回目标项与干扰项间距: 与multiBoard形成多态'''
         return self.get_road_spacings()   
     
     def calc_target_flanker_spacings(self):
@@ -243,9 +240,11 @@ class Board(object):
             self.road_dict[flanker_seat].reset_pos(target_road, is_left_algo)
             
     def update_flanker_spacings(self, is_left_algo):
-        '''根据算法更新所有干扰项-目标项间距值, 同时以目标项为基准, 更新所有干扰项的坐标'''
+        '''根据算法更新所有干扰项-目标项间距值, 同时以目标项为基准, 更新所有干扰项的坐标
+        @todo: 后续考虑重构...
+        '''
         
-        road_spacings = self.get_road_spacings()    
+        road_spacings = self.get_road_spacings()   #self.road_spacings 
         for i in range(len(road_spacings)):
             if is_left_algo:
                 road_spacings[i] = round(0.5 * road_spacings[i], 2)
@@ -331,6 +330,33 @@ class Board(object):
         '''
         pass
     
+    def dist_with(self, a_board):
+        '''计算路牌间距, 结果取2位小数. 以路牌中心点为参考
+        @param a_board: 传入的参数路牌对象
+        
+        @return: 返回间距值
+        '''
+        return maths.dist(self.pos, a_board.pos)
+    
+    def update_pos(self, target_pos, is_left_algo):
+        '''根据两点间距变化值, 重新计算当前路名/路牌坐标. 
+        @algo: 根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近
+        @param target_pos: 目标项位置坐标, 元组对象(x, y)
+        @param is_left_algo: 算法参数, 如 True=0.5r, False=r+1
+        '''
+        
+        x0, y0 = target_pos
+        x, y = self.pos
+        r = maths.dist((x0, y0), (x, y)) #计算两点间距
+        if is_left_algo:
+            r1 = r * SPACING_LEFT_FACTOR
+        else:
+            r1 = r + SPACING_RIGHT_DELTA
+                        
+        x = x0 - r1*(x0-x)/r*1.0
+        y = y0 - r1*(y0-y)/r*1.0
+        self.pos = round(x,2), round(y,2)        
+    
     def is_target_road_real(self):
         '''判断目标路名是否为真路名'''
         return self.get_target_road().is_real
@@ -414,7 +440,7 @@ class MultiBoard(object):
         '''初始化.  
         @param board_size:     3块路牌中的最大尺寸, 元组形式: (w, h) 
         @param board_range:    路牌排列形式, H-横, V-纵
-        @param road_size:      路名尺寸
+        @param road_size:      初始路名尺寸, 一般为第一个最大路牌上的路名尺寸
         @param pre_board_num:  求数量阈值时初始路牌显示数量
         @param board_space:   路牌间距
         @param board_scale:   路牌缩放比例, 默认1
@@ -428,7 +454,7 @@ class MultiBoard(object):
         self.board_size = param.get_board_size()
         self.board_range = param.board_range
         self.pre_board_num = param.pre_board_num
-        self.road_size = param.road_size
+        self.road_size = param.road_size        #最大路名尺寸
         self.board_space = param.board_space
         self.board_scale = param.board_scale
         
@@ -472,9 +498,9 @@ class MultiBoard(object):
         '''
         for iboard in self.board_dict.values():
             if iboard == self.board_dict[target_board_key]: #是目标路牌
-                iboard.load_roads(iboard.spared_road_seats, target_seat, self.road_size)
+                iboard.load_roads(iboard.spared_road_seats, target_seat, iboard.road_size)
             else:
-                iboard.load_roads_lean(self.road_size)    
+                iboard.load_roads_lean(iboard.road_size)    
         
     def _init_prompt_boards(self, board_size, board_range, road_size, board_space, board_scale):
         '''初始化每一次阶梯算法的目标提示路牌, 并加载路牌上相应的路名'''
@@ -497,7 +523,7 @@ class MultiBoard(object):
             prev_board = curr_board #指针下移
             
     def _generate_boards(self, param):
-        '''根据初始参数设置, 生成路牌列表. '''
+        '''生成初始路牌列表. '''
         board_dict = {}
         prev_board = None
         
@@ -514,6 +540,7 @@ class MultiBoard(object):
                                             param.board_range, 
                                             param.board_space
                                         ))
+                print 'board pos: ', curr_board.pos 
             curr_board.set_spared_road_seats(road_seats_list[i])
             board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
             
@@ -585,35 +612,53 @@ class MultiBoard(object):
         return '%s,%s' % (self.board_size[0], self.board_size[1])
     
     def get_item_spacings(self):
-        '''与Board形成多态'''
+        '''返回目标项与干扰项间距: 与Board类型对象形成多态'''
         return self._calc_item_spacings()
     
-    def _calc_item_spacings(self): #TODO
-        '''计算当前目标路牌与所有干扰路牌的间距, 返回间距列表'''
-        return [100.0, 300.0]
-    
+    def _calc_item_spacings(self):
+        '''计算当前目标路牌与所有干扰路牌的间距. 路牌坐标变化将引起间距变化
+        @return: 间距列表
+        '''
+        key, iboard = self.get_target_board()
+        flanker_boards = self.board_dict.values()
+        flanker_boards.remove(iboard)
+        spacings = []
+        for board in flanker_boards:
+            spacings.append(board.dist_with(iboard))
+            
+        return spacings
+        
     def clear_queue(self):  #TODO
         '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
         pass
     
     def update_flanker_spacings(self, is_left_algo):
-        '''根据算法更新所有干扰项-目标项间距值, 同时以目标项为基准, 更新所有干扰项的坐标'''
-        pass        
-    
+        '''求多路牌关键间距时调用.
+        根据算法更新所有目标项-干扰项间距值, 本质上是更新干扰项的坐标(以目标项为原点)'''
+        
         self.update_flanker_poses(is_left_algo)
+        
     
     def update_flanker_poses(self, is_left_algo):
-        '''更新所有干扰项的坐标, 在间距阶梯法中以反应目标与干扰项的间距变化. 
+        '''更新所有干扰项的坐标: 在间距阶梯法中用来反应目标与干扰项的间距变化. 
         算法规则: 根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近.
                 以目标项为原点, 连线方向指向干扰项.
         '''
-        pass
+        key, iboard = self.get_target_board()
+        flanker_boards = self.board_dict.values()
+        flanker_boards.remove(iboard)
+        for flanker in flanker_boards:
+            flanker.update_pos(iboard.pos, is_left_algo)
+        
         
     def flash_road_names(self):
         '''刷新所有路牌上的路名, 不替换路名对象'''
         for board in self.board_dict.values():
             board.flash_road_names()
             
+    def is_target_road_real(self):
+        key, iboard = self.get_target_board()
+        return iboard.is_target_road_real()       
             
         
 class Road(object):

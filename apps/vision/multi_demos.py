@@ -16,20 +16,14 @@ from vision.demos import DemoThread
 多路牌试验线程类
 '''
     
-class DynamicMultiDemoThread(DemoThread):
-    '''动态多路牌'''
-    
-    def str(self):
-        return u'动态多路牌试验'        
-    
+class MultiDemoThread(DemoThread):
+    '''多路牌试验线程'''
+
     def build_board(self):
         return MultiBoard(self.param)
     
-    #def build_step_algo(self, step_scheme):   #使用父类方法
-    #    pass
-    
     def step_process(self, param, step_algo):
-        '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
+        '''阶梯过程. 不同阶梯过程差异使用多态解决. 默认静态试验
             @override 重写父类方法
         '''
         
@@ -93,19 +87,29 @@ class DynamicMultiDemoThread(DemoThread):
                                 continue
                             
                             # 更新阶梯变量
-                            step_algo.update_vars(self.is_left_algo)    #TODO
+                            step_algo.update_vars(self.is_left_algo)    #TODO---
+                
+            
+    
+class DynamicMultiDemoThread(MultiDemoThread):
+    '''动态多路牌'''
+    
+    def str(self):
+        return u'动态多路牌试验'        
+    
+    def step_process(self, param, step_algo): #TODO...
+        '''
+        @todo: 加入运动过程...
+        '''
+        super(DynamicMultiDemoThread, self).step_process(param, step_algo)
     
     
-    
-class StaticMultiDemoThread(DemoThread):
+class StaticMultiDemoThread(MultiDemoThread):
     '''静态多路牌'''
     
     def str(self):
         return u'静态多路牌试验'    
     
-    def build_board(self):
-        #TODO... build multi boards
-        return MultiBoard(self.param)
 
     
         

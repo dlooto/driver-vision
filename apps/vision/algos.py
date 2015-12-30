@@ -17,9 +17,6 @@ class StepAlgo(object):
     def extend_block_data(self, block_data):
         pass
     
-    #def get_dynamic_road_seats(self, road_seats):
-    #    return road_seats
-
     def prepare_steping(self):
         pass
     
@@ -55,7 +52,8 @@ class SpaceStepAlgo(StepAlgo):
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
         self.board.update_flanker_spacings(is_left_algo)
-        print 'Spacing changed: ', '0.5r' if is_left_algo else 'r+1', self.board.get_road_spacings()
+        print 'Spacing changed: ', '0.5r' if is_left_algo else 'r+1', \
+            self.board.get_item_spacings()
             
 class NumberStepAlgo(StepAlgo):
     '''数量阶梯算法: 求数量阈值'''

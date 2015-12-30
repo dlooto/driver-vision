@@ -146,15 +146,25 @@ class TrialParam(BaseModel):
         return int(size[0]), int(size[1])
         
     def get_road_seats(self):# TODO...
-        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 ['A', 'B', 'D'], ['B', 'D'] 
-        第1个列表为所有路名位置, 第2个列表为可选的目标项位置  
+        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 
+        @return: 元组 (['A', 'B', 'D'], ['B', 'D']), 第1个列表为所有路名位置, 第2个列表为可选的目标项位置  
         '''
         roads_str, targets_str = self.road_marks.split('|')
         return roads_str.split(','), targets_str.split(',')
     
-    def get_multi_road_seats(self): #TODO
-        '''返回路名标记列表, 形如 [([A,B,D], [A,B]), ([B,C,D], [C,D]), ]'''
-        return [(['A','B','D'], ['A','B']), (['B','C','D'], ['C','D']),]
+    def get_multi_road_seats(self):
+        '''返回路名位置标记列表.
+        
+        @return: [(['A','B','D'], ['A','B']), (['B','C','D'], ['C','D']), ].
+                返回为元组列表, 每个元组为一个路牌上的路名位置. 各元组中第1个列表为所有路名位置, 第2个列表为可选的目标项位置 
+        '''
+        result_list = []
+        seats_str_list = self.road_marks.split('::')
+        for seats_str in seats_str_list:
+            roads_str, targets_str = seats_str.split('|')
+            result_list.append( (roads_str.split(','), targets_str.split(',')) )
+            
+        return result_list    
     
     def be_executed(self):
         '''被执行一次, 执行次数加1'''
@@ -202,7 +212,7 @@ class Block(BaseModel):
     demo = models.ForeignKey(Demo, verbose_name=u'所属Demo')
     
     # 单路牌时值如A/B/C/..., 多路牌时形如 B1,A (B1为目标路牌标记, A为目标路名标记, 以逗号分隔)
-    tseat = models.CharField(u'目标位置(D)', max_length=1)      
+    tseat = models.CharField(u'目标位置(D)', max_length=10)      
     
     # 目标项与注视点距离. 单路牌为目标路名, 多路牌为目标路牌    
     ee = models.FloatField(u'离心率(E)', null=True, blank=True)

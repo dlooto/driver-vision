@@ -88,8 +88,8 @@ class DemoThread(threading.Thread):
         print tboard_key, tseat
         
         # set target road
-        for iboard in self.board.board_dict.values():
-            for road in iboard.road_dict.values():
+        for iboard in self.board.prompt_board_dict.values():
+            for road in iboard.prompt_road_dict.values():
                 road.is_target = False
         self.board.prompt_board_dict[tboard_key].prompt_road_dict[tseat].is_target = True
         
