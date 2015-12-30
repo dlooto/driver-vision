@@ -13,12 +13,31 @@ import settings
 face_background = '#F3F9FF'     #主窗口背景颜色
 board_color = "#0866B9"         #路牌背景颜色
 DEFAULT_ROAD_COLOR = 'white'    #路名颜色
-TARGET_ROAD_COLOR = '#ff6600'     #目标路名颜色
+TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
-SPACING_LEFT_FACTOR = 0.5       #间距变化左算法变化因子
-SPACING_RIGHT_DELTA = 1         #间距变化右算法变化量
+#求关键间距阶梯算法参数
+SPACING_PARAM = {
+    'left':  0.5,          #左算法变化因子
+    'right': 1             #右算法变化量
+}
+#尺寸阈值阶梯算法参数
+SIZE_PARAM = {
+    'left':  0.5,          
+    'right': 1                       
+}
+#数量阈值阶梯算法参数
+NUM_PARAM = {
+    'left':  0.5,          
+    'right': 1                         
+}
+#动态敏感度阶梯算法参数
+NUM_PARAM = {
+    'left':  0.5,          
+    'right': 1                         
+}
+
 
 STEPS_COUNT = 10                     #阶梯法默认循环次数
 DEFAULT_ECCENTS = (6, 10, 14, 16)    #默认离心率变化值范围
@@ -57,18 +76,18 @@ ROAD_SEAT_REFER = {
     'left_x':   30,     #路牌中心点左侧路名与中心点横向距离
     'right_x':  30,     #路牌中心点右侧路名与中心点横向距离
     'a_y':      5,      #A位置路名中心点离路牌中心点的纵向距离
-    'blank_y':  5,      #纵向相邻路名间的空白间距, 以路名上下边缘计算  
+    'blank_y':  5,      #纵向相邻路名间的空白间距, 以路名上下边缘计算
     'g_y':      35      #G位置路名中心点离路牌中心点的纵向距离
 }
 
 def scale_refer(factor):
-    '''根据不同缩放因子, 返回不同路名位置坐标参考系'''
+    '''根据不同尺寸缩放因子, 返回不同路名位置坐标参考系'''
     return {
-        'left_x':   ROAD_SEAT_REFER['left_x'] * factor,     #路牌中心点左侧路名与中心点横向距离
-        'right_x':  ROAD_SEAT_REFER['right_x'] * factor,     #路牌中心点右侧路名与中心点横向距离
-        'a_y':      ROAD_SEAT_REFER['a_y'] * factor,       #A位置路名中心点离路牌中心点的纵向距离
-        'blank_y':  ROAD_SEAT_REFER['blank_y'] * factor,      #纵向相邻路名间的空白间距, 以路名上下边缘计算  
-        'g_y':      ROAD_SEAT_REFER['g_y'] * factor      #G位置路名中心点离路牌中心点的纵向距离
+        'left_x':   ROAD_SEAT_REFER['left_x']   * factor,     #路牌中心点左侧路名与中心点横向距离
+        'right_x':  ROAD_SEAT_REFER['right_x']  * factor,     #路牌中心点右侧路名与中心点横向距离
+        'a_y':      ROAD_SEAT_REFER['a_y']      * factor,     #A位置路名中心点离路牌中心点的纵向距离
+        'blank_y':  ROAD_SEAT_REFER['blank_y']  * factor,     #纵向相邻路名间的空白间距, 以路名上下边缘计算  
+        'g_y':      ROAD_SEAT_REFER['g_y']      * factor      #G位置路名中心点离路牌中心点的纵向距离
     }
 
 # ## 路名默认坐标设置. 以下已弃用....

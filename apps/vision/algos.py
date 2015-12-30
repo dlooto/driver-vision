@@ -52,7 +52,7 @@ class SpaceStepAlgo(StepAlgo):
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
         self.board.update_flanker_spacings(is_left_algo)
-        print 'Spacing changed: ', '0.5r' if is_left_algo else 'r+1', \
+        print 'Spacing changed: ', 'Left' if is_left_algo else 'Right', \
             self.board.get_item_spacings()
             
 class NumberStepAlgo(StepAlgo):

@@ -247,9 +247,9 @@ class Board(object):
         road_spacings = self.get_road_spacings()   #self.road_spacings 
         for i in range(len(road_spacings)):
             if is_left_algo:
-                road_spacings[i] = round(0.5 * road_spacings[i], 2)
+                road_spacings[i] = round(SPACING_PARAM['left'] * road_spacings[i], 2)
             else:
-                road_spacings[i] += SPACING_RIGHT_DELTA
+                road_spacings[i] += SPACING_PARAM['right']
                   
         self.update_flanker_poses(is_left_algo)    
     
@@ -349,9 +349,9 @@ class Board(object):
         x, y = self.pos
         r = maths.dist((x0, y0), (x, y)) #计算两点间距
         if is_left_algo:
-            r1 = r * SPACING_LEFT_FACTOR
+            r1 = r * SPACING_PARAM['left']
         else:
-            r1 = r + SPACING_RIGHT_DELTA
+            r1 = r + SPACING_PARAM['right']
                         
         x = x0 - r1*(x0-x)/r*1.0
         y = y0 - r1*(y0-y)/r*1.0
@@ -599,7 +599,10 @@ class MultiBoard(object):
         return '%s:%s' % (key, board.get_target_road().name)
             
     def get_flanker_boards(self):
-        pass     
+        flanker_boards = self.board_dict.values()
+        key, iboard = self.get_target_board()
+        flanker_boards.remove(iboard)
+        return flanker_boards
     
     def count_flanker_items(self):
         '''返回干扰项数量'''
@@ -620,10 +623,8 @@ class MultiBoard(object):
         @return: 间距列表
         '''
         key, iboard = self.get_target_board()
-        flanker_boards = self.board_dict.values()
-        flanker_boards.remove(iboard)
         spacings = []
-        for board in flanker_boards:
+        for board in self.get_flanker_boards():
             spacings.append(board.dist_with(iboard))
             
         return spacings
@@ -645,10 +646,11 @@ class MultiBoard(object):
                 以目标项为原点, 连线方向指向干扰项.
         '''
         key, iboard = self.get_target_board()
-        flanker_boards = self.board_dict.values()
-        flanker_boards.remove(iboard)
-        for flanker in flanker_boards:
-            flanker.update_pos(iboard.pos, is_left_algo)
+        for flanker_board in self.get_flanker_boards():
+            flanker_board.update_pos(iboard.pos, is_left_algo)
+            
+            # 路牌位置变化后需加载路名
+            flanker_board.load_roads_lean(flanker_board.road_size)  
         
         
     def flash_road_names(self):
@@ -692,9 +694,9 @@ class Road(object):
         x, y = self.pos
         r = maths.dist((x0, y0), (x, y)) #两路名原来的间距
         if is_left_algo:
-            r1 = 0.5*r
+            r1 = r * SPACING_PARAM['left']
         else:
-            r1 = r + SPACING_RIGHT_DELTA
+            r1 = r + SPACING_PARAM['right']
                         
         x = x0 - r1*(x0-x)/r*1.0
         y = y0 - r1*(y0-y)/r*1.0
