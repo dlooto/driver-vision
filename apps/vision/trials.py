@@ -14,6 +14,9 @@ import math
 import Queue
 
 
+cached_real_roads = RoadModel.objects.all_real_roads()
+cached_kana_roads = RoadModel.objects.all_kana_roads()
+
 class WatchPoint(object):
     tk_id = None
     pos = WATCH_POS
@@ -24,9 +27,7 @@ class WatchPoint(object):
         self.radius = radius        #圆圈半径
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
-    
-cached_real_roads = RoadModel.objects.all_real_roads()
-cached_kana_roads = RoadModel.objects.all_kana_roads()
+
 
 class Board(object):
     '''路牌'''
@@ -253,7 +254,7 @@ class Board(object):
                   
         self.update_flanker_poses(is_left_algo)    
     
-    def update_flanker_numbers(self, is_left_algo, road_size):
+    def update_flanker_numbers(self, is_left_algo):
         '''
         更新干扰项的数量. 该方法将修改road_dict字典对象. 
         若减少干扰项数, 则将路名位置标记放入队列, 否则从队列取出路名位置标记
@@ -261,7 +262,7 @@ class Board(object):
         @return: 返回更新后的干扰项数量
         '''
         if is_left_algo: #+2
-            self.add_flankers(road_size)
+            self.add_flankers()
         else:
             self.decr_flankers()
             
@@ -271,7 +272,7 @@ class Board(object):
         #self.road_que.put(item)
         #self.get_target_road()
     
-    def add_flankers(self, road_size):
+    def add_flankers(self):
         '''增加干扰项数量'''
         if self.road_que.qsize() < 2:
             print('\nAlready max flankers on board: %s' % int(len(self.road_dict)-1))
@@ -280,15 +281,15 @@ class Board(object):
         seat1, seat2 = self.road_que.get(), self.road_que.get() 
         road_model1, road_model2 = self.generate_random_roads(2)
         self.road_dict[seat1] = Road(road_model1.name, 
-                                     self.pos_xx(seat1, road_size), 
+                                     self.pos_xx(seat1, self.road_size), 
                                      is_real=road_model1.is_real, 
-                                     size=road_size
+                                     size=self.road_size
                                 )
         self.road_dict[seat2] = Road(road_model2.name, 
-                                     self.pos_xx(seat2, road_size), 
+                                     self.pos_xx(seat2, self.road_size), 
                                      is_real=road_model2.is_real, 
-                                     size=road_size
-                                )      
+                                     size=self.road_size
+                                )
         
     def decr_flankers(self):
         '''减少干扰项数量'''
@@ -300,7 +301,6 @@ class Board(object):
                 self.road_que.put(seat)
                 self.road_dict.pop(seat)
                 break
-        
     
     def update_road_size(self, is_left_algo):
         '''更新路名尺寸.  
@@ -429,7 +429,7 @@ class Board(object):
 #     def erase(self, canvas):
 #         '''擦除路牌, 开始下一个1.6s的显示. 擦除路牌同时擦除所有路名'''
 #         self._erase_roads(canvas)
-#         canvas.delete(self.tk_id)   
+#         canvas.delete(self.tk_id)
 
 class MultiBoard(object):
     '''路牌容器, 内部管理着多个路牌'''
@@ -448,8 +448,8 @@ class MultiBoard(object):
         说明: 
             初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名,
         '''
-        
-        self.prompt_board_dict = {} #辅助变量, 用于提示目标项, 结构与board_dict相同
+        #辅助变量, 用于提示目标项, 结构与board_dict相同
+        self.prompt_board_dict = {} 
         
         self.board_size = param.get_board_size()
         self.board_range = param.board_range
@@ -458,25 +458,45 @@ class MultiBoard(object):
         self.board_space = param.board_space
         self.board_scale = param.board_scale
         
-        # 初始化路牌字典, 该字典存放正在显示中的路牌, 如 {'B1':Board1, 'B2':Board2, 'B3':Board3}
+        # 初始化路牌字典, 该字典存放正在控制过程中并显示的路牌, 如 {'B1':Board1, 'B2':Board2, 'B3':Board3}
         # 已初始化且未显示的路牌将存放于 board_que
-        self.board_dict = self._generate_boards(param)      
+        self.board_repos = self._generate_boards(param)   #路牌仓库, 存储所有待用路牌   
+        
+        #初始化为空, 在控制过程中真正在使用的路牌, 从board_repos中装载
+        self.board_dict = {} 
+        self.reload_boards()  #装载self.board_dict
         
         self._init_prompt_boards(param.get_board_size(), param.board_range, param.road_size, 
                                  param.board_space, param.board_scale)
 
-    #TODO: 仅适用于3个路牌都存在的情况. 在路牌数量变化的情况需要重构...
-    # 需要根据当前self.board_dict中路牌情况(数量, 排列状况等)来设置坐标...
+    def reload_boards(self):
+        '''每一轮目标项变化后重新加载路牌, 主要因路牌数量阈值情况而增加 '''
+        self.board_dict.clear()
+        for k, board in self.board_repos.items():
+            self.board_dict[k] = board 
+
+#     def get_all_boards(self): #TODO...
+#         '''返回包括所有路牌(处于控制过程中和存放在board_que中)的字典. 尤其当求数量阈值时, 
+#         会有路牌存于board_que中. 
+#         '''
+#         res_dict = {}
+#         for k in ALLOWED_BOARD_MARKS:
+#             if self.board_dict.has_key(k):
+#                 res_dict[k] = self.board_dict[k]
+#             else:
+#                 res_dict[k] = self.board_que.get()  #TODO: error ...
+#         return res_dict
+        
+
+    # 根据当前self.board_dict中路牌情况(数量, 排列状况等)来设置坐标...
     def reset_boards(self, eccent, angle, ): 
-        '''
-        重新加载路牌: 路牌数量增减, 尺寸变化, 间距变化后路牌重新加载. 各路牌坐标重设后, 
-        需要重新加载路牌上的路名对象, 以更新所有路名坐标
-            
+        '''重设路牌坐标
+        
         @param eccent: 最大路牌的离心率, 该路牌作为其他路牌的参考路牌
         @param angle:  最大路牌的角度
         '''
-        board_marks = ALLOWED_BOARD_MARKS
         
+        board_marks = ALLOWED_BOARD_MARKS
         prev_board = None
         for i in range(len(board_marks)):
             curr_board = self.board_dict[board_marks[i]]
@@ -487,11 +507,11 @@ class MultiBoard(object):
                                             self.board_range, 
                                             self.board_space
                                         ))
-            prev_board = curr_board #指针下移      
+            prev_board = curr_board     #指针下移    
         
         
     def load_roads(self, target_board_key, target_seat):
-        ''' 多个路牌上加载所有路名, 并设置目标项
+        ''' 多个路牌上加载所有路名, 并根据条件设置目标项
         
         @param target_board_key: 目标路牌位置标记
         @param target_seat: 目标路名位置
@@ -523,13 +543,13 @@ class MultiBoard(object):
             prev_board = curr_board #指针下移
             
     def _generate_boards(self, param):
-        '''生成初始路牌列表. '''
+        '''生成初始路牌列表. 全部路牌都被加载'''
         board_dict = {}
         prev_board = None
         
         road_seats_list = param.get_multi_road_seats()
         board_size = param.get_board_size()
-        for i in range(len(road_seats_list)):
+        for i in range(len(road_seats_list)): #3个路牌同时初始化
             width = board_size[0] * param.board_scale**i
             height = board_size[1] * param.board_scale**i
             road_size = param.road_size * param.board_scale**i
@@ -540,7 +560,7 @@ class MultiBoard(object):
                                             param.board_range, 
                                             param.board_space
                                         ))
-                print 'board pos: ', curr_board.pos 
+                #print 'board pos: ', curr_board.pos 
             curr_board.set_spared_road_seats(road_seats_list[i])
             board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
             
@@ -564,19 +584,21 @@ class MultiBoard(object):
             return prev_board_pos[0], prev_board_pos[1]+board_space
             
         
-    def calc_ee(self, target_board, wpoint):
+    def calc_ee(self, wpoint):
         '''计算目标路牌离心率: 根据目标路牌中心点及注视点对象计算离心率
         @param target_board: 目标路牌
         @param wpoint: 注视点对象
         '''
+        key, target_board = self.get_target_board()
         return maths.dist(target_board.pos, wpoint.pos)
         
     
-    def calc_angle(self, target_board, wpoint):
+    def calc_angle(self, wpoint):
         '''计算目标路牌角度: 目标路牌中心点与注视点连线夹角, 顺时针方向计算
         @param target_board: 目标路牌对象
         @param wpoint: 注视点对象  
         '''
+        key, target_board = self.get_target_board()
         return maths.angle(target_board.pos, wpoint.pos)       
     
     def set_target_board(self, board_key):
@@ -587,7 +609,11 @@ class MultiBoard(object):
         '''获取目标路牌'''
         if target_board_key:
             return target_board_key, self.board_dict[target_board_key]
-        return self.target_board_key, self.board_dict[self.target_board_key]
+        return self.target_board_key, self.board_dict[self.target_board_key] #目标路牌必定存在于dict中
+            
+    def get_spared_target_seats(self, board_key):
+        '''返回当前设定的目标路牌上的待轮询目标路牌路名位置'''
+        return self.board_repos[board_key].spared_target_seats
             
     def get_target_road(self):
         '''获取目标路牌上的目标路名'''
@@ -629,9 +655,51 @@ class MultiBoard(object):
             
         return spacings
         
-    def clear_queue(self):  #TODO
-        '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
-        pass
+    def clear_queue(self):  #TODO: 不可以清空已重设坐标后的boards
+        '''数量阈值时清空queue
+        
+        用于下一轮求数量阈值的阶梯变化过程
+        '''
+        if not self.board_que.empty():
+            self.board_que.queue.clear()
+        
+        # 阶梯循环前装载pre_board_num数量的路牌(包括目标项). 此不可以进行board_dict.clear(), 
+        # 因为各路牌坐标已进行了重设.
+        while len(self.board_dict) > self.pre_board_num:
+            self.decr_board()
+        
+        # 剩余路牌标记存入board_que    
+        rest_marks = set(ALLOWED_BOARD_MARKS) - set(self.board_dict.keys()) 
+        for m in rest_marks:
+            self.board_que.put(m)  
+           
+    def update_flanker_numbers(self, is_left_algo):
+        if is_left_algo:
+            self.incre_board()
+        else:
+            self.decr_board()            
+           
+    def incre_board(self): #TODO...增加的路牌坐标中心如何确定?
+        '''board_dict中增加路牌, 目前每次仅增加一块路牌'''
+        if self.board_que.qsize() < 1:
+            return
+        key = self.board_que.get()
+        self.board_dict[key] = self.board_repos[key]
+        
+    
+    def decr_board(self):
+        '''board_dict中减少一块路牌'''
+        #get board from board_dict
+        # add into que
+        if len(self.board_dict) == 2: #至少2个路牌
+            return
+        
+        for key in self.board_dict.keys():
+            if key == self.target_board_key: #目标路牌不允许去除
+                continue
+            self.board_dict.pop(key)
+            self.board_que.put(key)
+            break
     
     def update_flanker_spacings(self, is_left_algo):
         '''求多路牌关键间距时调用.
@@ -708,7 +776,7 @@ class Road(object):
             if self.size*0.8 >= SIZE_BORDER[0]:
                 self.size *= 0.8 
             else: 
-                self.size = SIZE_BORDER[0]  
+                self.size = SIZE_BORDER[0]
         else:
             if self.size*1.2 < SIZE_BORDER[1]:
                 self.size *= 1.2

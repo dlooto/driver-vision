@@ -26,7 +26,7 @@ class DemoThread(threading.Thread):
     
     param = None      #数据库读取的参数对象
     wpoint = None     #注视点
-    board = None      #多路牌时为Board对象列表结构, 单路牌时为Board对象结构
+    board = None      #多路牌时为MultiBoard对象结构, 单路牌时为Board对象结构
     
     #辅助结构
     demo = None
@@ -48,7 +48,7 @@ class DemoThread(threading.Thread):
         self.param = param
         
         self.wpoint = WatchPoint()
-        self.board = self.build_board()  #考虑单路牌/多路牌通用
+        self.board = self.build_board()
         
     def run(self):
         print('Demo thread started: %s' % self.str())
@@ -65,7 +65,7 @@ class DemoThread(threading.Thread):
         print('Demo thread ended')
         
     def build_board(self):
-        '''需要子类重载'''
+        '''需要子类重载, 以同时适用单路牌和多路牌情况'''
         #return Board(self.param.eccent, self.param.init_angle, width=width, height=height)
         width, height = self.param.get_board_size()
         return Board(0, 0, self.param.road_size, width=width, height=height)
@@ -127,6 +127,7 @@ class DemoThread(threading.Thread):
                 for angle in angle_list:            
                     self.board.reset_pos(eccent, angle)
                     self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
+                    
                     block_data = {
                         'demo':  self.demo, 
                         'tseat': tseat, 

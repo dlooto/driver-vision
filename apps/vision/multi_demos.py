@@ -4,12 +4,9 @@
 # Created on Nov 8, 2015, by Junn
 #
 
-from utils import times, eggs, logs
 from config import *
-import threading
-from vision.trials import Board, WatchPoint, MultiBoard
-from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
-    VelocityStepAlgo
+from utils import times
+from vision.trials import  MultiBoard
 from vision.demos import DemoThread
 
 '''
@@ -17,7 +14,7 @@ from vision.demos import DemoThread
 '''
     
 class MultiDemoThread(DemoThread):
-    '''多路牌试验线程'''
+    '''多路牌试验线程基类'''
 
     def build_board(self):
         return MultiBoard(self.param)
@@ -33,16 +30,17 @@ class MultiDemoThread(DemoThread):
         
         step_algo.print_prompt()
         
-        for bkey, iboard in self.board.board_dict.items():    #====路牌循环, 各路牌轮询作为目标路牌
+        for bkey, board in self.board.board_repos.items():   #====路牌循环, 各路牌轮询作为目标路牌
             if not self.is_started: break
             self.board.set_target_board(bkey)
             
-            for tseat in iboard.spared_target_seats:         #====目标路名循环
+            for tseat in self.board.get_spared_target_seats(bkey): #====目标路名循环(在当前目标路牌上的)
                 if not self.is_started: break
                 
                 self.prompt_target_multi(bkey, tseat)
-                for eccent in eccent_list:                  #====离心率循环
-                    for angle in angle_list:                #====角度循环     
+                for eccent in eccent_list:   #====离心率循环
+                    for angle in angle_list: #====角度循环     
+                        step_algo.init_boards()
                         self.board.reset_boards(eccent, angle)
                         self.board.load_roads(bkey, tseat)
                         
@@ -50,8 +48,8 @@ class MultiDemoThread(DemoThread):
                         block_data = {
                             'demo':  self.demo, 
                             'tseat': '%s:%s' % (bkey, tseat),   #目标项- 路牌key:目标路名seat
-                            'ee':    self.board.calc_ee(iboard, self.wpoint),   
-                            'angle': self.board.calc_angle(iboard, self.wpoint),
+                            'ee':    self.board.calc_ee(self.wpoint),   
+                            'angle': self.board.calc_angle(self.wpoint),
                         }
                         step_algo.extend_block_data(block_data)
                         block = self.create_block(block_data)
@@ -60,13 +58,13 @@ class MultiDemoThread(DemoThread):
                         # 阶梯变化开始
                         step_algo.prepare_steping()                 #TODO----
                         for i in range(STEPS_COUNT):
-                            if not self.is_started: break  
+                            if not self.is_started: break
                             
                             # Append Trial data
                             self.total_trials += 1
                             trial_data = {
                                 'block':        block,  
-                                'cate':         block.cate, 
+                                'cate':         block.cate,
                                 'steps_value':  step_algo.get_steps_value(),    #TODO---
                                 'target_road':  self.board.get_target_name(),   
                                 'created_time': times.now()
@@ -83,12 +81,22 @@ class MultiDemoThread(DemoThread):
                             
                             #用户按键唤醒线程后刷新路名    
                             self.board.flash_road_names()
-                            if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                            if not self.is_update_step_value: #不更新阶梯变量, 则直接进行第2次刺激显示
                                 continue
                             
                             # 更新阶梯变量
-                            step_algo.update_vars(self.is_left_algo)    #TODO---
+                            step_algo.update_vars(self.is_left_algo) #TODO---
                 
+
+class StaticMultiDemoThread(MultiDemoThread):
+    '''静态多路牌'''
+    
+    def str(self):
+        return u'静态多路牌试验'    
+    
+    def step_process(self, param, step_algo):
+        ''' 阶梯过程 '''
+        super(StaticMultiDemoThread, self).step_process(param, step_algo)            
             
     
 class DynamicMultiDemoThread(MultiDemoThread):
@@ -104,12 +112,7 @@ class DynamicMultiDemoThread(MultiDemoThread):
         super(DynamicMultiDemoThread, self).step_process(param, step_algo)
     
     
-class StaticMultiDemoThread(MultiDemoThread):
-    '''静态多路牌'''
-    
-    def str(self):
-        return u'静态多路牌试验'    
-    
+
 
     
         

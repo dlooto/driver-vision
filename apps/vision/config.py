@@ -36,7 +36,7 @@ NUM_PARAM = {
     'right': 1                         
 }
 #动态敏感度阶梯算法参数
-NUM_PARAM = {
+VELO_PARAM = {
     'left':  0.5,          
     'right': 1                         
 }
@@ -59,8 +59,8 @@ FACE_SIZE = {
 
 #小路牌默认尺寸, bs_w, bs_h
 BOARD_SIZE = {
-    'w': 280, #280
-    'h': 200  #200           
+    'w': 280, 
+    'h': 200            
 }
 #大路牌默认尺寸
 BOARD_SIZE_B = {  
@@ -72,7 +72,7 @@ WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #注视点坐标默认值
 BOARD_POS = WATCH_POS[0]+200, WATCH_POS[1]      #路牌中心点坐标默认值,  bp_x, bp_y
 
 ALLOWED_ROAD_SEATS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
-ALLOWED_BOARD_MARKS = ('B1', 'B2', 'B3')  #路牌位置标记, B0位置为最大尺寸路牌, 多路牌时使用
+ALLOWED_BOARD_MARKS = ('B1', 'B2', 'B3')  #路牌位置标记, B1位置为最大尺寸路牌, 多路牌时使用
 
 #140*100路牌尺寸. 基础路名位置坐标参考系
 ROAD_SEAT_REFER = { 

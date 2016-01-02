@@ -6,10 +6,11 @@
 # Created on Oct 22, 2015, by Junn
 #
 
-from Tkinter import *           # 导入 Tkinter 库
-import maths
-from config import *
 import subprocess
+
+from Tkinter import *           # 导入 Tkinter 库
+from config import *
+
 from vision.demos import StaticSingleDemoThread, DynamicSingleDemoThread
 from vision.multi_demos import StaticMultiDemoThread, DynamicMultiDemoThread
 from vision.models import TrialParam
@@ -182,7 +183,7 @@ class GUI(Tk):
 
         # 启动试验线程
         self.demo_thread.start()
-        self.stop()    
+        self.stop() 
         
     def stop(self, e=None):
         self.demo_thread.is_started = False
@@ -232,7 +233,7 @@ class GUI(Tk):
         else:
             subprocess.call(["afplay", AUD_PATH['F']])
         
-## 开始新的实验
+## 开始新的试验
 def run():
     global gui
     gui = GUI()

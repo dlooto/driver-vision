@@ -4,10 +4,9 @@
 # Created on Oct 19, 2015, by Junn
 #
 
-from django.db import models
-from utils import eggs, logs
-from core.models import BaseModel
 from config import *
+from django.db import models
+from core.models import BaseModel
 from core.managers import BaseManager
 
 class RoadManager(BaseManager):
@@ -47,14 +46,13 @@ class RoadModel(BaseModel):
 
     def __unicode__(self):
         return u'%s' % self.name
-    
 
     
 # 路牌类型
 BOARD_CATE = (
     ('S', u'单路牌'),
     ('M', u'多路牌'),
-)    
+)
 
 DEMO_SCHEME_CHOICES = ( #试验模式
     ('S', u'静态'),
