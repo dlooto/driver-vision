@@ -24,13 +24,12 @@ class MultiDemoThread(DemoThread):
             @override 重写父类方法
         '''
         
-        #road_seats_list = param.get_multi_road_seats()
         eccent_list = param.get_eccents()
         angle_list = param.get_angles()
         
         step_algo.print_prompt()
         
-        for bkey, board in self.board.board_repos.items():   #====路牌循环, 各路牌轮询作为目标路牌
+        for bkey in self.board.board_repos.keys():   #====路牌循环, 各路牌轮询作为目标路牌
             if not self.is_started: break
             self.board.set_target_board(bkey)
             
@@ -56,7 +55,7 @@ class MultiDemoThread(DemoThread):
                         print 'Block: ', block_data
                         
                         # 阶梯变化开始
-                        step_algo.prepare_steping()                 #TODO----
+                        step_algo.prepare_steping()
                         for i in range(STEPS_COUNT):
                             if not self.is_started: break
                             

@@ -19,7 +19,8 @@ class StepAlgo(object):
         pass
     
     def init_boards(self):
-        pass    
+        '''为多路牌时从board_repos重新加载路牌, 以替代在MultiBoard初始构建时无需初始化board_dict''' 
+        self.board.reload_boards()     
     
     def prepare_steping(self):
         pass
@@ -56,7 +57,7 @@ class SpaceStepAlgo(StepAlgo):
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
         self.board.update_flanker_spacings(is_left_algo)
-        print 'Spacing changed: ', 'Left' if is_left_algo else 'Right', \
+        print 'Spacing changed: algo-', 'Left' if is_left_algo else 'Right', \
             self.board.get_item_spacings()
             
 class NumberStepAlgo(StepAlgo):
@@ -69,12 +70,15 @@ class NumberStepAlgo(StepAlgo):
         '''block数据中添加额外的数据'''
         extra_data = {
             'cate': 'N', 
-            'S':    self.board.get_item_size(), 'V': 0.0   # 'R': 待确定. 目前间距为统一变化
+            'S':    self.board.get_item_size(), 
+            'V':    0.0   
+            # 'R': 待确定. 目前间距为统一变化
         }
         block_data.update(extra_data)
         
-    def init_boards(self):#主要为数量阈值而设 
-        self.board.reload_boards()      
+#     def init_boards(self):
+#         '''主要为数量阈值而增加: 从board_repos重新加载路牌''' 
+#         self.board.reload_boards()      
         
     def prepare_steping(self):
         self.board.clear_queue() #清空辅助队列, 用于干扰项增减(单路牌中为路名, 多路牌中为路牌增减)
@@ -85,7 +89,7 @@ class NumberStepAlgo(StepAlgo):
         
     def update_vars(self, is_left_algo):
         self.board.update_flanker_numbers(is_left_algo)
-        print 'Flankers:', 'Left' if is_left_algo else 'Right', self.board.count_flanker_items()
+        print 'Flanker items: algo-', 'Left' if is_left_algo else 'Right', self.board.count_flanker_items()
             
         
 class SizeStepAlgo(StepAlgo):
@@ -98,19 +102,19 @@ class SizeStepAlgo(StepAlgo):
         extra_data = {
             'cate': 'S', #求尺寸阈值
             'N':    self.board.count_flanker_items(), 
-            'V':    0.0   # 'R': 置空, 间距随路名尺寸变化而变化
+            'V':    0.0   
+            # 'R': 置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
     
     def get_steps_value(self):
         '''返回阶梯变化值'''
-        return self.board.get_road_size()
+        return self.board.get_item_size()
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
-        # ##
-        self.board.update_road_size(is_left_algo)
-        print 'Road size:', '*0.8' if is_left_algo else '*1.2', self.board.get_road_size()
+        self.board.update_items_size(is_left_algo)
+        print 'Item size: algo-', 'Left' if is_left_algo else 'Right', self.board.get_item_size()
 
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''

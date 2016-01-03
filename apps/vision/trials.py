@@ -82,6 +82,22 @@ class Board(object):
 #             self.road_seat_refer = ROAD_SEAT_S
 #         else:
 #             self.road_seat_refer = ROAD_SEAT_B
+                         
+    def reset_size(self, is_left_algo):
+        '''重设路牌尺寸'''
+        if is_left_algo:
+            if self.width * SIZE_PARAM['left'] < BOARD_SIZE_BORDER['min'][0] or \
+                    self.height * SIZE_PARAM['left'] < BOARD_SIZE_BORDER['min'][1]:
+                self.width, self.height = BOARD_SIZE_BORDER['min']
+            else:
+                self.width, self.height = self.width*SIZE_PARAM['left'], self.height*SIZE_PARAM['left']    
+        else:
+            if self.width * SIZE_PARAM['right'] > BOARD_SIZE_BORDER['max'][0] or \
+                    self.height * SIZE_PARAM['right'] > BOARD_SIZE_BORDER['max'][1]:
+                self.width, self.height = BOARD_SIZE_BORDER['max']            
+            else:
+                self.width, self.height = self.width*SIZE_PARAM['right'], self.height*SIZE_PARAM['right']
+                
                                 
     def reset_pos_xy(self, pos):
         ''' 重置路牌中心点坐标. 为reset_pos()的替代方法, 直接传入路牌中心点坐标.  
@@ -302,11 +318,15 @@ class Board(object):
                 self.road_dict.pop(seat)
                 break
     
+    def update_items_size(self, is_left_algo):
+        '''与MultiBoard形成多态而增加, 在algo中调用, 用于计算尺寸阈值中更新阶梯变量'''
+        self.update_road_size(is_left_algo)
+    
     def update_road_size(self, is_left_algo):
         '''更新路名尺寸.  
-        @param is_left_algo: 决定了尺寸*1.2 or *0.8
+        @param is_left_algo: 决定了尺寸用左边算法计算 or 右边算法计算
         '''
-        for road in self.road_dict.viewvalues():  #dict.values() Return a copy of the dictionary’s list of values
+        for road in self.road_dict.viewvalues():
             road.reset_size(is_left_algo)    
     
     def get_road_size(self):
@@ -474,19 +494,6 @@ class MultiBoard(object):
         self.board_dict.clear()
         for k, board in self.board_repos.items():
             self.board_dict[k] = board 
-
-#     def get_all_boards(self): #TODO...
-#         '''返回包括所有路牌(处于控制过程中和存放在board_que中)的字典. 尤其当求数量阈值时, 
-#         会有路牌存于board_que中. 
-#         '''
-#         res_dict = {}
-#         for k in ALLOWED_BOARD_MARKS:
-#             if self.board_dict.has_key(k):
-#                 res_dict[k] = self.board_dict[k]
-#             else:
-#                 res_dict[k] = self.board_que.get()  #TODO: error ...
-#         return res_dict
-        
 
     # 根据当前self.board_dict中路牌情况(数量, 排列状况等)来设置坐标...
     def reset_boards(self, eccent, angle, ): 
@@ -663,13 +670,13 @@ class MultiBoard(object):
         if not self.board_que.empty():
             self.board_que.queue.clear()
         
-        # 阶梯循环前装载pre_board_num数量的路牌(包括目标项). 此不可以进行board_dict.clear(), 
+        # 阶梯循环前装载pre_board_num数量的路牌(包括目标项). 注: 此处不可以进行board_dict.clear(), 
         # 因为各路牌坐标已进行了重设.
         while len(self.board_dict) > self.pre_board_num:
             self.decr_board()
         
-        # 剩余路牌标记存入board_que    
-        rest_marks = set(ALLOWED_BOARD_MARKS) - set(self.board_dict.keys()) 
+        # 剩余路牌位置标记存入board_que    
+        rest_marks = set(ALLOWED_BOARD_MARKS) - set(self.board_dict.keys())
         for m in rest_marks:
             self.board_que.put(m)  
            
@@ -720,6 +727,15 @@ class MultiBoard(object):
             # 路牌位置变化后需加载路名
             flanker_board.load_roads_lean(flanker_board.road_size)  
         
+    def update_items_size(self, is_left_algo):
+        '''更新路牌尺寸.  
+        2种变化规则: 1. 路牌尺寸独立变化, 2.路牌尺寸与间距同比例变化.  目前暂实现第1种
+        路牌尺寸变化, 是否要引起其他参数变化? TODO...
+        
+        @param is_left_algo: 决定了尺寸用左边算法计算 or 右边算法计算
+        '''
+        for board in self.board_dict.values():
+            board.reset_size(is_left_algo)
         
     def flash_road_names(self):
         '''刷新所有路牌上的路名, 不替换路名对象'''
@@ -773,13 +789,13 @@ class Road(object):
     def reset_size(self, is_left_algo):
         '''重设路名尺寸'''
         if is_left_algo:
-            if self.size*0.8 >= SIZE_BORDER[0]:
-                self.size *= 0.8 
+            if self.size*SIZE_PARAM['left'] >= SIZE_BORDER[0]:
+                self.size *= SIZE_PARAM['left'] 
             else: 
                 self.size = SIZE_BORDER[0]
         else:
-            if self.size*1.2 < SIZE_BORDER[1]:
-                self.size *= 1.2
+            if self.size*SIZE_PARAM['right'] < SIZE_BORDER[1]:
+                self.size *= SIZE_PARAM['right']
             else:
                 self.size = SIZE_BORDER[1]
               

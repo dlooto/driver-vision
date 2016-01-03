@@ -27,25 +27,25 @@ SPACING_PARAM = {
 }
 #尺寸阈值阶梯算法参数
 SIZE_PARAM = {
-    'left':  0.5,          
-    'right': 1                       
-}
-#数量阈值阶梯算法参数
-NUM_PARAM = {
-    'left':  0.5,          
-    'right': 1                         
+    'left':  0.8,          
+    'right': 1.2                       
 }
 #动态敏感度阶梯算法参数
 VELO_PARAM = {
-    'left':  0.5,          
-    'right': 1                         
+    'left':  1.4,          
+    'right': 0.8                         
 }
 
 DEFAULT_ECCENTS = (60, 100, 140, 160)    #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
 ### 边界值
-SIZE_BORDER = 8, 40     #路名尺寸最小值和最大值边界(求尺寸阈值时需要)
+SIZE_BORDER = 8, 40         #路名尺寸最小值和最大值边界(求尺寸阈值时需要)
+
+BOARD_SIZE_BORDER = {       #路牌尺寸最小值和最大值边界(求尺寸阈值时)
+    'min': (56, 40),        #(width, height)
+    'max': (420, 300)                      
+}    
  
 
 DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
