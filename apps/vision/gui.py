@@ -91,9 +91,9 @@ class GUI(Tk):
         
     def draw_target_board(self, multi_board, board_key, tseat):
         '''多路牌时绘制出目标路牌提示
-        @param board_key:     目标路牌标识
-        @param multi_board:   多路牌对象
-        @param tseat: 目标路名位置
+        @param board_key:   目标路牌标识
+        @param multi_board: 多路牌对象
+        @param tseat:       目标路名位置
         '''
         self.erase_all()
         txt_pos = PROMPT_POS[0], PROMPT_POS[1]-150

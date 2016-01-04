@@ -27,7 +27,7 @@ class WatchPoint(object):
         self.radius = radius        #圆圈半径
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
-
+        
 
 class Board(object):
     '''路牌'''
@@ -51,8 +51,7 @@ class Board(object):
         self.road_size = road_size
         
         # 根据尺寸确定各路名位置坐标参考系. 以140宽为基准
-        factor = width/140.0   
-        self.road_seat_refer = scale_refer(factor)
+        self.road_seat_refer = scale_refer(width/140.0)
         
         self.reset_pos(e, a)
         #self.prompt_pos = WATCH_POS
@@ -72,16 +71,6 @@ class Board(object):
         '''
         self.pos = self.calc_pos(e, a, wp_pos)
         
-#         self.width = width
-#         self.height = height
-        
-#         # 根据尺寸确定各路名位置坐标参考系
-#         if self.width == 280:
-#             self.road_seat_refer = ROAD_SEAT
-#         elif self.width == 140:
-#             self.road_seat_refer = ROAD_SEAT_S
-#         else:
-#             self.road_seat_refer = ROAD_SEAT_B
                          
     def reset_size(self, is_left_algo):
         '''重设路牌尺寸'''
@@ -90,18 +79,18 @@ class Board(object):
                     self.height * SIZE_PARAM['left'] < BOARD_SIZE_BORDER['min'][1]:
                 self.width, self.height = BOARD_SIZE_BORDER['min']
             else:
-                self.width, self.height = self.width*SIZE_PARAM['left'], self.height*SIZE_PARAM['left']    
+                self.width, self.height = self.width * SIZE_PARAM['left'], self.height * SIZE_PARAM['left']    
         else:
             if self.width * SIZE_PARAM['right'] > BOARD_SIZE_BORDER['max'][0] or \
                     self.height * SIZE_PARAM['right'] > BOARD_SIZE_BORDER['max'][1]:
                 self.width, self.height = BOARD_SIZE_BORDER['max']            
             else:
-                self.width, self.height = self.width*SIZE_PARAM['right'], self.height*SIZE_PARAM['right']
+                self.width, self.height = self.width * SIZE_PARAM['right'], self.height * SIZE_PARAM['right']
                 
                                 
     def reset_pos_xy(self, pos):
         ''' 重置路牌中心点坐标. 为reset_pos()的替代方法, 直接传入路牌中心点坐标.  
-        路牌中心坐标一旦改变, 路牌上所有路名坐标将改变.
+        路牌中心坐标一旦改变, 后续逻辑需要重新加载路牌上的路名(调整路名坐标).
         
         @param pos: (x, y)元组形式坐标值 
         '''
@@ -344,11 +333,14 @@ class Board(object):
         '''返回干扰项数量'''
         return len(self.get_road_seats()) - 1
     
-    def move(self, dx, dy):
-        '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
-        erase()再draw(), 或者canvas.move(board)再canvas.move(roads)
-        '''
+    #def move(self, dx, dy):
+    #    '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
+    #    erase()再draw(), 或者canvas.move(board)再canvas.move(roads)
+    #    '''
+    #    pass
+    def move(self, velocity):
         pass
+    
     
     def dist_with(self, a_board):
         '''计算路牌间距, 结果取2位小数. 以路牌中心点为参考
@@ -390,16 +382,17 @@ class Board(object):
         roads = self.road_dict.values()
         roads.remove(target_road)
         return roads
-  
+    
+    ## 以下建立路牌及路名坐标系  
     def pos_xx(self, mark, s):
         '''以路牌中心坐标为参照点, 获取路牌上 A, B, C, D, E, F, G, H各点中心坐标
         @param mark: 路名位置标识, 一般为小写字母, 以匹配正确的pos_x方法
-        @param s:  路名尺寸(一般为高度值)
+        @param s:  路名尺寸(一般为文本高度值)
         '''
         mt = 'pos_%s' % mark.lower()
         return getattr(self, mt)(s)    
     
-    def pos_a(self, s=0):#带默认值可不传, 为便于里pos_xx调用的一致性
+    def pos_a(self, s=0):#带默认值可不传, 为便于pos_xx调用的一致性
         return self.pos[0]-self.road_seat_refer['left_x'], self.pos[1]+self.road_seat_refer['a_y']
     def pos_b(self, s):
         x, y = self.pos_a(s)
@@ -696,8 +689,6 @@ class MultiBoard(object):
     
     def decr_board(self):
         '''board_dict中减少一块路牌'''
-        #get board from board_dict
-        # add into que
         if len(self.board_dict) == 2: #至少2个路牌
             return
         
@@ -736,6 +727,8 @@ class MultiBoard(object):
         '''
         for board in self.board_dict.values():
             board.reset_size(is_left_algo)
+            #board.reset_pos_xy()
+            #board.load_roads()
         
     def flash_road_names(self):
         '''刷新所有路牌上的路名, 不替换路名对象'''
@@ -744,8 +737,19 @@ class MultiBoard(object):
             
     def is_target_road_real(self):
         key, iboard = self.get_target_board()
-        return iboard.is_target_road_real()       
-            
+        return iboard.is_target_road_real()      
+    
+    def move(self, velocity):
+        pass
+     
+    def start_motion(self):
+        '''开始运动线程
+        1. new MoveWorker() thread
+        2. 
+        
+        '''
+        pass
+                
         
 class Road(object):
     name = ''           #路名   

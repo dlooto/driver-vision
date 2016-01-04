@@ -31,3 +31,6 @@ cd ..
 git pull
 --->若出现错误, 注意查看错误信息, 将有改动的本地文件备份后删除.重新执行:
 git pull
+
+==启动运动worker
+python manage.py celery worker --loglevel=info --settings=settings.local

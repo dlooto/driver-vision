@@ -21,6 +21,10 @@ class StepAlgo(object):
     def init_boards(self):
         '''为多路牌时从board_repos重新加载路牌, 以替代在MultiBoard初始构建时无需初始化board_dict''' 
         self.board.reload_boards()     
+        self.init_others()
+            
+    def init_others(self):
+        pass
     
     def prepare_steping(self):
         pass
@@ -76,10 +80,6 @@ class NumberStepAlgo(StepAlgo):
         }
         block_data.update(extra_data)
         
-#     def init_boards(self):
-#         '''主要为数量阈值而增加: 从board_repos重新加载路牌''' 
-#         self.board.reload_boards()      
-        
     def prepare_steping(self):
         self.board.clear_queue() #清空辅助队列, 用于干扰项增减(单路牌中为路名, 多路牌中为路牌增减)
         
@@ -106,6 +106,10 @@ class SizeStepAlgo(StepAlgo):
             # 'R': 置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
+    
+    def init_others(self):
+        for board in self.board.board_dict.values():
+            board.width, board.height = self.board.board_size  #各路牌尺寸还原
     
     def get_steps_value(self):
         '''返回阶梯变化值'''

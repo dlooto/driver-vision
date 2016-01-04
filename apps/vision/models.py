@@ -33,10 +33,8 @@ class RoadModel(BaseModel):
     '''作为路名字典'''
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='')
     is_real = models.BooleanField(u'是真路名', default=False)
-    
     is_valid = models.BooleanField(u'有效', default=True)
     
-
     objects = RoadManager()
     
     class Meta:
@@ -64,14 +62,14 @@ BOARD_RANGE_CHOICES = ( #路牌排列选择
     ('V', u'纵'),
 )
 
-STEP_SCHEME_CHOICES = (  #阶梯类型
+STEP_SCHEME_CHOICES = ( #阶梯类型
     ('R', u'关键间距'),
     ('N', u'数量阈值'),
     ('S', u'尺寸阈值'),
     ('V', u'动态敏感度'),                           
 )
 
-MOVE_TYPE_CHOICES = (  #运动模式
+MOVE_TYPE_CHOICES = (   #运动模式
     ('C', u'圆周'),
     ('S', u'平滑'),
     ('M', u'混合'),
@@ -84,7 +82,7 @@ class TrialParam(BaseModel):
     board_type = models.CharField(u'路牌类型', max_length=1, choices=BOARD_CATE, default='S')#默认单路牌
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
     step_scheme = models.CharField(u'阶梯类型', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
-    move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True)#运动模式, 仅当试验模式为动态时有效
+    move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True, default='-')#运动模式, 仅当试验模式为动态时有效
     
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #所设为最大路牌尺寸, 其他路牌按比例(board_scale)依次缩放 
     road_size = models.IntegerField(u'路名尺寸', default=15) #所设为最大路名尺寸, 其他路牌上的路名按比例(board_scale)依次缩放
@@ -98,10 +96,10 @@ class TrialParam(BaseModel):
     #road_num = models.CharField(u'路名数量', max_length=10, default='3')   
     
     #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名. 多路牌时以::号分隔各路牌上的路名设置       
-    road_marks = models.CharField(u'路名位置标记|目标标记', max_length=100)  
+    road_marks = models.CharField(u'路名位置|目标项', max_length=100)  
     
     # 路牌中心距, 即路牌中心离注视点的距离. 最多3个值, 各值间以,分隔
-    eccent = models.CharField(u'路牌中心距离', max_length=40, null=True, blank=True)
+    eccent = models.CharField(u'路牌中心距', max_length=40, null=True, blank=True)
     
     #路牌中心-注视点连线与水平线的夹角. 顺时针方向旋转为角度增大. 最多3个值, 各值间以,分隔
     init_angle = models.CharField(u'初始角度', max_length=40, null=True, blank=True)
@@ -177,7 +175,6 @@ class TrialParam(BaseModel):
         '''返回初始角度值列表(浮点值列表)''' 
         return [float(a) for a in self.init_angle.split(',')]
                
-        
         
 class Demo(BaseModel):
     '''一次完整试验记录'''
@@ -281,15 +278,5 @@ class BoardLog(BaseModel):
     def __unicode__(self):
         return self.id        
     
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
         

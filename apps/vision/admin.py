@@ -96,6 +96,7 @@ class MyAdminSite(sites.AdminSite):
                                 'admin/index.html', context,
                                 current_app=self.name) 
 
+# unused now
 admin_site = MyAdminSite()          
         
 
@@ -126,10 +127,11 @@ def set_is_coming(modeladmin, request, queryset):
     queryset.update(is_coming=True)
     
      
-set_is_coming.short_description = u'设为可用' 
+set_is_coming.short_description = u'设为可用'
     
 class TrialParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'board_type', 'demo_scheme', 'step_scheme', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
+    list_display = ('id', 'board_type', 'demo_scheme', 'step_scheme', 'board_size', 
+                    'road_size', 'eccent', 'init_angle', 'move_type', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
     search_fields = ('desc', )
     list_filter = ('board_type', 'demo_scheme', 'step_scheme', 'move_type', 'is_coming')
     #fields = ('board_type', 'demo_scheme', )

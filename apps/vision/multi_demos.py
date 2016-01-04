@@ -40,6 +40,8 @@ class MultiDemoThread(DemoThread):
                 for eccent in eccent_list:   #====离心率循环
                     for angle in angle_list: #====角度循环     
                         step_algo.init_boards()
+                        
+                        # 每一轮更新离心率和角度值, 都需要重设路牌坐标并加载路名
                         self.board.reset_boards(eccent, angle)
                         self.board.load_roads(bkey, tseat)
                         
@@ -71,8 +73,7 @@ class MultiDemoThread(DemoThread):
                             self.current_trial = self.append_trial(trial_data)
                             
                             #刺激显示
-                            self.gui.draw_all(self.board, self.wpoint)
-                            self.wait() #等待用户按键判断
+                            self.show_frame()
                             
                             if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
                                 self.current_trial.is_correct = False
@@ -103,6 +104,9 @@ class DynamicMultiDemoThread(MultiDemoThread):
     
     def str(self):
         return u'动态多路牌试验'        
+    
+    def start_motion_worker(self, motion_type):
+        pass
     
     def step_process(self, param, step_algo): #TODO...
         '''

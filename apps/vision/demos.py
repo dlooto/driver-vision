@@ -13,6 +13,8 @@ import threading
 from vision.trials import Board, WatchPoint, MultiBoard
 from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
+from vision.motion import MotionWorker
+
 
 '''
 单路牌试验线程类
@@ -108,6 +110,10 @@ class DemoThread(threading.Thread):
             return SizeStepAlgo(self.board)
         return VelocityStepAlgo(self.board)    #动态敏感度        
 
+    def start_motion_worker(self): #TODO
+        self.motion = MotionWorker(self.param, self.board, self.wpoint)
+        self.motion.start()
+
     def step_process(self, param, step_algo):
         '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
         '''
@@ -152,10 +158,12 @@ class DemoThread(threading.Thread):
                         }
                         self.current_trial = self.append_trial(trial_data)
                         
-                        self.gui.draw_all(self.board, self.wpoint) #刺激显示
-                        self.wait() #等待用户按键判断
+                        #刺激显示
+                        self.show_frame()
                         
-                        if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                        #非被唤醒并自然等待1.6s, 视为用户判断错误
+                        if not self.is_awakened():
+                            self.motion.stop()
                             self.current_trial.is_correct = False
                             self.handle_judge(is_correct=False)
                         
@@ -166,6 +174,13 @@ class DemoThread(threading.Thread):
                         
                         # 更新阶梯变量
                         step_algo.update_vars(self.is_left_algo)
+
+    def show_frame(self):
+        '''刺激显示一帧. 
+        路牌显示后将等待并阻塞后续逻辑执行, 直到用户按键判断或等待1.6s
+        '''
+        self.gui.draw_all(self.board, self.wpoint)
+        self.wait()                #等待用户按键判断        
 
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 
@@ -228,6 +243,9 @@ class DemoThread(threading.Thread):
     def wait(self):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
         '''
+        #静态时什么都不做, 动态时发送'开始运动'信号
+        self.start_motion_worker()   
+        
         self.signal.clear()  ##重置线程flag标志位为False, 以使得signal.wait调用有效.                   
         self.signal.wait(show_interval)
         
@@ -238,8 +256,12 @@ class DemoThread(threading.Thread):
         return self.signal.is_set()           
         
     def awake(self):
-        '''唤醒线程. Set the internal flag to true'''
-        self.signal.set()  
+        '''唤醒线程. Set the internal flag to true. 
+        在用户按键后被调用, 后续将开始下一帧的刺激显示
+        '''
+        self.motion.stop()
+        
+        self.signal.set()
         
         
 class StaticSingleDemoThread(DemoThread):
@@ -252,7 +274,8 @@ class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
     
     def str(self):
-        return u'动态单路牌试验'    
+        return u'动态单路牌试验' 
+    
 
     
         
