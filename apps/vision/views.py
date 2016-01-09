@@ -52,7 +52,9 @@ class ParamsSetView(CustomAPIView):
         board_type = req.POST.get('board_type')     #路牌类型: 单路牌或多路牌(S/M)
         demo_scheme = req.POST.get('demo_scheme')   #试验模式: 静态/动态(S/D)
         step_scheme = req.POST.get('step_scheme')   #试验模式: 静态/动态(S/D)
-        move_type = req.POST.get('move_type')       #动态模式: 圆周/平滑/混合/MOT(C/S/M/O)
+        move_type = req.POST.get('move_type')       #动态模式: 圆周/平滑/混合(C/S/M) MOT模式已调整为别一维度进行参数设置
+        wp_scheme = req.POST.get('wp_scheme')       #注视点运动模式: S-静止, L-直线运动  
+        velocity = req.POST.get('velocity')         #速度值: 离散值3个
         
         board_size = req.POST.get('board_size')     #路牌大小: 280,200/420,300
         road_size = req.POST.get('road_size')       #路名尺寸
@@ -67,6 +69,7 @@ class ParamsSetView(CustomAPIView):
         
         if demo_scheme == 'S':
             move_type = ''
+            velocity = ''
         
         try:
             params = {
@@ -74,6 +77,8 @@ class ParamsSetView(CustomAPIView):
                 "demo_scheme":  demo_scheme,
                 "step_scheme":  step_scheme, 
                 "move_type":    move_type, 
+                "wp_scheme":    wp_scheme,
+                "velocity":     velocity,
                 
                 "board_size":   board_size, 
                 "road_size":    int(road_size),

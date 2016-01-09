@@ -18,3 +18,14 @@
 #     if not worker.is_working:
 #         return
 #     worker.is_working = False
+
+from vision.motion import MotionWorker
+import time
+
+def foo():
+    for i in range(1146880):
+        MotionWorker(None, None, None).start()
+        #time.sleep()
+        print i
+    
+    

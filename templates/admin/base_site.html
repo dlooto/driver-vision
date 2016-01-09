@@ -4,6 +4,37 @@
 
 {% block extrahead %}
 <link rel="icon" href="{{ STATIC_URL }}vision/img/logo_vt_50.jpeg" />
+
+<style type="text/css">
+.prompt-text {
+    font-size: 11px;
+    color:     #999999;
+}
+</style>
+
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/verify.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}vision/js/jquery.cookie.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    $("#demo_scheme").change(function(){
+        var demo_schemo = $("#demo_scheme").val();
+        if(demo_schemo == 'S') { //静态
+            $("#move_type").hide();
+            $("#velocity_div").hide();
+            $("#wp_scheme_div").hide();
+        } else {//动态
+            $("#move_type").show();
+            $("#velocity_div").show();
+            $("#wp_scheme_div").show();
+        }
+    }); //end change()
+});
+</script>
+
+{% block extjs %}{% endblock %}
+{% block extcss %}{% endblock %}
+
 {% endblock %}
 
 {% block branding %}

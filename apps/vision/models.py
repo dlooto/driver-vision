@@ -73,7 +73,12 @@ MOVE_TYPE_CHOICES = (   #运动模式
     ('C', u'圆周'),
     ('S', u'平滑'),
     ('M', u'混合'),
-    ('O', u'MOT'),
+    #('O', u'MOT'),
+)
+
+WP_SCHEME_CHOICES = (   #注视点模式
+    ('S', u'静止不动'),
+    ('L', u'直线运动'),
 )
     
 class TrialParam(BaseModel):
@@ -83,6 +88,8 @@ class TrialParam(BaseModel):
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
     step_scheme = models.CharField(u'阶梯类型', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
     move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True, default='-')#运动模式, 仅当试验模式为动态时有效
+    wp_scheme = models.CharField(u'注视点模式', max_length=1, choices=WP_SCHEME_CHOICES, null=True, blank=True, default='S')
+    velocity = models.CharField(u'速度值', max_length=40, null=True, blank=True) #动态模式时设置速度值, 各值以,分隔
     
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #所设为最大路牌尺寸, 其他路牌按比例(board_scale)依次缩放 
     road_size = models.IntegerField(u'路名尺寸', default=15) #所设为最大路名尺寸, 其他路牌上的路名按比例(board_scale)依次缩放
@@ -140,6 +147,9 @@ class TrialParam(BaseModel):
     def get_board_size(self):
         size = self.board_size.split(',')
         return int(size[0]), int(size[1])
+    
+    def get_velocitys(self):
+        return self.velocity.split(',')
         
     def get_road_seats(self):# TODO...
         '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 

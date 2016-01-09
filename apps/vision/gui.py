@@ -69,6 +69,29 @@ class GUI(Tk):
         
         return DynamicMultiDemoThread(self, param)       #动态多路牌             
         
+    def start(self, e):
+        '''点击按钮开始试验. 点击开始前, 需要先设置好试验参数.
+        '''
+        if hasattr(self, 'demo_thread') and self.demo_thread and self.demo_thread.is_started:
+            return
+        
+        self.demo_thread = self.build_demo_thread()
+        
+        # 清屏
+        self.prompt.destroy()
+        self.start_button.destroy()
+        self.cv.pack()
+        self.erase_all()
+
+        # 启动试验线程
+        self.demo_thread.start()
+        self.stop() 
+        
+    def stop(self, e=None):
+        self.demo_thread.is_started = False
+        self.erase_all()
+        self.draw_gameover()        
+        
     def erase_all(self):
         for tk_id in self.cv.widget_list:
             self.cv.delete(tk_id)
@@ -116,7 +139,7 @@ class GUI(Tk):
         
     def draw_wpoint(self, wpoint):
         '''绘制注视点'''
-        wp_id = self.cv.create_circle(wpoint.pos[0], wpoint.pos[1], wpoint.radius, 
+        wp_id = self.cv.create_circle(wpoint.move_pos[0], wpoint.move_pos[1], wpoint.radius, 
                                       fill=wpoint.fill, outline=wpoint.outline)
         self.cv.widget_list.append(wp_id)
         
@@ -136,15 +159,16 @@ class GUI(Tk):
         tk_id = self.cv.create_rectangle_pro(
             board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
         )
+          
         self.cv.widget_list.append(tk_id)
-        
+         
         # 绘制所有路名
         for road in board.road_dict.values():
             road_font = DEFAULT_ROAD_FONT[0], int(round(road.size, 0))
             road_color = DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
-            
+
     def draw_prompt_boards(self, board):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
@@ -167,29 +191,6 @@ class GUI(Tk):
                                     fill=gover['fill'], font=gover['font'])
         self.cv.widget_list.append(tk_id)
         
-    def start(self, e):
-        '''点击按钮开始试验. 点击开始前, 需要先设置好试验参数.
-        '''
-        if hasattr(self, 'demo_thread') and self.demo_thread and self.demo_thread.is_started:
-            return
-        
-        self.demo_thread = self.build_demo_thread()
-        
-        # 清屏
-        self.prompt.destroy()
-        self.start_button.destroy()
-        self.cv.pack()
-        self.erase_all()
-
-        # 启动试验线程
-        self.demo_thread.start()
-        self.stop() 
-        
-    def stop(self, e=None):
-        self.demo_thread.is_started = False
-        self.erase_all()
-        self.draw_gameover()
-    
     def bind_keys(self):
         self.bind('<Key-Left>',     self._press_left)       #左
         self.bind('<Key-Right>',    self._press_right)      #右

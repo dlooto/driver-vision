@@ -1,11 +1,7 @@
 {% extends "admin/base_site.html" %}
 
-{% block extrahead %}
+{% block extcss %}
 <style type="text/css">
-.prompt-text {
-    font-size: 11px;
-    color:     #999999;
-}
 
 /* ============= 路牌1样式 ============ */
 input.road_h1 { /* 水平方向路名A,B,C */
@@ -54,23 +50,10 @@ input.road_v2_2 { /* 垂直方向路名H */
 }
 
 </style>
+{% endblock %}
 
-<script type="text/javascript" src="{{STATIC_URL}}vision/js/verify.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}vision/js/jquery.cookie.js"></script>
-
+{% block extjs %}
 <script type="text/javascript">
-$(document).ready(function(){
-    $("#demo_scheme").change(function(){
-        var demo_schemo = $("#demo_scheme").val();
-        if(demo_schemo == 'S') { //静态
-            $("#move_type").hide();
-        } else {//动态
-            $("#move_type").show();
-        }
-    }); //end change()
-  
-    
-});
 
 function checkMark(m) {
     //var rm = m.toUpperCase();
@@ -90,6 +73,9 @@ function saveMultiParams() {
     var demo_scheme = $('#demo_scheme').val();
     var step_scheme = $('#step_scheme').val();
     var move_type =   $("input[name='move_type']:checked").val();
+    var wp_scheme =   $('#wp_scheme').val(); //注视点运动模式
+    var velocity =    $('#velocity').val();
+    
     var board_scale = $('#board_scale').val(); //缩放比例
     var board_range = $('#board_range').val(); //排列形式: 横/纵  
     var board_space = $('#board_space').val(); //路牌间距
@@ -160,6 +146,8 @@ function saveMultiParams() {
                     "demo_scheme":  demo_scheme, 
                     "step_scheme":  step_scheme,
                     "move_type":    move_type,
+                    "wp_scheme":    wp_scheme,
+                    "velocity":     velocity,
                     "board_scale":  board_scale,    
                     "board_range":  board_range,    
                     "board_space":  board_space,
@@ -218,14 +206,37 @@ function setResult(res) {
             <option value="S" selected="selected">静态</option>
             <option value="D">动态</option>
         </select>&nbsp;&nbsp;
-            <div id="move_type" style="display: none;">
+        
+        <div id="move_type" style="display: none;">
             <input name="move_type" type="radio" checked="checked" value="C" />圆周 &nbsp;&nbsp;<!--Circle圆周-->
             <input name="move_type" type="radio" value="S" />平滑 &nbsp;&nbsp;<!--smooth平滑-->
             <input name="move_type" type="radio" value="M" />混合 &nbsp;&nbsp;<!--Mixed混合-->
-            <input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp;<!--MOT-->
-            </div>
+            <!--<input name="move_type" type="radio" value="O" />MOT &nbsp;&nbsp; --><!--MOT-->
+        </div>
     </div>
 </div></div>
+
+<!--注视点是否运动-->
+<div id="wp_scheme_div" class="control-group form-row" style="display: none;"><div>
+    <div class="control-label">
+        <label class="required">注视点模式:</label></div>
+    <div class="controls">
+        <select id="wp_scheme" name="wp_scheme">
+            <option value="S" selected="selected">静止不动</option>
+            <option value="L">直线运动</option>
+        </select>
+        <span class="prompt-text">(若注视点运动则为MOT模式. 该选项与运动模式组合使用)</span>
+    </div>
+</div></div>
+
+<!--速度值-->
+<div id="velocity_div" class="control-group form-row" style="display: none;"><div>
+    <div class="control-label"><label>速度值:</label></div>
+    <div class="controls">
+        <input name="velocity" class="vTextField" id="velocity" type="text" value="" placeholder="v1,v2,v3" >
+        <span class="prompt-text">(动态模式时需设置该值3个, 各值间以 , 分隔)</span>
+    </div>
+</div></div> 
 
 <!--阶梯过程-->
 <div class="control-group form-row"><div>
@@ -261,7 +272,7 @@ function setResult(res) {
             <option value="15">15</option>
         </select>
     </div>
-</div></div> 
+</div></div>
 
 <!--路牌尺寸比例-->
 <div class="control-group form-row"><div>
@@ -280,7 +291,7 @@ function setResult(res) {
     <div class="controls">
         <select id="board_range" name="board_range">
             <option value="H" selected="selected">横列</option>
-            <option value="V">纵列</option>        
+            <option value="V">纵列</option>
         </select>
     </div>
 </div></div>     

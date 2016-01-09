@@ -3,12 +3,14 @@
 # Copyright (C) 2014  NianNian TECH Co., Ltd. All Rights Reserved.
 # Created on Oct 24, 2015, by Junn
 #
-import settings
 
 '''#########################
         视觉测试系统参数设置
    ########################
 '''
+
+import math
+import settings
 
 
 face_background = '#F3F9FF'     #主窗口背景颜色
@@ -18,7 +20,16 @@ TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
 watch_color = 'red'             #注视点填充颜色
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 
-STEPS_COUNT = 10                #阶梯算法循环次数
+STEPS_COUNT = 20                #阶梯算法循环次数
+
+MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
+WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
+
+#运动方向随机值范围, 以角度值表示
+PRE_MOVE_DIRECTS = (30, 45, 60, 120, 150)
+
+#直线运动斜率值范围
+GRADS = (math.tan(math.radians(a)) for a in PRE_MOVE_DIRECTS)
 
 #求关键间距阶梯算法参数
 SPACING_PARAM = {

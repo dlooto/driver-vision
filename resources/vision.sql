@@ -31,3 +31,7 @@ alter table vision_block modify column `S` varchar(40);
 
 /* 2015-12-30 */
 alter table vision_block modify column `tseat` varchar(10) NOT NULL;
+
+/* 2015-1-9 */
+alter table vision_trialparam add column `velocity` varchar(40);
+alter table vision_trialparam add column `wp_scheme` varchar(1);

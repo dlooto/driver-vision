@@ -18,20 +18,25 @@ cached_real_roads = RoadModel.objects.all_real_roads()
 cached_kana_roads = RoadModel.objects.all_kana_roads()
 
 class WatchPoint(object):
-    tk_id = None
     pos = WATCH_POS
     radius = 5
     
     def __init__(self, pos=WATCH_POS, radius=5, fill=watch_color, outline=watch_color):
-        self.pos = pos              #坐标点
+        #坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
+        self.pos = pos               
+        
+        #运动过程中, 该值为运动坐标. 绘制时以该坐标为准
+        self.move_pos = pos         
+        
         self.radius = radius        #圆圈半径
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
         
+    def move(self, move_scheme): 
+        self.move_pos = move_scheme.new_wp_pos(self.move_pos)  
 
 class Board(object):
     '''路牌'''
-    
     
     # 辅助变量
     road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
@@ -182,6 +187,10 @@ class Board(object):
             self.road_dict[mark].name = road_model.name 
             self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
             modeled_roads.remove(road_model)
+            
+    def update_road_poses(self):     
+        '''路牌移动时更新所有路名坐标'''   
+        pass
     
     def generate_random_roads(self, road_num):
         ''' 根据传入的路名数量, 生成不重复的随机路名列表.
@@ -333,13 +342,16 @@ class Board(object):
         '''返回干扰项数量'''
         return len(self.get_road_seats()) - 1
     
-    #def move(self, dx, dy):
-    #    '''路牌移动. dx = p2.x - p1.x, dy = p2.y - p1.y.
-    #    erase()再draw(), 或者canvas.move(board)再canvas.move(roads)
-    #    '''
-    #    pass
-    def move(self, velocity):
-        pass
+    def move(self, move_scheme):
+        ''' 移动路牌坐标
+        @param move_scheme: 运动模式对象
+        '''
+        new_pos = move_scheme.new_pos(self.pos)
+        dx, dy = new_pos[0]-self.pos[0], new_pos[1]-self.pos[1] #路名偏移量
+        self.reset_pos_xy(new_pos)
+        
+        for road in self.road_dict.values():
+            road.pos = road.pos[0]+dx, road.pos[1]+dy
     
     
     def dist_with(self, a_board):
@@ -739,23 +751,32 @@ class MultiBoard(object):
         key, iboard = self.get_target_board()
         return iboard.is_target_road_real()      
     
-    def move(self, velocity):
-        pass
-     
-    def start_motion(self):
-        '''开始运动线程
-        1. new MoveWorker() thread
-        2. 
-        
+    def move(self, move_scheme):
+        ''' 移动路牌坐标
+        @param move_scheme: 运动模式对象
         '''
-        pass
-                
+        key, iboard = self.get_target_board()
+        
+        new_pos = move_scheme.new_pos(iboard.pos)
+        dx, dy = new_pos[0]-iboard.pos[0], new_pos[1]-iboard.pos[1] #路名偏移量
+        
+        iboard.reset_pos_xy(new_pos)
+        for road in iboard.road_dict.values():
+            road.pos = road.pos[0]+dx, road.pos[1]+dy
+        
+        flanker_boards = self.get_flanker_boards()
+        for fboard in flanker_boards:
+            fboard.reset_pos_xy((fboard.pos[0]+dx, fboard.pos[1]+dy))
+            
+            for road in fboard.road_dict.values():
+                road.pos = road.pos[0]+dx, road.pos[1]+dy
+     
         
 class Road(object):
-    name = ''           #路名   
-    pos = 0, 0          #路名中心点在路牌上的位置坐标, 坐标会不断变化
-    is_target = False   #是否是目标路名
-    is_real = False     #是否真名
+    #name = ''           #路名   
+    #pos = 0, 0          #路名中心点在路牌上的位置坐标, 坐标会不断变化
+    #is_target = False   #是否是目标路名
+    #is_real = False     #是否真名
     
     def __init__(self, name, pos, size=15, is_target=False, is_real=False):
         self.name = name

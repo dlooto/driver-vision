@@ -76,6 +76,7 @@ class MultiDemoThread(DemoThread):
                             self.show_frame()
                             
                             if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
+                                self.stop_motion_worker()
                                 self.current_trial.is_correct = False
                                 self.handle_judge(is_correct=False)
                             
@@ -96,7 +97,13 @@ class StaticMultiDemoThread(MultiDemoThread):
     
     def step_process(self, param, step_algo):
         ''' 阶梯过程 '''
-        super(StaticMultiDemoThread, self).step_process(param, step_algo)            
+        super(StaticMultiDemoThread, self).step_process(param, step_algo) 
+        
+    def start_motion_worker(self): 
+        pass                   
+    
+    def stop_motion_worker(self):
+        pass    
             
     
 class DynamicMultiDemoThread(MultiDemoThread):
@@ -105,8 +112,8 @@ class DynamicMultiDemoThread(MultiDemoThread):
     def str(self):
         return u'动态多路牌试验'        
     
-    def start_motion_worker(self, motion_type):
-        pass
+    #def start_motion_worker(self):
+    #    pass
     
     def step_process(self, param, step_algo): #TODO...
         '''

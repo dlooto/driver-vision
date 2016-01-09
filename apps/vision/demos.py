@@ -6,14 +6,14 @@
 
 import time
 from vision.models import Demo, Block, Trial
-from utils import times, eggs, logs
-from utils.eggs import float_list_to_str
+from utils import times
 from config import *
 import threading
-from vision.trials import Board, WatchPoint, MultiBoard
+from vision.trials import Board, WatchPoint
 from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
-from vision.motion import MotionWorker
+from vision.motion import MotionWorker, CircleMoveScheme, SmoothMoveScheme,\
+    MixedMoveScheme
 
 
 '''
@@ -49,7 +49,7 @@ class DemoThread(threading.Thread):
         self.gui = gui
         self.param = param
         
-        self.wpoint = WatchPoint()
+        self.wpoint = self.build_wpoint()
         self.board = self.build_board()
         
     def run(self):
@@ -58,6 +58,7 @@ class DemoThread(threading.Thread):
         self.is_started = True              #实验进行状态, 默认为未开始
         self.new_demo_model()               #先构造demo数据对象, 以备阶梯过程中使用
         
+        self.move_scheme = self.build_move_scheme(self.param)
         step_algo = self.build_step_algo(self.param.step_scheme)
         self.step_process(self.param, step_algo)
         
@@ -66,11 +67,34 @@ class DemoThread(threading.Thread):
         
         print('Demo thread ended')
         
+    def build_wpoint(self):
+        return WatchPoint()        
+        
     def build_board(self):
         '''需要子类重载, 以同时适用单路牌和多路牌情况'''
         #return Board(self.param.eccent, self.param.init_angle, width=width, height=height)
         width, height = self.param.get_board_size()
         return Board(0, 0, self.param.road_size, width=width, height=height)
+    
+    def build_step_algo(self, step_scheme):
+        if step_scheme not in ('R', 'S', 'N', 'V'):
+            raise Exception('Unknown step scheme: %s' % step_scheme)
+         
+        if step_scheme == 'R':       
+            return SpaceStepAlgo(self.board)
+        if step_scheme == 'N':    
+            return NumberStepAlgo(self.board)
+        if step_scheme == 'S':
+            return SizeStepAlgo(self.board)
+        return VelocityStepAlgo(self.board)    #动态敏感度     
+    
+    def build_move_scheme(self, param): #TODO
+        if param.move_type == 'C':    #圆周
+            return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
+        elif param.move_type == 'S':  #平滑
+            return SmoothMoveScheme(param.wp_scheme) 
+        return MixedMoveScheme(param.wp_scheme)      #混合
+        #return MotMoveScheme()
     
     def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
@@ -98,21 +122,13 @@ class DemoThread(threading.Thread):
         self.gui.draw_target_board(self.board, tboard_key, tseat)  #self.board相当于多个路牌的容器
         time.sleep(TARGET_ITEM_PROMPT['interval'])
  
-    def build_step_algo(self, step_scheme):
-        if step_scheme not in ('R', 'S', 'N', 'V'):
-            raise Exception('Unknown step scheme: %s' % step_scheme)
-         
-        if step_scheme == 'R':       
-            return SpaceStepAlgo(self.board)
-        if step_scheme == 'N':    
-            return NumberStepAlgo(self.board)
-        if step_scheme == 'S':
-            return SizeStepAlgo(self.board)
-        return VelocityStepAlgo(self.board)    #动态敏感度        
-
     def start_motion_worker(self): #TODO
-        self.motion = MotionWorker(self.param, self.board, self.wpoint)
+        self.move_scheme.set_velocity(float(self.param.velocity))
+        self.motion = MotionWorker(self.gui, self.move_scheme, self.board, self.wpoint)
         self.motion.start()
+
+    def stop_motion_worker(self):
+        self.motion.stop()
 
     def step_process(self, param, step_algo):
         '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
@@ -163,7 +179,7 @@ class DemoThread(threading.Thread):
                         
                         #非被唤醒并自然等待1.6s, 视为用户判断错误
                         if not self.is_awakened():
-                            self.motion.stop()
+                            self.stop_motion_worker()
                             self.current_trial.is_correct = False
                             self.handle_judge(is_correct=False)
                         
@@ -180,7 +196,12 @@ class DemoThread(threading.Thread):
         路牌显示后将等待并阻塞后续逻辑执行, 直到用户按键判断或等待1.6s
         '''
         self.gui.draw_all(self.board, self.wpoint)
-        self.wait()                #等待用户按键判断        
+        
+        #静态时什么都不做, 动态时发送'开始运动'信号
+        self.start_motion_worker()
+         
+        #等待用户按键判断         
+        self.wait()                
 
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 
@@ -243,9 +264,6 @@ class DemoThread(threading.Thread):
     def wait(self):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
         '''
-        #静态时什么都不做, 动态时发送'开始运动'信号
-        self.start_motion_worker()   
-        
         self.signal.clear()  ##重置线程flag标志位为False, 以使得signal.wait调用有效.                   
         self.signal.wait(show_interval)
         
@@ -259,7 +277,7 @@ class DemoThread(threading.Thread):
         '''唤醒线程. Set the internal flag to true. 
         在用户按键后被调用, 后续将开始下一帧的刺激显示
         '''
-        self.motion.stop()
+        self.stop_motion_worker()
         
         self.signal.set()
         
@@ -269,6 +287,12 @@ class StaticSingleDemoThread(DemoThread):
     
     def str(self):
         return u'静态单路牌试验'
+    
+    def start_motion_worker(self): 
+        pass
+    
+    def stop_motion_worker(self):
+        pass
 
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
