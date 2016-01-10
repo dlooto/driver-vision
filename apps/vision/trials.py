@@ -6,12 +6,11 @@
 # Created on Oct 22, 2015, by Junn
 #
 
+import Queue
 import random
 import maths
 from config import *
 from vision.models import RoadModel
-import math
-import Queue
 
 
 cached_real_roads = RoadModel.objects.all_real_roads()

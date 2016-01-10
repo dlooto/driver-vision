@@ -52,15 +52,22 @@ class DemoThread(threading.Thread):
         self.wpoint = self.build_wpoint()
         self.board = self.build_board()
         
+        self.move_scheme = self.build_move_scheme(self.param)
+        self.step_algo = self.build_step_algo(self.param.step_scheme)
+        
+        self.print_move_params()
+    
+    def print_move_params(self):
+        '''静态时重写为空'''
+        self.move_scheme.print_direct()
+        
     def run(self):
         print('Demo thread started: %s' % self.str())
         
         self.is_started = True              #实验进行状态, 默认为未开始
         self.new_demo_model()               #先构造demo数据对象, 以备阶梯过程中使用
         
-        self.move_scheme = self.build_move_scheme(self.param)
-        step_algo = self.build_step_algo(self.param.step_scheme)
-        self.step_process(self.param, step_algo)
+        self.step_process(self.param, self.step_algo)
         
         #批量保存block数据, is_started=True 则试验未被中断, 否则被中断
         self.end_demo(is_break=not self.is_started)
@@ -88,14 +95,6 @@ class DemoThread(threading.Thread):
             return SizeStepAlgo(self.board)
         return VelocityStepAlgo(self.board)    #动态敏感度     
     
-    def build_move_scheme(self, param): #TODO
-        if param.move_type == 'C':    #圆周
-            return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
-        elif param.move_type == 'S':  #平滑
-            return SmoothMoveScheme(param.wp_scheme) 
-        return MixedMoveScheme(param.wp_scheme)      #混合
-        #return MotMoveScheme()
-    
     def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
         self.board.reset_pos_xy(WATCH_POS)
@@ -122,21 +121,36 @@ class DemoThread(threading.Thread):
         self.gui.draw_target_board(self.board, tboard_key, tseat)  #self.board相当于多个路牌的容器
         time.sleep(TARGET_ITEM_PROMPT['interval'])
  
-    def start_motion_worker(self): #TODO
-        self.move_scheme.set_velocity(float(self.param.velocity))
-        self.motion = MotionWorker(self.gui, self.move_scheme, self.board, self.wpoint)
+    def build_move_scheme(self, param):
+        '''仅动态模式时需要构建MoveScheme对象'''
+        if param.move_type not in ('C', 'S', 'M'):
+            return
+        if param.move_type == 'C':    #圆周
+            return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
+        elif param.move_type == 'S':  #平滑
+            return SmoothMoveScheme(param.wp_scheme)
+        return MixedMoveScheme(param.wp_scheme)      #混合
+        #return MotMoveScheme() 
+ 
+    def set_move_velocity(self, velocity):
+        '''静态试验中重写该方法为空'''
+        self.move_scheme.set_velocity(velocity)
+ 
+    def start_motion_worker(self):
+        '''静态试验中, 需重写该方法为空'''
+        self.motion = MotionWorker(self.move_scheme, self.gui, self.board, self.wpoint)
         self.motion.start()
 
     def stop_motion_worker(self):
         self.motion.stop()
 
     def step_process(self, param, step_algo):
-        '''阶梯过程. 重构后使用该统一代码流程, 不同阶梯过程差异使用多态解决
+        '''阶梯过程. 不同阶梯过程差异使用多态解决. 
+        注: 不含动态敏感度阈值计算过程
         '''
         
         # init params
         road_seats, target_seats = param.get_road_seats()
-        #width, height = param.get_board_size()
         eccent_list = param.get_eccents()
         angle_list = param.get_angles()
         
@@ -145,51 +159,57 @@ class DemoThread(threading.Thread):
             if not self.is_started: break
             
             self.prompt_target_seat(tseat)
-            for eccent in eccent_list:
-                for angle in angle_list:            
-                    self.board.reset_pos(eccent, angle)
-                    self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
-                    
-                    block_data = {
-                        'demo':  self.demo, 
-                        'tseat': tseat, 
-                        'ee':    self.board.get_ee(tseat, self.wpoint), 
-                        'angle': self.board.get_angle(tseat, self.wpoint), 
-                    }
-                    step_algo.extend_block_data(block_data)
-                    block = self.create_block(block_data)
-                    print 'Block: ', block_data
-                    
-                    # 阶梯变化开始
-                    step_algo.prepare_steping()
-                    for i in range(STEPS_COUNT):
-                        if not self.is_started: break  
-                        self.total_trials += 1
-                        trial_data = {
-                            'block':        block,  
-                            'cate':         block.cate, 
-                            'steps_value':  step_algo.get_steps_value(),
-                            'target_road':  self.board.get_target_road().name,
-                            'created_time': times.now()
+            for velocity in param.get_velocitys():
+                self.set_move_velocity(velocity)    #设置运动速度值
+                
+                for eccent in eccent_list:
+                    for angle in angle_list:            
+                        self.board.reset_pos(eccent, angle)
+                        self.board.load_roads(road_seats, tseat, param.road_size)  #重新加载路名对象
+                        
+                        block_data = {
+                            'demo':  self.demo, 
+                            'tseat': tseat, 
+                            'ee':    self.board.get_ee(tseat, self.wpoint), 
+                            'angle': self.board.get_angle(tseat, self.wpoint), 
+                            'V':     velocity,
                         }
-                        self.current_trial = self.append_trial(trial_data)
+                        step_algo.extend_block_data(block_data)
+                        block = self.create_block(block_data)
+                        print 'Block: ', block_data
                         
-                        #刺激显示
-                        self.show_frame()
-                        
-                        #非被唤醒并自然等待1.6s, 视为用户判断错误
-                        if not self.is_awakened():
+                        # 阶梯变化开始
+                        step_algo.prepare_steping()
+                        for i in range(STEPS_COUNT):
+                            if not self.is_started: break  
+                            self.total_trials += 1
+                            trial_data = {
+                                'block':        block,  
+                                'cate':         block.cate, 
+                                'steps_value':  step_algo.get_steps_value(),
+                                'target_road':  self.board.get_target_road().name,
+                                'created_time': times.now()
+                            }
+                            self.current_trial = self.append_trial(trial_data)
+                            
+                            #刺激显示一帧并进入按键等待. 若为动态模式则开始运动线程.
+                            self.show_frame()
+
+                            #路牌停止运动
                             self.stop_motion_worker()
-                            self.current_trial.is_correct = False
-                            self.handle_judge(is_correct=False)
-                        
-                        #用户按键唤醒线程后刷新路名    
-                        self.board.flash_road_names() 
-                        if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
-                            continue
-                        
-                        # 更新阶梯变量
-                        step_algo.update_vars(self.is_left_algo)
+                                                        
+                            # 自然等待1.6s(非用户按钮唤醒), 视为用户判断错误
+                            if not self.is_awakened():
+                                self.current_trial.is_correct = False
+                                self.handle_judge(is_correct=False)
+                            
+                            #用户按键唤醒线程后刷新路名    
+                            self.board.flash_road_names() 
+                            if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
+                                continue
+                            
+                            # 更新阶梯变量
+                            step_algo.update_vars(self.is_left_algo)
 
     def show_frame(self):
         '''刺激显示一帧. 
@@ -197,7 +217,7 @@ class DemoThread(threading.Thread):
         '''
         self.gui.draw_all(self.board, self.wpoint)
         
-        #静态时什么都不做, 动态时发送'开始运动'信号
+        # 静态时不运作, 动态模式时'开始运动线程'
         self.start_motion_worker()
          
         #等待用户按键判断         
@@ -277,8 +297,6 @@ class DemoThread(threading.Thread):
         '''唤醒线程. Set the internal flag to true. 
         在用户按键后被调用, 后续将开始下一帧的刺激显示
         '''
-        self.stop_motion_worker()
-        
         self.signal.set()
         
         
@@ -288,11 +306,21 @@ class StaticSingleDemoThread(DemoThread):
     def str(self):
         return u'静态单路牌试验'
     
+    #### 以下动态模式相关方法, 重写为空   
+    def build_move_scheme(self, param):
+        pass
+    
+    def set_move_velocity(self, velocity):
+        pass
+    
     def start_motion_worker(self): 
         pass
     
     def stop_motion_worker(self):
         pass
+    
+    def print_move_params(self):
+        pass    
 
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''

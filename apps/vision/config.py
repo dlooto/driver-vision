@@ -25,11 +25,14 @@ STEPS_COUNT = 20                #阶梯算法循环次数
 MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
 
-#运动方向随机值范围, 以角度值表示
-PRE_MOVE_DIRECTS = (30, 45, 60, 120, 150)
+# 直线运动时, 决定x轴坐标的变化方向
+X_DIRECTS = (1, 0, -1)
+
+# 直线运动时, 运动方向的随机值范围, 以角度值表示. 决定y轴坐标的变化方向
+PRE_MOVE_DIRECTS = (30, 45, 60, 120, 135, 150)
 
 #直线运动斜率值范围
-GRADS = (math.tan(math.radians(a)) for a in PRE_MOVE_DIRECTS)
+GRADS = [math.tan(math.radians(a)) for a in PRE_MOVE_DIRECTS]
 
 #求关键间距阶梯算法参数
 SPACING_PARAM = {

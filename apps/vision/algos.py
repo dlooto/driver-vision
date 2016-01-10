@@ -50,7 +50,6 @@ class SpaceStepAlgo(StepAlgo):
             'cate':  'R', 
             'N':     self.board.count_flanker_items(), 
             'S':     self.board.get_item_size(), 
-            'V':     0.0
         }
         block_data.update(extra_data)
     
@@ -61,7 +60,7 @@ class SpaceStepAlgo(StepAlgo):
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
         self.board.update_flanker_spacings(is_left_algo)
-        print 'Spacing changed: algo-', 'Left' if is_left_algo else 'Right', \
+        print 'Spacing changed:', 'Left' if is_left_algo else 'Right', \
             self.board.get_item_spacings()
             
 class NumberStepAlgo(StepAlgo):
@@ -75,7 +74,6 @@ class NumberStepAlgo(StepAlgo):
         extra_data = {
             'cate': 'N', 
             'S':    self.board.get_item_size(), 
-            'V':    0.0   
             # 'R': 待确定. 目前间距为统一变化
         }
         block_data.update(extra_data)
@@ -89,7 +87,7 @@ class NumberStepAlgo(StepAlgo):
         
     def update_vars(self, is_left_algo):
         self.board.update_flanker_numbers(is_left_algo)
-        print 'Flanker items: algo-', 'Left' if is_left_algo else 'Right', self.board.count_flanker_items()
+        print 'Flanker items:', 'Left' if is_left_algo else 'Right', self.board.count_flanker_items()
             
         
 class SizeStepAlgo(StepAlgo):
@@ -102,8 +100,7 @@ class SizeStepAlgo(StepAlgo):
         extra_data = {
             'cate': 'S', #求尺寸阈值
             'N':    self.board.count_flanker_items(), 
-            'V':    0.0   
-            # 'R': 置空, 间距随路名尺寸变化而变化
+            # 'R':  置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
     
@@ -118,7 +115,7 @@ class SizeStepAlgo(StepAlgo):
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
         self.board.update_items_size(is_left_algo)
-        print 'Item size: algo-', 'Left' if is_left_algo else 'Right', self.board.get_item_size()
+        print 'Item size:', 'Left' if is_left_algo else 'Right', self.board.get_item_size()
 
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
