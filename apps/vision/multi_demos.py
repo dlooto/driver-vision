@@ -98,7 +98,7 @@ class MultiDemoThread(DemoThread):
 class StaticMultiDemoThread(MultiDemoThread):
     '''静态多路牌'''
     
-    def str(self):
+    def label(self):
         return u'静态多路牌试验'    
     
     def step_process(self, param, step_algo):
@@ -125,7 +125,7 @@ class StaticMultiDemoThread(MultiDemoThread):
 class DynamicMultiDemoThread(MultiDemoThread):
     '''动态多路牌'''
     
-    def str(self):
+    def label(self):
         return u'动态多路牌试验'        
     
     def step_process(self, param, step_algo):

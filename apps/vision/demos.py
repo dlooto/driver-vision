@@ -40,7 +40,7 @@ class DemoThread(threading.Thread):
     total_trials = 0                #总刺激显示次数
     total_correct_judge = 0         #总正确判断次数
     
-    def str(self):
+    def label(self):
         return u'视觉测试试验'
     
     def __init__(self, gui, param):
@@ -62,7 +62,7 @@ class DemoThread(threading.Thread):
         self.move_scheme.print_direct()
         
     def run(self):
-        print('Demo thread started: %s' % self.str())
+        print 'Demo thread started:', self.label()
         
         self.is_started = True              #实验进行状态, 默认为未开始
         self.new_demo_model()               #先构造demo数据对象, 以备阶梯过程中使用
@@ -303,7 +303,7 @@ class DemoThread(threading.Thread):
 class StaticSingleDemoThread(DemoThread):
     '''静态单路牌'''
     
-    def str(self):
+    def label(self):
         return u'静态单路牌试验'
     
     #### 以下动态模式相关方法, 重写为空   
@@ -325,7 +325,7 @@ class StaticSingleDemoThread(DemoThread):
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
     
-    def str(self):
+    def label(self):
         return u'动态单路牌试验' 
     
 
