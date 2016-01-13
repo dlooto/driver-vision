@@ -21,7 +21,7 @@ from vision.motion import MotionWorker, CircleMoveScheme, SmoothMoveScheme,\
 '''
 
 class DemoThread(threading.Thread):
-    '''父类试验线程对象.  为初始参数, 路牌,注视点等的容器
+    '''父类试验线程对象. 为初始参数,路牌,注视点等的容器
     '''
     is_started = False              #实验进行状态, 默认为未开始
     signal = threading.Event()

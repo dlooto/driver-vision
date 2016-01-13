@@ -9,6 +9,12 @@
    ########################
 '''
 
+## 为解决以下问题而加载: UnicodeEncodeError: 'ascii' codec can't encode ordinal ...
+## 尤其出现在print 'Demo thread started:', self.label()中 in run() of demos.py
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 import math
 import settings
 
