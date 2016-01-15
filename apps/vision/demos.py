@@ -40,9 +40,6 @@ class DemoThread(threading.Thread):
     total_trials = 0                #总刺激显示次数
     total_correct_judge = 0         #总正确判断次数
     
-    def label(self):
-        return u'视觉测试试验'
-    
     def __init__(self, gui, param):
         threading.Thread.__init__(self)
         
@@ -52,17 +49,16 @@ class DemoThread(threading.Thread):
         self.wpoint = self.build_wpoint()
         self.board = self.build_board()
         
-        self.move_scheme = self.build_move_scheme(self.param)
+        move_scheme = self.build_move_scheme(self.param)
+        #print 'type:', move_scheme.scheme_type()
+        self.board.set_move_scheme(move_scheme)
+        self.wpoint.set_move_scheme(move_scheme)
+        
         self.step_algo = self.build_step_algo(self.param.step_scheme)
         
-        self.print_move_params()
-    
-    def print_move_params(self):
-        '''静态时重写为空'''
-        self.move_scheme.print_direct()
         
     def run(self):
-        print 'Demo thread started:', self.label()
+        print 'Demo thread started:', self.param
         
         self.is_started = True              #实验进行状态, 默认为未开始
         self.new_demo_model()               #先构造demo数据对象, 以备阶梯过程中使用
@@ -79,7 +75,6 @@ class DemoThread(threading.Thread):
         
     def build_board(self):
         '''需要子类重载, 以同时适用单路牌和多路牌情况'''
-        #return Board(self.param.eccent, self.param.init_angle, width=width, height=height)
         width, height = self.param.get_board_size()
         return Board(0, 0, self.param.road_size, width=width, height=height)
     
@@ -93,7 +88,11 @@ class DemoThread(threading.Thread):
             return NumberStepAlgo(self.board)
         if step_scheme == 'S':
             return SizeStepAlgo(self.board)
-        return VelocityStepAlgo(self.board)    #动态敏感度     
+        else:
+            return self.build_velocity_step_algo(self.board)    #动态敏感度     
+    
+    def build_velocity_step_algo(self, board): #多态重写
+        return VelocityStepAlgo(board)
     
     def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
@@ -124,21 +123,22 @@ class DemoThread(threading.Thread):
     def build_move_scheme(self, param):
         '''仅动态模式时需要构建MoveScheme对象'''
         if param.move_type not in ('C', 'S', 'M'):
-            return
+            raise Exception('Unknown move_type: %s' % param.move_type)
+        
+        # 求动态敏感度阈值时不进行圆周运动
+        if param.move_type == 'C' and param.is_dynamic_sensitivity():
+            raise Exception('参数错误: 求动态敏感度阶梯过程不可设置为圆周运动')
+            
         if param.move_type == 'C':    #圆周
             return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
         elif param.move_type == 'S':  #平滑
             return SmoothMoveScheme(param.wp_scheme)
-        return MixedMoveScheme(param.wp_scheme)      #混合
+        return MixedMoveScheme(param.wp_scheme)  #混合
         #return MotMoveScheme() 
- 
-    def set_move_velocity(self, velocity):
-        '''静态试验中重写该方法为空'''
-        self.move_scheme.set_velocity(velocity)
  
     def start_motion_worker(self):
         '''静态试验中, 需重写该方法为空'''
-        self.motion = MotionWorker(self.move_scheme, self.gui, self.board, self.wpoint)
+        self.motion = MotionWorker(self.gui, self.board, self.wpoint)
         self.motion.start()
 
     def stop_motion_worker(self):
@@ -160,7 +160,7 @@ class DemoThread(threading.Thread):
             
             self.prompt_target_seat(tseat)
             for velocity in param.get_velocitys():
-                self.set_move_velocity(velocity)    #设置运动速度值
+                step_algo.set_velocity(velocity)    #extend_block_data时需要该参数
                 
                 for eccent in eccent_list:
                     for angle in angle_list:            
@@ -172,7 +172,6 @@ class DemoThread(threading.Thread):
                             'tseat': tseat, 
                             'ee':    self.board.get_ee(tseat, self.wpoint), 
                             'angle': self.board.get_angle(tseat, self.wpoint), 
-                            'V':     velocity,
                         }
                         step_algo.extend_block_data(block_data)
                         block = self.create_block(block_data)
@@ -203,8 +202,8 @@ class DemoThread(threading.Thread):
                                 self.current_trial.is_correct = False
                                 self.handle_judge(is_correct=False)
                             
-                            #用户按键唤醒线程后刷新路名    
-                            self.board.flash_road_names() 
+                            # 线程唤醒(用户判断或自然等待)后刷新路名, 准备下一帧显示   
+                            step_algo.flash_contents()
                             if not self.is_update_step_value:   #不更新阶梯变量, 则直接进行第2次刺激显示
                                 continue
                             
@@ -291,7 +290,7 @@ class DemoThread(threading.Thread):
         '''线程是否被用户按键唤醒, 若刺激显示是自然等待1.6s开始下一帧则未被唤醒, 此时返回False. 
         用户按键做判断后, 线程将被唤醒, 唤醒标识位设置为True, 
         '''
-        return self.signal.is_set()           
+        return self.signal.is_set()      
         
     def awake(self):
         '''唤醒线程. Set the internal flag to true. 
@@ -303,14 +302,8 @@ class DemoThread(threading.Thread):
 class StaticSingleDemoThread(DemoThread):
     '''静态单路牌'''
     
-    def label(self):
-        return u'静态单路牌试验'
-    
-    #### 以下动态模式相关方法, 重写为空   
+    #### 静态模式重写以下方法为空   
     def build_move_scheme(self, param):
-        pass
-    
-    def set_move_velocity(self, velocity):
         pass
     
     def start_motion_worker(self): 
@@ -321,12 +314,16 @@ class StaticSingleDemoThread(DemoThread):
     
     def print_move_params(self):
         pass    
+    
+    def build_velocity_step_algo(self, board): #多态重写
+        raise Exception(u'静态模式无动态敏感度阈值阶梯过程')
 
 class DynamicSingleDemoThread(DemoThread):
     '''动态单路牌'''
     
-    def label(self):
-        return u'动态单路牌试验' 
+    pass
+    
+    # 动态敏感度
     
 
     

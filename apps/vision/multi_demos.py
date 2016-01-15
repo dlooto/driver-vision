@@ -38,7 +38,7 @@ class MultiDemoThread(DemoThread):
                 
                 self.prompt_target_multi(bkey, tseat)
                 for velocity in param.get_velocitys():
-                    self.set_move_velocity(velocity)    #设置运动速度值
+                    step_algo.set_velocity(velocity)    #extend_block_data时需要V参数
                     
                     for eccent in eccent_list:   #====离心率循环
                         for angle in angle_list: #====角度循环     
@@ -54,7 +54,6 @@ class MultiDemoThread(DemoThread):
                                 'tseat': '%s:%s' % (bkey, tseat),   #目标项- 路牌key:目标路名seat
                                 'ee':    self.board.calc_ee(self.wpoint),   
                                 'angle': self.board.calc_angle(self.wpoint),
-                                'V':     velocity,
                             }
                             step_algo.extend_block_data(block_data)
                             block = self.create_block(block_data)
@@ -86,8 +85,8 @@ class MultiDemoThread(DemoThread):
                                     self.current_trial.is_correct = False
                                     self.handle_judge(is_correct=False)
                                 
-                                #用户按键唤醒线程后刷新路名    
-                                self.board.flash_road_names()
+                                # 线程唤醒后刷新路名
+                                step_algo.flash_contents()
                                 if not self.is_update_step_value: #不更新阶梯变量, 则直接进行第2次刺激显示
                                     continue
                                 
@@ -105,13 +104,10 @@ class StaticMultiDemoThread(MultiDemoThread):
         ''' 阶梯过程 '''
         super(StaticMultiDemoThread, self).step_process(param, step_algo) 
         
-    #### 以下动态模式相关方法, 重写为空    
+    #### 静态模式重写以下方法为空  
     def build_move_scheme(self, param):
         pass
     
-    def set_move_velocity(self, velocity):
-        pass            
-        
     def start_motion_worker(self): 
         pass                   
     
@@ -121,6 +117,9 @@ class StaticMultiDemoThread(MultiDemoThread):
     def print_move_params(self):
         pass
             
+    def build_velocity_step_algo(self, board): #多态重写
+        raise Exception(u'静态模式无动态敏感度阈值阶梯过程')            
+            
     
 class DynamicMultiDemoThread(MultiDemoThread):
     '''动态多路牌'''
@@ -129,9 +128,11 @@ class DynamicMultiDemoThread(MultiDemoThread):
         return u'动态多路牌试验'        
     
     def step_process(self, param, step_algo):
-        '''
-        '''
+        '''overwrite'''
         super(DynamicMultiDemoThread, self).step_process(param, step_algo)
+    
+    # 动态敏感度
+    
     
     
 

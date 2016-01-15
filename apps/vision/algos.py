@@ -33,11 +33,24 @@ class StepAlgo(object):
         '''返回阶梯变化值'''
         pass
     
+    def change_move_direction(self):
+        '''动态敏感度阈值过程是, 每按键判断或自然等待1.6s需要改变路牌运动方向'''
+        pass
+    
+    def flash_contents(self):
+        self.board.flash_road_names()
+    
     def update_vars(self, is_left_algo):
         '''
         更新阶梯变量.
         '''
         pass
+    
+    def set_velocity(self, velocity):
+        '''动态阶梯控制过程需要该方法'''
+        self.board.set_move_velocity(velocity)    #设置运动速度值
+        self.velocity = velocity    
+    
             
 class SpaceStepAlgo(StepAlgo):
     '''关键间距阶梯算法'''
@@ -50,6 +63,7 @@ class SpaceStepAlgo(StepAlgo):
             'cate':  'R', 
             'N':     self.board.count_flanker_items(), 
             'S':     self.board.get_item_size(), 
+            'V':     self.velocity,
         }
         block_data.update(extra_data)
     
@@ -74,6 +88,7 @@ class NumberStepAlgo(StepAlgo):
         extra_data = {
             'cate': 'N', 
             'S':    self.board.get_item_size(), 
+            'V':    self.velocity,
             # 'R': 待确定. 目前间距为统一变化
         }
         block_data.update(extra_data)
@@ -100,6 +115,7 @@ class SizeStepAlgo(StepAlgo):
         extra_data = {
             'cate': 'S', #求尺寸阈值
             'N':    self.board.count_flanker_items(), 
+            'V':    self.velocity,
             # 'R':  置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
@@ -120,19 +136,25 @@ class SizeStepAlgo(StepAlgo):
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
     def print_prompt(self):
-        pass
+        print('\n求动态敏感度阈值过程开始...')
 
     def extend_block_data(self, block_data):
-        pass
-    
-    def prepare_steping(self):
-        pass
+        extra_data = {
+            'cate': 'V',
+            # 'R':  置空, 间距随路名尺寸变化而变化
+        }
+        block_data.update(extra_data)
     
     def get_steps_value(self):
         '''返回阶梯变化值'''
-        pass
+        return self.board.get_move_velocity()
+    
+    def flash_contents(self):
+        self.board.flash_road_names()
+        self.board.change_move_direction()
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
-        # TODO...
-        pass  
+        self.board.change_items_velocity(is_left_algo)
+        print 'Velocity:', 'Left' if is_left_algo else 'Right', self.board.get_move_velocity()
+  

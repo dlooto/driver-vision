@@ -16,24 +16,13 @@ from vision.trials import WatchPoint
 # from vision.tasks import start_move
 
 
-# from django.dispatch.dispatcher import receiver
-# from django.dispatch import Signal
-# 
-# 
-# s_start_move = Signal(providing_args=['worker', ])
-# s_stop_move = Signal(providing_args=['worker', ])
-
-
 class MotionWorker(threading.Thread):
     '''运行线程'''
     
     interval = MOVE_SLEEP_TIME
     
-    def __init__(self, move_scheme, gui, board, wpoint):
+    def __init__(self, gui, board, wpoint):
         threading.Thread.__init__(self)
-        
-        # 运动模式/类型等
-        self.move_scheme = move_scheme
         
         # 运动对象: 注视点, 目标项, 干扰项
         self.gui = gui
@@ -55,11 +44,10 @@ class MotionWorker(threading.Thread):
         self.is_working = True
         
         while self.is_working:
-            self.wpoint.move(self.move_scheme)
-            self.board.move(self.move_scheme)
+            self.wpoint.move()
+            self.board.move()
             self.gui.draw_all(self.board, self.wpoint)
             time.sleep(self.interval)
-            
         #print 'move thread ended'    
         
     def _draw_point(self):  #绘制圆点, for test
@@ -83,6 +71,9 @@ class MoveScheme(object):
         
         self.wp_scheme = wp_scheme
         self.v = v                      #速度值: 角速度值或直线速率值
+        
+    def scheme_type(self):
+        print type(self)    
         
     def print_wp_direct(self):   
         print '注视点运动方向: (wp_grad_x, wp_grad_y): (%s, %s)' % (self.wp_grad_x, self.wp_grad_y)
@@ -113,8 +104,14 @@ class MoveScheme(object):
             return self.line_formula(old_pos, dx, self.wp_grad_x, self.wp_grad_y)
         return old_pos     
         
+    def change_direction(self):
+        pass        
+        
     def set_velocity(self, v):
         self.v = v
+        
+    def get_velocity(self):
+        return self.v    
         
     def is_wpoint_move(self):
         '''注视点是否运动'''
@@ -144,6 +141,13 @@ class CircleMoveScheme(MoveScheme):
 class SmoothMoveScheme(MoveScheme):
     '''平滑运动'''
 
+    DIRECTIONS = (
+        (-1, 0, 'left'), 
+        (1, 0,  'right'), 
+        (0, -1, 'up'), 
+        (0, 1,  'down')
+    )
+    
     def __init__(self, wp_scheme='S'):
         MoveScheme.__init__(self, wp_scheme)
         self.grad_x = random.choice(X_DIRECTS)   #x轴变化方向
@@ -153,6 +157,12 @@ class SmoothMoveScheme(MoveScheme):
         '''计算平滑运动新坐标'''
         dx = self.v * t
         return self.line_formula(old_pos, dx, self.grad_x, self.grad_y)
+        
+    def change_direction(self):
+        '''运动敏感度阈值过程时: 改变下一帧的运动方向, 在'上下左右'4个方向中随机选择'''
+        direction = random.choice(self.DIRECTIONS)
+        self.grad_x, self.grad_y = direction[0], direction[1]
+        print 'Move direction changed to: %s' % direction[2]
         
     def print_direct(self):
         self.print_wp_direct()

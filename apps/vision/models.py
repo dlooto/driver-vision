@@ -125,14 +125,31 @@ class TrialParam(BaseModel):
 
     def __unicode__(self):
         res = ''
-        if self.board_type == 'S':
-            res += u'单路'
+        if self.is_single():
+            res += u'单路牌'
         else:
-            res += u'多路'
-        if self.demo_scheme == 'S':
+            res += u'多路牌'
+            
+        if self.is_static():
             res += u'静态'
         else:
-            res += u'动态'                
+            res += u'动态' 
+            if self.move_type == 'C':
+                res += u'-圆周运动' 
+            elif self.move_type == 'S':
+                res += u'-平滑运动'
+            else:
+                res += u'-混合运动'
+            
+        if self.step_scheme == 'R':
+            res += u'-关键间距'
+        elif self.step_scheme == 'N':
+            res += u'-数量阈值'
+        elif self.step_scheme == 'S':
+            res += u'-尺寸阈值'
+        else:
+            if not self.is_static() and self.step_scheme == 'V':       
+                res += u'-动态敏感度阈值'
                 
         return u'%s-%s' % (self.id, res)    
         
@@ -142,7 +159,12 @@ class TrialParam(BaseModel):
                     
     def is_static(self):
         '''是否静态模式'''
-        return True if self.demo_scheme == 'S' else False                    
+        return True if self.demo_scheme == 'S' else False  
+    
+    def is_dynamic_sensitivity(self):
+        if not self.is_static() and self.step_scheme == 'V':
+            return True
+        return False
         
     def get_board_size(self):
         size = self.board_size.split(',')

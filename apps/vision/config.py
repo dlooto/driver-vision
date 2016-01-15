@@ -19,16 +19,9 @@ import math
 import settings
 
 
-face_background = '#F3F9FF'     #主窗口背景颜色
-board_color = "#0866B9"         #路牌背景颜色
-DEFAULT_ROAD_COLOR = 'white'    #路名颜色
-TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
-watch_color = 'red'             #注视点填充颜色
-show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
-
 STEPS_COUNT = 20                #阶梯算法循环次数
-
-MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
+show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
+MOVE_SLEEP_TIME = 0.2           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
 
 # 直线运动时, 决定x轴坐标的变化方向
@@ -62,11 +55,23 @@ DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 ### 边界值
 SIZE_BORDER = 8, 40         #路名尺寸最小值和最大值边界(求尺寸阈值时需要)
 
-BOARD_SIZE_BORDER = {       #路牌尺寸最小值和最大值边界(求尺寸阈值时)
+#路牌尺寸最小值和最大值边界(求尺寸阈值时)
+BOARD_SIZE_BORDER = {       
     'min': (56, 40),        #(width, height)
     'max': (420, 300)                      
 }    
+
+#路牌运动速度最小值和最大值边界(求动态敏感度阈值时) 
+VELO_BORDER = {             
+    'min': 5.0,        
+    'max': 250.0                      
+}   
  
+face_background = '#F3F9FF'     #主窗口背景颜色
+board_color = "#0866B9"         #路牌背景颜色
+DEFAULT_ROAD_COLOR = 'white'    #路名颜色
+TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
+watch_color = 'red'             #注视点填充颜色
 
 DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
 TRIAL_END_FONT =    ('Microsoft Yahei', 35)      #试验结束文字字体
@@ -113,7 +118,7 @@ def scale_refer(factor):
         'g_y':      ROAD_SEAT_REFER['g_y']      * factor      #G位置路名中心点离路牌中心点的纵向距离
     }
 
-# ## 路名默认坐标设置. 以下已弃用....
+# ## 路名默认坐标参考系设置. 以下已弃用....
 # ROAD_SEAT = { #280*200路牌尺寸
 #     'left_x':   80,     #路牌中心点左侧路名与中心点横向距离
 #     'right_x':  80,     #路牌中心点右侧路名与中心点横向距离

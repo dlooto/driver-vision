@@ -30,11 +30,52 @@ class WatchPoint(object):
         self.radius = radius        #圆圈半径
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
+    
+    def set_move_scheme(self, move_scheme):
+        self.move_scheme = move_scheme
         
-    def move(self, move_scheme): 
-        self.move_pos = move_scheme.new_wp_pos(self.move_pos)  
+    def move(self): 
+        self.move_pos = self.move_scheme.new_wp_pos(self.move_pos)  
 
-class Board(object):
+class BaseBoard(object):
+    
+    #def __init__(self):
+    #    pass
+    
+    def set_move_scheme(self, move_scheme):
+        self.move_scheme = move_scheme 
+        
+        if self.move_scheme:
+            self.move_scheme.print_direct()
+            
+    def set_move_velocity(self, velocity):
+        '''静态试验中重写该方法为空'''
+        if not self.move_scheme:
+            return
+        self.move_scheme.set_velocity(velocity)  
+
+    def get_move_velocity(self):
+        '''静态试验中重写该方法为空'''
+        return self.move_scheme.get_velocity()         
+        
+    def change_move_direction(self):
+        self.move_scheme.change_direction()     
+        
+    def change_items_velocity(self, is_left_algo): #动态敏感度阈值时速度阶梯变化
+        v0 = self.get_move_velocity()
+        if is_left_algo:
+            if v0*VELO_PARAM['left'] > VELO_BORDER['max']:
+                self.set_move_velocity(VELO_BORDER['max'])
+            else:
+                self.set_move_velocity(v0*VELO_PARAM['left'])
+        else: 
+            if v0*VELO_PARAM['right'] < VELO_BORDER['min']:
+                self.set_move_velocity(VELO_BORDER['min'])
+            else:
+                self.set_move_velocity(v0*VELO_PARAM['right'])
+               
+
+class Board(BaseBoard):
     '''路牌'''
     
     # 辅助变量
@@ -46,6 +87,9 @@ class Board(object):
         @param a: 路牌中心点与注视点连线的水平夹角(角度值)
         @param road_size: 路名尺寸
         '''
+        
+        BaseBoard.__init__(self)
+        
         self.pos = None                  #路牌中心点坐标
         self.road_dict = {}              #路名字典, key/value: 'A'/Road()
         self.target_seat = None          #目标路名位置
@@ -65,6 +109,7 @@ class Board(object):
         
     def __str__(self):
         return '%s, (%s, %s)' % (self.pos, self.width, self.height)    
+        
         
     def reset_pos(self, e, a, wp_pos=WATCH_POS):
         ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 重新加载路名后路牌上所有路名坐标将改变.
@@ -166,16 +211,6 @@ class Board(object):
                                         size=road_size)
             modeled_roads.remove(road_model)
         
-#     def flash_road_names(self, road_seats, target_seat):
-#         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
-#         modeled_roads = self.generate_random_roads(len(road_seats))
-#         for mark in road_seats:
-#             road_model = random.choice(modeled_roads)
-#             self.road_dict[mark].name = road_model.name 
-#             self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
-#             self.road_dict[mark].is_target = True if mark == target_seat else False
-#             modeled_roads.remove(road_model)
-#         self.target_seat = target_seat  
         
     def flash_road_names(self):
         '''仅刷新路名, 不替换路名对象, 不更新目标项及干扰项位置'''
@@ -341,11 +376,11 @@ class Board(object):
         '''返回干扰项数量'''
         return len(self.get_road_seats()) - 1
     
-    def move(self, move_scheme):
+    def move(self):
         ''' 移动路牌坐标
         @param move_scheme: 运动模式对象
         '''
-        new_pos = move_scheme.new_pos(self.pos)
+        new_pos = self.move_scheme.new_pos(self.pos)
         dx, dy = new_pos[0]-self.pos[0], new_pos[1]-self.pos[1] #路名偏移量
         self.reset_pos_xy(new_pos)
         
@@ -455,7 +490,7 @@ class Board(object):
 #         self._erase_roads(canvas)
 #         canvas.delete(self.tk_id)
 
-class MultiBoard(object):
+class MultiBoard(BaseBoard):
     '''路牌容器, 内部管理着多个路牌'''
     
     board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
@@ -472,6 +507,8 @@ class MultiBoard(object):
         说明: 
             初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名,
         '''
+        BaseBoard.__init__(self)
+        
         #辅助变量, 用于提示目标项, 结构与board_dict相同
         self.prompt_board_dict = {} 
         
@@ -750,23 +787,23 @@ class MultiBoard(object):
         key, iboard = self.get_target_board()
         return iboard.is_target_road_real()      
     
-    def move(self, move_scheme):
+    def move(self):
         ''' 移动路牌坐标
-        @param move_scheme: 运动模式对象
         '''
         key, iboard = self.get_target_board()
         
-        new_pos = move_scheme.new_pos(iboard.pos)
+        new_pos = self.move_scheme.new_pos(iboard.pos)
         dx, dy = new_pos[0]-iboard.pos[0], new_pos[1]-iboard.pos[1] #路名偏移量
         
+        #重设目标路牌坐标
         iboard.reset_pos_xy(new_pos)
         for road in iboard.road_dict.values():
             road.pos = road.pos[0]+dx, road.pos[1]+dy
         
+        #重设干扰路牌坐标
         flanker_boards = self.get_flanker_boards()
         for fboard in flanker_boards:
             fboard.reset_pos_xy((fboard.pos[0]+dx, fboard.pos[1]+dy))
-            
             for road in fboard.road_dict.values():
                 road.pos = road.pos[0]+dx, road.pos[1]+dy
      
