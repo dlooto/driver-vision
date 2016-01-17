@@ -35,8 +35,8 @@ GRADS = [math.tan(math.radians(a)) for a in PRE_MOVE_DIRECTS]
 
 #求关键间距阶梯算法参数
 SPACING_PARAM = {
-    'left':  0.5,          #左算法变化因子
-    'right': 1             #右算法变化量
+    'left':  0.8,          #左算法变化因子
+    'right': 2             #右算法变化量
 }
 #尺寸阈值阶梯算法参数
 SIZE_PARAM = {

@@ -286,22 +286,42 @@ class Board(BaseBoard):
         road_seats.remove(self.target_seat)
         
         for flanker_seat in road_seats:
-            self.road_dict[flanker_seat].reset_pos(target_road, is_left_algo)
+            self.road_dict[flanker_seat].update_pos(target_road.pos, is_left_algo)
             
-    def update_flanker_spacings(self, is_left_algo):
-        '''根据算法更新所有干扰项-目标项间距值, 同时以目标项为基准, 更新所有干扰项的坐标
-        @todo: 后续考虑重构...
+    def update_flanker_spacings(self, is_left_algo, update_all=False):
+        '''以目标项为基准, 更新所有干扰项的坐标.(即更新了干扰项与目标项的间距)
+        @param is_left_algo: 算法规则, true-流程图左侧看法, 一般设置为间距减小, false-右侧算法, 设置为间距增加
+        @param update_all: true-间距统一变化, 
+                          false-间距不统一变化, 规则: 若为左侧算法, 则减小最大间距; 若为右侧算法, 则增加最小间距 
         '''
+        if update_all: #若所有干扰项间距统一变化 
+            self.update_flanker_poses(is_left_algo)
+            return
         
-        road_spacings = self.get_road_spacings()   #self.road_spacings 
-        for i in range(len(road_spacings)):
-            if is_left_algo:
-                road_spacings[i] = round(SPACING_PARAM['left'] * road_spacings[i], 2)
-            else:
-                road_spacings[i] += SPACING_PARAM['right']
-                  
-        self.update_flanker_poses(is_left_algo)    
-    
+        space_dict = {}
+        target_road = self.get_target_road()
+        for flanker in self.get_flanker_roads():
+            space_dict[flanker] = flanker.dist_with(target_road)
+        
+        if is_left_algo:    #选择最大的间距进行减小
+            mval = 0.0
+            for space in space_dict.values():
+                if space > mval:
+                    mval = space
+        else:       #选择最小的间距进行间距增加
+            mval = 99999999
+            for space in space_dict.values():
+                if space < mval:
+                    mval = space
+               
+        #筛选出间距与最大值或最小值相等的路名
+        equal_space_roads  = [] #间距相等的路名列表
+        for road, space in space_dict.items():
+            if abs(space-mval) < 0.01:
+                equal_space_roads.append(road)               
+        for flanker in equal_space_roads:
+            flanker.update_pos(target_road.pos, is_left_algo)
+                
     def update_flanker_numbers(self, is_left_algo):
         '''
         更新干扰项的数量. 该方法将修改road_dict字典对象. 
@@ -398,7 +418,7 @@ class Board(BaseBoard):
     
     def update_pos(self, target_pos, is_left_algo):
         '''根据两点间距变化值, 重新计算当前路名/路牌坐标. 
-        @algo: 根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近
+        根据两点原有坐标可确定间距变化方向, 目标项坐标不变, 干扰项则远离或靠近
         @param target_pos: 目标项位置坐标, 元组对象(x, y)
         @param is_left_algo: 算法参数, 如 True=0.5r, False=r+1
         '''
@@ -747,11 +767,38 @@ class MultiBoard(BaseBoard):
             self.board_que.put(key)
             break
     
-    def update_flanker_spacings(self, is_left_algo):
+    def update_flanker_spacings(self, is_left_algo, update_all=False):
         '''求多路牌关键间距时调用.
         根据算法更新所有目标项-干扰项间距值, 本质上是更新干扰项的坐标(以目标项为原点)'''
         
-        self.update_flanker_poses(is_left_algo)
+        if update_all:
+            self.update_flanker_poses(is_left_algo)
+            return
+        
+        space_dict = {}
+        key, iboard = self.get_target_board()
+        for flanker in self.get_flanker_boards():
+            space_dict[flanker] = flanker.dist_with(iboard)    
+        
+        if is_left_algo:    #选择最大的间距进行减小
+            mval = 0.0
+            for space in space_dict.values():
+                if space > mval:
+                    mval = space
+        else:       #选择最小的间距进行间距增加
+            mval = 99999999
+            for space in space_dict.values():
+                if space < mval:
+                    mval = space 
+ 
+        #筛选出间距与最大值或最小值相等的路牌
+        equal_space_boards  = [] #间距相等的路牌列表
+        for board, space in space_dict.items():
+            if abs(space-mval) < 0.01:
+                equal_space_boards.append(board)               
+        for flanker_board in equal_space_boards:
+            flanker_board.update_pos(iboard.pos, is_left_algo)
+            flanker_board.load_roads_lean(flanker_board.road_size)                            
         
     
     def update_flanker_poses(self, is_left_algo):
@@ -763,7 +810,7 @@ class MultiBoard(BaseBoard):
         for flanker_board in self.get_flanker_boards():
             flanker_board.update_pos(iboard.pos, is_left_algo)
             
-            # 路牌位置变化后需加载路名
+            # 路牌位置变化后需重新加载路名
             flanker_board.load_roads_lean(flanker_board.road_size)  
         
     def update_items_size(self, is_left_algo):
@@ -828,14 +875,14 @@ class Road(object):
         '''计算路名间距, 结果取2位小数'''
         return maths.dist(self.pos, a_road.pos)
     
-    def reset_pos(self, target_road, is_left_algo):
-        '''根据两点间距变化值, 重新计算当前路名位置坐标. 
-        根据两点原有坐标可确定间距变化方向, 目标路名坐标不变, 干扰路名则远离或靠近
-        @param target_road: Road类型对象,
-        @param is_left_algo: 算法参数, True-0.5r, False-r+1
+    def update_pos(self, target_pos, is_left_algo): #算法规则与路牌同名方法相同, 以后可考虑重构提取公共方法.
+        '''根据两点间距变化值, 重新计算当前路名/路牌坐标. 
+        根据两点原有坐标可确定间距变化方向, 目标项坐标不变, 干扰项则远离或靠近
+        @param target_pos: 目标项位置坐标, 元组对象(x, y)
+        @param is_left_algo: 算法参数, 如 True=0.5r, False=r+1
         '''
         
-        x0, y0 = target_road.pos
+        x0, y0 = target_pos
         x, y = self.pos
         r = maths.dist((x0, y0), (x, y)) #两路名原来的间距
         if is_left_algo:

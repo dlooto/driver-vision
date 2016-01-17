@@ -278,7 +278,7 @@ class Trial(BaseModel):
     steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
     
     # 单路牌时如'视觉路', 多路牌时如'B2,视觉路'(目标路牌,目标路名). 由此可知道用户按键情况    
-    target_road = models.CharField(u'目标路名', max_length=40, null=True, blank=True, default='')
+    target_road = models.CharField(u'目标项', max_length=40, null=True, blank=True, default='')
     #start_time = models.DateTimeField(u'开始时间', )
     
     class Meta:
