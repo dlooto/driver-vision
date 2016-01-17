@@ -123,6 +123,8 @@ class Board(BaseBoard):
                          
     def reset_size(self, is_left_algo):
         '''重设路牌尺寸'''
+        original_width = self.width 
+        
         if is_left_algo:
             if self.width * SIZE_PARAM['left'] < BOARD_SIZE_BORDER['min'][0] or \
                     self.height * SIZE_PARAM['left'] < BOARD_SIZE_BORDER['min'][1]:
@@ -136,6 +138,8 @@ class Board(BaseBoard):
             else:
                 self.width, self.height = self.width * SIZE_PARAM['right'], self.height * SIZE_PARAM['right']
                 
+        #路牌尺寸变化将引起路牌上路名尺寸同比例变化
+        self.road_size = self.road_size*self.width*1.0 / original_width
                                 
     def reset_pos_xy(self, pos):
         ''' 重置路牌中心点坐标. 为reset_pos()的替代方法, 直接传入路牌中心点坐标.  
@@ -542,6 +546,7 @@ class MultiBoard(BaseBoard):
         # 初始化路牌字典, 该字典存放正在控制过程中并显示的路牌, 如 {'B1':Board1, 'B2':Board2, 'B3':Board3}
         # 已初始化且未显示的路牌将存放于 board_que
         self.board_repos = self._generate_boards(param)   #路牌仓库, 存储所有待用路牌   
+        #self.original_param = self.set_original_param(param)
         
         #初始化为空, 在控制过程中真正在使用的路牌, 从board_repos中装载
         self.board_dict = {} 
@@ -549,6 +554,13 @@ class MultiBoard(BaseBoard):
         
         self._init_prompt_boards(param.get_board_size(), param.board_range, param.road_size, 
                                  param.board_space, param.board_scale)
+
+    def set_original_param(self, param):
+        return {
+            'board_size':  param.get_board_size(), 
+            'road_size':   param.road_size, 
+            'board_space': param.board_space,         
+        }    
 
     def reload_boards(self):
         '''每一轮目标项变化后重新加载路牌, 主要因路牌数量阈值情况而增加 '''
@@ -822,8 +834,7 @@ class MultiBoard(BaseBoard):
         '''
         for board in self.board_dict.values():
             board.reset_size(is_left_algo)
-            #board.reset_pos_xy()
-            #board.load_roads()
+            board.load_roads_lean(board.road_size)
         
     def flash_road_names(self):
         '''刷新所有路牌上的路名, 不替换路名对象'''

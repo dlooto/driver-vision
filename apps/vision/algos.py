@@ -120,9 +120,14 @@ class SizeStepAlgo(StepAlgo):
         }
         block_data.update(extra_data)
     
-    def init_others(self):
-        for board in self.board.board_dict.values():
-            board.width, board.height = self.board.board_size  #各路牌尺寸还原
+    def init_others(self): #仅多路牌时使用该方法
+        board_size = self.board.board_size
+        ori_scale = self.board.board_scale
+        ori_road_size = self.board.road_size
+        board_list = self.board.board_dict.values()
+        for i in range(len(board_list)): #各路牌尺寸还原
+            board_list[i].width, board_list[i].height = board_size[0] * ori_scale**i, board_size[1] * ori_scale**i,   
+            board_list[i].road_size = ori_road_size * ori_scale**i
     
     def get_steps_value(self):
         '''返回阶梯变化值'''
