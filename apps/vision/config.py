@@ -19,8 +19,8 @@ import math
 import settings
 
 
-STEPS_COUNT = 20                #阶梯算法循环次数
-show_interval = 3.0             #默认刺激显示间隔时间, 单位秒
+STEPS_COUNT = 10                #阶梯算法循环次数
+show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 MOVE_SLEEP_TIME = 0.2           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
 

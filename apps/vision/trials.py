@@ -75,11 +75,57 @@ class BaseBoard(object):
                 self.set_move_velocity(v0*VELO_PARAM['right'])
                
 
+class ItemQueue():
+    '''队列, 主用于路名或路牌增减. 默认规则: 增加路牌/路名以最近的间距增加(表现为出队列)，
+    减少路牌/路名以最远的间距减少(表现为入队列).'''
+    
+    def __init__(self, board, maxsize=8):
+        '''
+        @param maxsize: 队列长度    
+        '''
+        self.maxsize = maxsize
+        self._queue = []
+        self.board = board  #单路牌或多路牌
+                   
+    def empty(self):
+        '''判断队列是否为空'''
+        if not self._queue or len(self._queue) == 0:
+            return True
+        return False
+    
+    def clear(self):
+        '''清空队列'''
+        self._queue = []
+    
+    def get(self):
+        pass
+    
+    def put(self, item):
+        '''入队列'''
+        if self.qsize() >= self.maxsize:
+            print self._queue
+            raise Exception('%s beyond largest size: %s' % (self.qsize(), self.maxsize))
+        self._queue.append(item)
+        
+    def qsize(self):
+        '''返回队列长度'''
+        return len(self._queue)
+    
+    def bget(self):
+        '''从队列中获取离目标项位置最近(间距最小)的位置返回, 并移除队列中相应元素'''
+        min_space = 99999999
+        min_seat = self._queue[0]
+        for seat in self._queue:
+            space = self.board.calc_queue_space(seat) 
+            if space < min_space:
+                min_space = space
+                min_seat = seat
+        self._queue.remove(min_seat)
+        return min_seat  
+        
+               
 class Board(BaseBoard):
     '''路牌'''
-    
-    # 辅助变量
-    road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
     
     def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
         ''' 
@@ -89,6 +135,10 @@ class Board(BaseBoard):
         '''
         
         BaseBoard.__init__(self)
+        
+        #辅助变量
+        #road_que = Queue.Queue(maxsize=8)  #用于求数量阈值时路名的增减
+        self.road_que = ItemQueue(self, maxsize=8)  #用于求数量阈值时路名的增减
         
         self.pos = None                  #路牌中心点坐标
         self.road_dict = {}              #路名字典, key/value: 'A'/Road()
@@ -153,7 +203,7 @@ class Board(BaseBoard):
     def clear_queue(self):
         '''清空queue, 用于下一轮求数量阈值的阶梯变化过程'''
         if not self.road_que.empty():
-            self.road_que.queue.clear()
+            self.road_que.clear()
         
         # 单路牌求数量阈值: 路名上限为8, 初始路名显示条数为设定的值
         rest_seats = set(ALLOWED_ROAD_SEATS) - set(self.get_road_seats())
@@ -302,29 +352,52 @@ class Board(BaseBoard):
             self.update_flanker_poses(is_left_algo)
             return
         
-        space_dict = {}
         target_road = self.get_target_road()
-        for flanker in self.get_flanker_roads():
-            space_dict[flanker] = flanker.dist_with(target_road)
-        
+        space_dict = self.get_flanker_space_dict()
         if is_left_algo:    #选择最大的间距进行减小
-            mval = 0.0
-            for space in space_dict.values():
-                if space > mval:
-                    mval = space
+            mflanker, mval = self.get_max_space_flanker(space_dict)        
         else:       #选择最小的间距进行间距增加
-            mval = 99999999
-            for space in space_dict.values():
-                if space < mval:
-                    mval = space
+            mflanker, mval = self.get_min_space_flanker(space_dict)
                
         #筛选出间距与最大值或最小值相等的路名
         equal_space_roads  = [] #间距相等的路名列表
         for road, space in space_dict.items():
             if abs(space-mval) < 0.01:
-                equal_space_roads.append(road)               
+                equal_space_roads.append(road)  
+                         
         for flanker in equal_space_roads:
             flanker.update_pos(target_road.pos, is_left_algo)
+                
+    def get_flanker_space_dict(self):
+        '''返回干扰项与目标项间距字典, 干扰项对象为key, 值为间距值. 主要用于计算最大间距及最小间距'''
+        space_dict = {}
+        target_road = self.get_target_road()
+        for flanker in self.get_flanker_roads():
+            space_dict[flanker] = flanker.dist_with(target_road)
+        return space_dict            
+                
+    def get_max_space_flanker(self, space_dict):
+        '''返回与目标项间距最大的干扰项'''
+        mval = 0.0
+        mflanker = None
+        for flanker, space in space_dict.items():
+            if space > mval:
+                mval = space
+                mflanker = flanker
+        
+        return mflanker, mval        
+
+    def get_min_space_flanker(self, space_dict):
+        '''返回与目标项间距最大的干扰项''' 
+        mval = 99999999
+        mflanker = None
+        for flanker, space in space_dict.items():
+            if space < mval:
+                mval = space
+                mflanker = flanker
+        
+        return mflanker, mval                                 
+                        
                 
     def update_flanker_numbers(self, is_left_algo):
         '''
@@ -337,39 +410,42 @@ class Board(BaseBoard):
             self.add_flankers()
         else:
             self.decr_flankers()
-            
-        #for m, road in self.road_dict:
-        #    if road.
-        #        self.road_dict.pop()    
-        #self.road_que.put(item)
-        #self.get_target_road()
-    
+          
+    def calc_queue_space(self, seat):
+        '''用于数量阈值队列中求目标项与当前位置对象的间距'''
+        return maths.dist(self.get_target_road().pos, self.pos_xx(seat, self.road_size))         
+          
     def add_flankers(self):
-        '''增加干扰项数量'''
+        '''增加干扰项数量, 每次增加2个干扰项. 增加以最近间距位置开始增加'''
         if self.road_que.qsize() < 2:
             print('\nAlready max flankers on board: %s' % int(len(self.road_dict)-1))
             return            
         
-        seat1, seat2 = self.road_que.get(), self.road_que.get() 
         road_model1, road_model2 = self.generate_random_roads(2)
+        seat1, seat2 = self.road_que.bget(), self.road_que.bget()
+        
         self.road_dict[seat1] = Road(road_model1.name, 
                                      self.pos_xx(seat1, self.road_size), 
                                      is_real=road_model1.is_real, 
                                      size=self.road_size
                                 )
-        self.road_dict[seat2] = Road(road_model2.name, 
-                                     self.pos_xx(seat2, self.road_size), 
-                                     is_real=road_model2.is_real, 
+        self.road_dict[seat2] = Road(road_model2.name,
+                                     self.pos_xx(seat2, self.road_size),
+                                     is_real=road_model2.is_real,
                                      size=self.road_size
                                 )
         
     def decr_flankers(self):
-        '''减少干扰项数量'''
+        '''减少干扰项数量, 每次减少1个. 从当前已存在的路名列表中最大间距的干扰项开始减少'''
         if len(self.road_dict) == 2:
             print('\nAlready min flankers on board: %s' % int(len(self.road_dict)-1))
             return
-        for seat in self.get_road_seats():
-            if seat != self.target_seat:  #干扰项
+        
+        space_dict = self.get_flanker_space_dict()
+        max_flanker, max_space = self.get_max_space_flanker(space_dict)
+        
+        for seat, road in self.road_dict.items():
+            if seat != self.target_seat and road == max_flanker:
                 self.road_que.put(seat)
                 self.road_dict.pop(seat)
                 break
@@ -462,7 +538,7 @@ class Board(BaseBoard):
         mt = 'pos_%s' % mark.lower()
         return getattr(self, mt)(s)    
     
-    def pos_a(self, s=0):#带默认值可不传, 为便于pos_xx调用的一致性
+    def pos_a(self, s=0):#带默认值时可不传, 为便于pos_xx调用的一致性
         return self.pos[0]-self.road_seat_refer['left_x'], self.pos[1]+self.road_seat_refer['a_y']
     def pos_b(self, s):
         x, y = self.pos_a(s)
@@ -517,8 +593,6 @@ class Board(BaseBoard):
 class MultiBoard(BaseBoard):
     '''路牌容器, 内部管理着多个路牌'''
     
-    board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
-    
     def __init__(self, param):
         '''初始化.  
         @param board_size:     3块路牌中的最大尺寸, 元组形式: (w, h) 
@@ -533,6 +607,10 @@ class MultiBoard(BaseBoard):
         '''
         BaseBoard.__init__(self)
         
+        # 辅助变量
+        #board_que = Queue.Queue(maxsize=3)  #求数量阈值时路牌增减
+        self.board_que = ItemQueue(self, maxsize=6)  #作用于求数量阈值时路牌增减, 存放路牌标识位
+        
         #辅助变量, 用于提示目标项, 结构与board_dict相同
         self.prompt_board_dict = {} 
         
@@ -546,7 +624,6 @@ class MultiBoard(BaseBoard):
         # 初始化路牌字典, 该字典存放正在控制过程中并显示的路牌, 如 {'B1':Board1, 'B2':Board2, 'B3':Board3}
         # 已初始化且未显示的路牌将存放于 board_que
         self.board_repos = self._generate_boards(param)   #路牌仓库, 存储所有待用路牌   
-        #self.original_param = self.set_original_param(param)
         
         #初始化为空, 在控制过程中真正在使用的路牌, 从board_repos中装载
         self.board_dict = {} 
@@ -554,13 +631,6 @@ class MultiBoard(BaseBoard):
         
         self._init_prompt_boards(param.get_board_size(), param.board_range, param.road_size, 
                                  param.board_space, param.board_scale)
-
-    def set_original_param(self, param):
-        return {
-            'board_size':  param.get_board_size(), 
-            'road_size':   param.road_size, 
-            'board_space': param.board_space,         
-        }    
 
     def reload_boards(self):
         '''每一轮目标项变化后重新加载路牌, 主要因路牌数量阈值情况而增加 '''
@@ -640,11 +710,11 @@ class MultiBoard(BaseBoard):
                                             param.board_range, 
                                             param.board_space
                                         ))
-                #print 'board pos: ', curr_board.pos 
+                #print 'board pos: ', curr_board.pos
             curr_board.set_spared_road_seats(road_seats_list[i])
-            board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board  
+            board_dict[ ALLOWED_BOARD_MARKS[i] ] = curr_board
             
-            prev_board = curr_board #指针下移   
+            prev_board = curr_board #指针下移
                 
         return board_dict                 
         
@@ -741,7 +811,7 @@ class MultiBoard(BaseBoard):
         用于下一轮求数量阈值的阶梯变化过程
         '''
         if not self.board_que.empty():
-            self.board_que.queue.clear()
+            self.board_que.clear()
         
         # 阶梯循环前装载pre_board_num数量的路牌(包括目标项). 注: 此处不可以进行board_dict.clear(), 
         # 因为各路牌坐标已进行了重设.
@@ -751,33 +821,47 @@ class MultiBoard(BaseBoard):
         # 剩余路牌位置标记存入board_que    
         rest_marks = set(ALLOWED_BOARD_MARKS) - set(self.board_dict.keys())
         for m in rest_marks:
-            self.board_que.put(m)  
+            self.board_que.put(m)
            
     def update_flanker_numbers(self, is_left_algo):
         if is_left_algo:
             self.incre_board()
         else:
             self.decr_board()            
+    
+    def calc_queue_space(self, seat):
+        '''board_que中使用, 计算路牌间隔, 如若目标为B1, 则B3与B1间隔为2, B5与B1间隔为4'''
+        return abs(int(seat[1]) - int(self.target_board_key[1]))
            
-    def incre_board(self): #TODO...增加的路牌坐标中心如何确定?
-        '''board_dict中增加路牌, 目前每次仅增加一块路牌'''
+    def incre_board(self): #该方法现仅适用于3个路牌情况
+        '''board_dict中增加路牌, 目前每次仅增加一块路牌. 增加的路牌为离目标路牌最近的位置'''
         if self.board_que.qsize() < 1:
             return
-        key = self.board_que.get()
+        key = self.board_que.bget()
         self.board_dict[key] = self.board_repos[key]
-        
     
-    def decr_board(self):
-        '''board_dict中减少一块路牌'''
+    def decr_board(self): #该方法已比较通用, 可适用于路牌数大于3个情况
+        '''board_dict中减少一块路牌. 去除的路牌为离目标项最远的位置'''
         if len(self.board_dict) == 2: #至少2个路牌
             return
         
-        for key in self.board_dict.keys():
+        # 得到距离目标项最远的干扰路牌
+        max_space = 0.0
+        max_fboard = None
+        key, tboard = self.get_target_board()
+        for fboard in self.get_flanker_boards():
+            space = tboard.dist_with(fboard)
+            if space > max_space: 
+                max_space = space
+                max_fboard = fboard
+                
+        for key, board in self.board_dict.items():
             if key == self.target_board_key: #目标路牌不允许去除
                 continue
-            self.board_dict.pop(key)
-            self.board_que.put(key)
-            break
+            if board == max_fboard:
+                self.board_dict.pop(key)
+                self.board_que.put(key)
+                return
     
     def update_flanker_spacings(self, is_left_algo, update_all=False):
         '''求多路牌关键间距时调用.
