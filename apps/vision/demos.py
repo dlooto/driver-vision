@@ -93,7 +93,8 @@ class DemoThread(threading.Thread):
         else:
             return self.build_velocity_step_algo(self.board)    #动态敏感度     
     
-    def build_velocity_step_algo(self, board): #多态重写
+    def build_velocity_step_algo(self, board): 
+        '''为多态重写, 增加该方法'''
         return VelocityStepAlgo(board)
     
     def prompt_target_seat(self, tseat):
@@ -129,7 +130,7 @@ class DemoThread(threading.Thread):
         
         # 求动态敏感度阈值时不进行圆周运动
         if param.move_type == 'C' and param.is_dynamic_sensitivity():
-            raise Exception('参数错误: 求动态敏感度阶梯过程不可设置为圆周运动')
+            raise Exception('参数错误: 动态敏感度阶梯过程仅在平滑运动时有效')
             
         if param.move_type == 'C':    #圆周
             return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
@@ -263,7 +264,20 @@ class DemoThread(threading.Thread):
             self.current_trial.is_correct = False
             
         self.current_trial.resp_cost = times.time_cost(self.current_trial.created_time)
-        return self.current_trial.is_correct                  
+        return self.current_trial.is_correct
+    
+    def is_direction_judge_correct(self, direction):
+        '''确定用户按键判断是否正确. 若用户的判断值与路牌运动方向一致, 则返回True, 否则返回False
+        @param direction: 为用户输入的判断值, 1-用户判断为上, 2-用户判断为下, 3-判断为左, 4-判断为右
+        '''
+        if self.board.is_same_direction_with(direction):     
+            self.current_trial.is_correct = True
+            self.total_correct_judge += 1
+        else: #判断错误
+            self.current_trial.is_correct = False
+            
+        self.current_trial.resp_cost = times.time_cost(self.current_trial.created_time)
+        return self.current_trial.is_correct                      
             
     def new_demo_model(self):
         demo = Demo(param=self.param)

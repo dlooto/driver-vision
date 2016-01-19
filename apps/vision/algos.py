@@ -5,7 +5,6 @@
 #
 
 from utils.eggs import float_list_to_str
-from vision.trials import Board
 
 class StepAlgo(object):
     '''阶梯算法过程基类'''
@@ -152,6 +151,10 @@ class SizeStepAlgo(StepAlgo):
 
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
+    
+    #def __init__(self, board, gui):
+    #    StepAlgo.__init__(self, board)
+        
     def print_prompt(self):
         print('\n求动态敏感度阈值过程开始...')
 

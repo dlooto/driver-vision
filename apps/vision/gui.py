@@ -48,7 +48,7 @@ class GUI(Tk):
         self.prompt.pack(pady=50)
         
         self.start_button = Label(self, START_BUTTON, relief=RAISED) #使用Button有些Fuck, 改用Label
-        self.start_button.pack(pady=250)
+        self.start_button.pack(pady=150)
         self.start_button.bind('<Button-1>', self.start)
         
         self.bind_keys()
@@ -192,19 +192,34 @@ class GUI(Tk):
         self.cv.widget_list.append(tk_id)
         
     def bind_keys(self):
-        self.bind('<Key-Left>',     self._press_left)       #左
-        self.bind('<Key-Right>',    self._press_right)      #右
-        self.bind('<KeyPress-y>',   self._press_y)          #y键
-        self.bind('<KeyPress-n>',   self._press_n)          #n键
+        self.bind('<KeyPress-y>', self._press_y)        #y键
+        self.bind('<KeyPress-n>', self._press_n)        #n键
+        
+        self.bind('<Key-Left>', self._press_left)       #左
+        self.bind('<Key-Right>',self._press_right)      #右
+        self.bind('<Key-Up>',   self._press_up)         #上
+        self.bind('<Key-Down>', self._press_down)       #下
         
         self.bind('<KeyPress-S>',   self.start)     #开始键
         self.bind('<KeyPress-Q>',   self.stop)      #结束键
                 
-        
     def _press_left(self, e):
-        print 'Left:', e.keysym 
+        '''用户按下左方向键, 判断路牌向左运动'''
+        self._handle_key_pressed(e, 3)
+        
     def _press_right(self, e):
-        print 'Right: ', e.keysym
+        self._handle_key_pressed(e, 4)
+        
+    def _press_up(self, e):
+        self._handle_key_pressed(e, 1)
+        
+    def _press_down(self, e):
+        self._handle_key_pressed(e, 2)                 
+        
+    def _handle_key_pressed(self, e, direction):
+        is_correct = self.demo_thread.is_direction_judge_correct(direction)
+        print '%s Pressed: %s' % (e.keysym, is_correct)
+        self._extra_keypressed(is_correct)                
         
     def _press_y(self, e):
         '''用户按下Y键, 判断目标项为真路名'''

@@ -61,7 +61,7 @@ class MoveScheme(object):
     
     wp_v = WPOINT_DEFAULT_VELOCITY  #注视点运动时默认速度值
     
-    def __init__(self, wp_scheme='S', v=20):
+    def __init__(self, wp_scheme='S', v=BOARD_DEFAULT_VELOCITY):
         '''注视点默认为静止
         @param wp_scheme: 注视点模式, S-静止, L-直线运动.
         @param v: 速度值
@@ -105,7 +105,10 @@ class MoveScheme(object):
         return old_pos     
         
     def change_direction(self):
-        pass        
+        pass      
+    
+    def get_direction(self):
+        pass  
         
     def set_velocity(self, v):
         self.v = v
@@ -157,6 +160,18 @@ class SmoothMoveScheme(MoveScheme):
         '''计算平滑运动新坐标'''
         dx = self.v * t
         return self.line_formula(old_pos, dx, self.grad_x, self.grad_y)
+        
+    def get_direction(self):
+        '''动态敏感度阈值过程时用到该方法'''
+        if self.grad_x == 0 and self.grad_y == -1: #上
+            return 1
+        if self.grad_x == 0 and self.grad_y == 1: #下
+            return 2
+        if self.grad_x == -1 and self.grad_y == 0: #左 
+            return 3
+        if self.grad_x == 1 and self.grad_y == 0: #右
+            return 4
+        return -1 #Unkonw direction
         
     def change_direction(self):
         '''运动敏感度阈值过程时: 改变下一帧的运动方向, 在'上下左右'4个方向中随机选择'''

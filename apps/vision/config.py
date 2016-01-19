@@ -21,8 +21,9 @@ import settings
 
 STEPS_COUNT = 20                #阶梯算法循环次数
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
-MOVE_SLEEP_TIME = 0.2           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
+MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
+BOARD_DEFAULT_VELOCITY = 50     #路牌默认运动速度值
 
 # 直线运动时, 决定x轴坐标的变化方向
 X_DIRECTS = (1, 0, -1)
@@ -63,7 +64,7 @@ BOARD_SIZE_BORDER = {
 
 #路牌运动速度最小值和最大值边界(求动态敏感度阈值时) 
 VELO_BORDER = {             
-    'min': 5.0,        
+    'min': 10.0,        
     'max': 250.0                      
 }   
  
@@ -135,8 +136,14 @@ def scale_refer(factor):
 #     'g_y':      105      #G位置路名中心点离路牌中心点的纵向距离
 # }
 
+USER_GUIDE = \
+u'''点击 '开始' 按钮进行测试. 操作说明: \n
+    若判断目标路名为 '真', 请按 'y' 键,  判断为 '假' 请按 'n' 键 \n 
+    动态敏感度试验时, 请按方向键进行路牌运动方向判断. 
+''' 
+
 TRIAL_START_PROMPT = { #试验开始提示信息 
-    'text': u'点击"开始"按钮进行测试, "真" 为 "y"  假 为 "n" ', 
+    'text': USER_GUIDE,
     'bg':   face_background,
     'fg':   '#1F90F2',
     'font': ("Helvetica", 30), 

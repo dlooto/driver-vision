@@ -58,6 +58,15 @@ class BaseBoard(object):
         '''静态试验中重写该方法为空'''
         return self.move_scheme.get_velocity()         
         
+    def is_same_direction_with(self, direction):
+        '''用户判断的方向(传入参数)是否与路牌当前运动方向一致
+        @param direction: 1-上, 2-下, 3-左, 4-右
+        @return: 若方向一致返回True, 否则返回False
+        '''
+        if self.move_scheme.get_direction() == direction:
+            return True
+        return False    
+        
     def change_move_direction(self):
         self.move_scheme.change_direction()     
         
@@ -75,8 +84,9 @@ class BaseBoard(object):
                 self.set_move_velocity(v0*VELO_PARAM['right'])
                
     def restore_size(self):
-        '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸'''
-        pass               
+        '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸. 多路牌时重写为空'''
+        pass           
+    
 
 class ItemQueue():
     '''队列, 主用于路名或路牌增减. 默认规则: 增加路牌/路名以最近的间距增加(表现为出队列)，
