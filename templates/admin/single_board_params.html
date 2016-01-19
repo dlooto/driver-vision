@@ -80,6 +80,7 @@ function saveParams() {
     var init_angle = $('#init_angle').val();
     var road_size = $('#road_size').val();
     var board_size = $('#board_size').val();
+    var space_type = $('#space_type').val();  //单路牌时路名间距是否也同比例缩放
     var desc = $('#desc').val();
     
     //构造 road_marks参数
@@ -132,6 +133,8 @@ function saveParams() {
                     "init_angle":   init_angle,
                     "road_size":    road_size,
                     "board_size":   board_size, 
+                    
+                    "space_type":   space_type, 
                     "desc":         desc,
         }, 
                     
@@ -260,6 +263,18 @@ function setResult(res) {
             <option value="15" selected="selected">15</option>
             <option value="20">20</option>        
         </select>
+    </div>
+</div></div> 
+
+<!--尺寸阈值过程变化类型-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>尺寸阈值类型:</label></div>
+    <div class="controls">
+        <select id="space_type" name="space_type">
+            <option value="S1" selected="selected">(尺寸1)间距不变</option>
+            <option value="S2">(尺寸2)间距缩放</option>        
+        </select>
+        <span class="prompt-text">(尺寸阈值阶梯过程时该参数有效, 默认间距不变)</span>
     </div>
 </div></div> 
 

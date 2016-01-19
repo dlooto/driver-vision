@@ -43,7 +43,11 @@ class ParamsSetView(CustomAPIView):
         return True, ''
     
     def extend_params(self, req, params):
-        pass
+        space_type = req.POST.get('space_type')   #  
+        extras = {
+            "space_type":  space_type,
+        }
+        params.update(extras)    
     
     def post(self, req):
         '''创建新的试验. 管理者参数设置完毕, 并点击确认后请求该方法

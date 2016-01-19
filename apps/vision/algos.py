@@ -5,6 +5,7 @@
 #
 
 from utils.eggs import float_list_to_str
+from vision.trials import Board
 
 class StepAlgo(object):
     '''阶梯算法过程基类'''
@@ -108,6 +109,10 @@ class NumberStepAlgo(StepAlgo):
 class SizeStepAlgo(StepAlgo):
     '''尺寸阶梯算法: 求尺寸阈值'''
     
+    def __init__(self, board, space_scale):
+        StepAlgo.__init__(self, board)
+        self.board.space_scale = space_scale #间距是否缩放
+    
     def print_prompt(self):
         print('\n求尺寸阈值过程开始...')
 
@@ -119,6 +124,10 @@ class SizeStepAlgo(StepAlgo):
             # 'R':  置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
+    
+    def prepare_steping(self):
+        '''单路牌时每一轮阶梯过程开始, 将路牌尺寸还原'''
+        self.board.restore_size()
     
     def init_others(self): #仅多路牌时使用该方法
         board_size = self.board.board_size
@@ -132,6 +141,9 @@ class SizeStepAlgo(StepAlgo):
     def get_steps_value(self):
         '''返回阶梯变化值'''
         return self.board.get_item_size()
+    
+    def set_space_scale(self, space_scale):
+        self.board.space_scale = space_scale
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''

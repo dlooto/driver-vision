@@ -35,3 +35,13 @@ alter table vision_block modify column `tseat` varchar(10) NOT NULL;
 /* 2015-1-9 */
 alter table vision_trialparam add column `velocity` varchar(40);
 alter table vision_trialparam add column `wp_scheme` varchar(1);
+
+/* 2016-1-19 */
+alter table vision_trialparam modify column `step_scheme` varchar(4) NOT NULL;
+alter table vision_trialparam add column `space_type` varchar(4);
+alter table vision_block modify column `cate` varchar(4) NOT NULL;
+alter table vision_trial modify column `cate` varchar(4) NOT NULL;
+
+
+
+

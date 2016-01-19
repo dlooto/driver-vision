@@ -38,6 +38,8 @@ class MultiDemoThread(DemoThread):
                 
                 self.prompt_target_multi(bkey, tseat)
                 for velocity in param.get_velocitys():
+                    if not self.is_started: break
+                    
                     step_algo.set_velocity(velocity)    #extend_block_data时需要V参数
                     
                     for eccent in eccent_list:   #====离心率循环

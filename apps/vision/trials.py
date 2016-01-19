@@ -74,6 +74,9 @@ class BaseBoard(object):
             else:
                 self.set_move_velocity(v0*VELO_PARAM['right'])
                
+    def restore_size(self):
+        '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸'''
+        pass               
 
 class ItemQueue():
     '''队列, 主用于路名或路牌增减. 默认规则: 增加路牌/路名以最近的间距增加(表现为出队列)，
@@ -127,7 +130,8 @@ class ItemQueue():
 class Board(BaseBoard):
     '''路牌'''
     
-    def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h']):
+    def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], 
+                 space_scale=False):
         ''' 
         @param e: 路牌中心距(路牌中心与注视点距离) 
         @param a: 路牌中心点与注视点连线的水平夹角(角度值)
@@ -144,9 +148,16 @@ class Board(BaseBoard):
         self.road_dict = {}              #路名字典, key/value: 'A'/Road()
         self.target_seat = None          #目标路名位置
         
+        self.space_scale = space_scale
+        
+        # 保留初始尺寸不被修改
+        self.original_width = width
+        self.original_height = height
+        self.original_road_size = road_size
+        
         self.width = width
         self.height = height
-        self.road_size = road_size
+        self.road_size = road_size  #全部路名的统一尺寸
         
         # 根据尺寸确定各路名位置坐标参考系. 以140宽为基准
         self.road_seat_refer = scale_refer(width/140.0)
@@ -160,6 +171,13 @@ class Board(BaseBoard):
     def __str__(self):
         return '%s, (%s, %s)' % (self.pos, self.width, self.height)    
         
+    def restore_size(self):
+        '''还原尺寸'''
+        self.width = self.original_width
+        self.height = self.original_height
+        self.road_size = self.original_road_size
+        
+        self.change_seat_refer()        
         
     def reset_pos(self, e, a, wp_pos=WATCH_POS):
         ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 重新加载路名后路牌上所有路名坐标将改变.
@@ -276,10 +294,6 @@ class Board(BaseBoard):
             self.road_dict[mark].is_real = road_model.is_real #解决某个Bug
             modeled_roads.remove(road_model)
             
-    def update_road_poses(self):     
-        '''路牌移动时更新所有路名坐标'''   
-        pass
-    
     def generate_random_roads(self, road_num):
         ''' 根据传入的路名数量, 生成不重复的随机路名列表.
          列表元素类型为Road Model(name, is_real).
@@ -451,15 +465,33 @@ class Board(BaseBoard):
                 break
     
     def update_items_size(self, is_left_algo):
-        '''与MultiBoard形成多态而增加, 在algo中调用, 用于计算尺寸阈值中更新阶梯变量'''
+        '''与MultiBoard形成多态而增加, 在algo中调用, 用于计算尺寸阈值中更新阶梯变量
+        !!!注: 间距缩放情况下, 路名尺寸变化将引起路牌尺寸变化, 并所有路名坐标变化, 表现形式为路名膨胀或缩小
+        
+        @param space_scale: False-间距不变, True-间距缩放.
+        '''
         self.update_road_size(is_left_algo)
+        
+        #original_size = self.road_size
+        self.road_size = self.get_road_size()
+        
+        if self.space_scale:
+            factor = self.road_size*1.0 / self.original_road_size
+            self.width, self.height = self.original_width * factor, self.original_height * factor
+            self.change_seat_refer()
+    
+    def change_seat_refer(self):
+        '''修改位置坐标参考系: 坐标参考系变化, 更新所有路名坐标'''
+        self.road_seat_refer = scale_refer(self.width/140.0) #坐标参考系变化
+        for seat, road in self.road_dict.items():
+            road.pos = self.pos_xx(seat, self.road_size)        
     
     def update_road_size(self, is_left_algo):
         '''更新路名尺寸.  
         @param is_left_algo: 决定了尺寸用左边算法计算 or 右边算法计算
         '''
         for road in self.road_dict.viewvalues():
-            road.reset_size(is_left_algo)    
+            road.reset_size(is_left_algo)
     
     def get_road_size(self):
         '''返回路名当前尺寸'''

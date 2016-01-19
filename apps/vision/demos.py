@@ -74,9 +74,9 @@ class DemoThread(threading.Thread):
         return WatchPoint()        
         
     def build_board(self):
-        '''需要子类重载, 以同时适用单路牌和多路牌情况'''
+        '''多路牌情况时需要重写'''
         width, height = self.param.get_board_size()
-        return Board(0, 0, self.param.road_size, width=width, height=height)
+        return Board(0, 0, self.param.road_size, width=width, height=height,)
     
     def build_step_algo(self, step_scheme):
         if step_scheme not in ('R', 'S', 'N', 'V'):
@@ -87,7 +87,9 @@ class DemoThread(threading.Thread):
         if step_scheme == 'N':    
             return NumberStepAlgo(self.board)
         if step_scheme == 'S':
-            return SizeStepAlgo(self.board)
+            if self.param.space_type == 'S2':
+                return SizeStepAlgo(self.board, space_scale=True)
+            return SizeStepAlgo(self.board, space_scale=False)
         else:
             return self.build_velocity_step_algo(self.board)    #动态敏感度     
     
@@ -138,7 +140,7 @@ class DemoThread(threading.Thread):
  
     def start_motion_worker(self):
         '''静态试验中, 需重写该方法为空'''
-        self.motion = MotionWorker(self.gui, self.board, self.wpoint)
+        self.motion = MotionWorker(self.gui, self.board, self.wpoint)  #后续可考虑从线程池中取出一个...
         self.motion.start()
 
     def stop_motion_worker(self):

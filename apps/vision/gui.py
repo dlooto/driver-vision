@@ -102,7 +102,7 @@ class GUI(Tk):
         '''绘制目标路名提示信息'''
         self.erase_all()
         #绘制文字
-        txt_pos = PROMPT_POS[0], PROMPT_POS[1]-board.height/2-40  #字体尺寸为40, 所以上移30
+        txt_pos = PROMPT_POS[0], PROMPT_POS[1]-board.original_height/2-40  #字体尺寸为40, 所以上移30
         tk_id1 = self.cv.create_text(txt_pos, text='%s%s' % (TARGET_ITEM_PROMPT['text'], target_seat), 
                                     fill=TARGET_ITEM_PROMPT['fill'], font=TARGET_ITEM_PROMPT['font'])
         self.cv.widget_list.append(tk_id1)
@@ -172,7 +172,7 @@ class GUI(Tk):
     def draw_prompt_boards(self, board):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
-            board.pos[0], board.pos[1], board.width, board.height, 
+            board.pos[0], board.pos[1], board.original_width, board.original_height, 
             fill=board_color, outline=board_color
         )
         self.cv.widget_list.append(tk_id)

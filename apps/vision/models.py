@@ -80,15 +80,21 @@ WP_SCHEME_CHOICES = (   #注视点模式
     ('S', u'静止不动'),
     ('L', u'直线运动'),
 )
+
+SPACE_TYPE_CHOICES = (
+    ('S1', u'间距不变'), #目标与干扰尺寸S一同变化, 间距不变(中心间距值)
+    ('S2', u'间距缩放'), #路名间距同比例放大或缩小, 表现为路牌膨胀或缩小
+)
     
 class TrialParam(BaseModel):
     '''试验数据模型: 初始参数设置记录'''
     
     board_type = models.CharField(u'路牌类型', max_length=1, choices=BOARD_CATE, default='S')#默认单路牌
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
-    step_scheme = models.CharField(u'阶梯类型', max_length=1, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
-    move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True, default='-')#运动模式, 仅当试验模式为动态时有效
     wp_scheme = models.CharField(u'注视点模式', max_length=1, choices=WP_SCHEME_CHOICES, null=True, blank=True, default='S')
+    step_scheme = models.CharField(u'阶梯类型', max_length=4, choices=STEP_SCHEME_CHOICES, default='R')#默认求关键间距
+
+    move_type = models.CharField(u'运动模式', max_length=1, choices=MOVE_TYPE_CHOICES, null=True, blank=True, default='-')#运动模式, 仅当试验模式为动态时有效
     velocity = models.CharField(u'速度值', max_length=40, null=True, blank=True, default='10') #动态模式时设置速度值, 各值以,分隔
     
     board_size = models.CharField(u'路牌尺寸', max_length=20, default='280,200') #所设为最大路牌尺寸, 其他路牌按比例(board_scale)依次缩放 
@@ -99,11 +105,14 @@ class TrialParam(BaseModel):
     board_space = models.FloatField(u'路牌间距', null=True, blank=True) #多路牌使用
     pre_board_num = models.IntegerField(u'初始路牌显示数', null=True, blank=True)
     
+    # 单路牌时尺寸阈值类型
+    space_type = models.CharField(u'尺寸阈值类型', max_length=4, choices=SPACE_TYPE_CHOICES, null=True, blank=True, default='S1')
+    
     #多路牌时多个数量以逗号间隔, 形如: 3,5,7
     #road_num = models.CharField(u'路名数量', max_length=10, default='3')   
     
     #如: 'A,B,C|A,C', 以|分隔为两部分, 前面为路名位置,最后遍历的目标路名. 多路牌时以::号分隔各路牌上的路名设置       
-    road_marks = models.CharField(u'路名位置|目标项', max_length=100)  
+    road_marks = models.CharField(u'路名位置|目标项', max_length=100)
     
     # 路牌中心距, 即路牌中心离注视点的距离. 最多3个值, 各值间以,分隔
     eccent = models.CharField(u'路牌中心距', max_length=40, null=True, blank=True)
@@ -151,7 +160,7 @@ class TrialParam(BaseModel):
             if not self.is_static() and self.step_scheme == 'V':       
                 res += u'-动态敏感度阈值'
                 
-        return u'%s-%s' % (self.id, res)    
+        return u'%s-%s' % (self.id, res)
         
     def is_single(self):
         '''是否单路牌类型'''
@@ -162,6 +171,7 @@ class TrialParam(BaseModel):
         return True if self.demo_scheme == 'S' else False  
     
     def is_dynamic_sensitivity(self):
+        '''是否动态敏感度试验类型'''
         if not self.is_static() and self.step_scheme == 'V':
             return True
         return False
@@ -249,9 +259,8 @@ class Block(BaseModel):
     # 目标项与注视点连线夹角                  
     angle = models.IntegerField(u'角度(@)')                    
     
-    cate = models.CharField(u'阶梯类别', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型
+    cate = models.CharField(u'阶梯类别', max_length=4, choices=STEP_TYPE_CHOICES) #阶梯变化类型
                          
-    
     ## 以下参数根据求不同的阈值时不同时存在. 如求数量阈值时, N的阶梯变化值将记录在Trial模型中, 
     # 而此时Block中N字段将为空(或无效), 其他参数类同.
     N = models.SmallIntegerField(u'干扰项数量(N)', null=True, blank=True, default=1)
@@ -271,7 +280,7 @@ class Trial(BaseModel):
     '''一次刺激显示中的数据记录'''
     
     block = models.ForeignKey(Block, verbose_name=u'所属Block')
-    cate = models.CharField(u'阶梯类型', max_length=1, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
+    cate = models.CharField(u'阶梯类型', max_length=4, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
     
     resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
