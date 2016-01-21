@@ -6,7 +6,7 @@
 # Created on Oct 22, 2015, by Junn
 #
 
-import Queue
+#import Queue
 import random
 import maths
 from config import *
@@ -36,6 +36,7 @@ class WatchPoint(object):
         
     def move(self): 
         self.move_pos = self.move_scheme.new_wp_pos(self.move_pos)  
+        
 
 class BaseBoard(object):
     
@@ -67,8 +68,29 @@ class BaseBoard(object):
             return True
         return False    
         
-    def change_move_direction(self):
-        self.move_scheme.change_direction()     
+    def random_move_direction(self):
+        '''动态敏感度阈值时, 在平滑动态状态下随机改变到另一个运动方向'''
+        self.move_scheme.change_direction()
+        self.reverse_move_direction()
+        
+    def reverse_move_direction(self):
+        '''运动敏感度阈值过程时, 且路牌越过边界时则向反方向运动'''
+        xy_boarder = self.get_border_xy()
+        if self.is_left_over(xy_boarder):
+            self.move_scheme.change_to('right')
+            print 'Left Over, Reversed to Right'
+        elif self.is_right_over(xy_boarder):
+            self.move_scheme.change_to('left')
+            print 'Right Over, Reversed to Left'
+        elif self.is_up_over(xy_boarder):
+            self.move_scheme.change_to('down')
+            print 'Up Over, Reversed to Down'
+        elif self.is_down_over(xy_boarder):
+            self.move_scheme.change_to('up')
+            print 'Down Over, Reversed to Up'
+        else:
+            pass
+                        
         
     def change_items_velocity(self, is_left_algo): #动态敏感度阈值时速度阶梯变化
         v0 = self.get_move_velocity()
@@ -86,6 +108,36 @@ class BaseBoard(object):
     def restore_size(self):
         '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸. 多路牌时重写为空'''
         pass           
+    
+    def get_border_xy(self):
+        '''返回路牌当前的边界坐标. 需要子类重载
+        @return: 4元列表, 分别表示路牌的左(x坐标)右(x坐标)上(y坐标)下(y坐标)各边界值.
+        '''
+        return []
+    
+    def is_left_over(self, xy_boarder):
+        '''路牌是否越过左边界'''
+        if xy_boarder[0] <= 0:
+            return True
+        return False
+    
+    def is_right_over(self, xy_boarder):
+        '''路牌是否越过右边界'''
+        if xy_boarder[1] >= FACE_SIZE['w']:
+            return True
+        return False    
+    
+    def is_up_over(self, xy_boarder):
+        '''路牌是否越过上边界'''
+        if xy_boarder[2] <= 0:
+            return True
+        return False
+    
+    def is_down_over(self, xy_boarder):
+        '''路牌是否越过下边界'''
+        if xy_boarder[3] >= FACE_SIZE['h']:
+            return True
+        return False    
     
 
 class ItemQueue():
@@ -494,7 +546,7 @@ class Board(BaseBoard):
         '''修改位置坐标参考系: 坐标参考系变化, 更新所有路名坐标'''
         self.road_seat_refer = scale_refer(self.width/140.0) #坐标参考系变化
         for seat, road in self.road_dict.items():
-            road.pos = self.pos_xx(seat, self.road_size)        
+            road.pos = self.pos_xx(seat, self.road_size)    
     
     def update_road_size(self, is_left_algo):
         '''更新路名尺寸.  
@@ -523,6 +575,7 @@ class Board(BaseBoard):
         @param move_scheme: 运动模式对象
         '''
         new_pos = self.move_scheme.new_pos(self.pos)
+        
         dx, dy = new_pos[0]-self.pos[0], new_pos[1]-self.pos[1] #路名偏移量
         self.reset_pos_xy(new_pos)
         
@@ -601,6 +654,12 @@ class Board(BaseBoard):
     def pos_h(self, s):
         x, y = self.pos_g(s)
         return x, y+s+self.road_seat_refer['blank_y']
+    
+    def get_border_xy(self):
+        '''返回路牌当前的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
+        x0, y0 = self.pos
+        woffset, hoffset = self.width*1.0/2, self.height*1.0/2
+        return [x0-woffset, x0+woffset, y0-hoffset, y0+hoffset]
     
     
 #     def draw(self, canvas):
@@ -994,6 +1053,28 @@ class MultiBoard(BaseBoard):
             fboard.reset_pos_xy((fboard.pos[0]+dx, fboard.pos[1]+dy))
             for road in fboard.road_dict.values():
                 road.pos = road.pos[0]+dx, road.pos[1]+dy
+                
+    def get_border_xy(self):
+        '''返回多路牌的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
+        l_board, r_board, u_board, d_board = None, None, None, None   #路牌数大于3时, 这可能分别是4个路牌
+        x_min, x_max, y_min, y_max = 99999, 0, 9999, 0
+        for board in self.board_dict.values():
+            x, y = board.pos
+            if x < x_min:   #最左路牌筛选
+                x_min = x
+                l_board = board
+            if x > x_max:   #最右路牌筛选
+                x_max = x
+                r_board = board
+            if y < y_min:   #最上路牌筛选
+                y_min = y
+                u_board = board                
+            if y > y_max:   #最下路牌筛选
+                y_max = y
+                d_board = board
+        
+        return [x_min - l_board.width*1.0/2, x_max + r_board.width*1.0/2, 
+                y_min - u_board.height*1.0/2, y_max + d_board.height*1.0/2]            
      
         
 class Road(object):

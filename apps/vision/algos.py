@@ -33,10 +33,6 @@ class StepAlgo(object):
         '''返回阶梯变化值'''
         pass
     
-    def change_move_direction(self):
-        '''动态敏感度阈值过程是, 每按键判断或自然等待1.6s需要改变路牌运动方向'''
-        pass
-    
     def flash_contents(self):
         self.board.flash_road_names()
     
@@ -158,7 +154,7 @@ class SizeStepAlgo(StepAlgo):
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
     
-    #def __init__(self, board, gui):
+    #def __init__(self, board, ):
     #    StepAlgo.__init__(self, board)
         
     def print_prompt(self):
@@ -177,7 +173,7 @@ class VelocityStepAlgo(StepAlgo):
     
     def flash_contents(self):
         self.board.flash_road_names()
-        self.board.change_move_direction()
+        self.board.random_move_direction()
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''

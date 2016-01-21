@@ -18,6 +18,11 @@ sys.setdefaultencoding('utf-8')
 import math
 import settings
 
+# 试验窗口默认尺寸
+FACE_SIZE = {
+    'w': 1024,  #宽
+    'h': 768    #高
+}
 
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
 STEPS_COUNT = 20                #阶梯算法循环次数
@@ -78,21 +83,11 @@ watch_color = 'red'             #注视点填充颜色
 DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
 TRIAL_END_FONT =    ('Microsoft Yahei', 35)      #试验结束文字字体
 
-# 试验界面窗口默认尺寸
-FACE_SIZE = {
-    'w': 1024,
-    'h': 768
-}
 
 #小路牌默认尺寸, bs_w, bs_h
 BOARD_SIZE = {
     'w': 280, 
     'h': 200            
-}
-#大路牌默认尺寸
-BOARD_SIZE_B = {  
-    'w': 420,
-    'h': 300             
 }
 
 WATCH_POS = FACE_SIZE['w']/2, FACE_SIZE['h']/2  #注视点坐标默认值
@@ -177,8 +172,8 @@ START_BUTTON = {
 
 aud_root = '%s/%s' % (settings.MEDIA_ROOT, settings.AUD_DIR)
 AUD_PATH = {
-    'T': '%s/%s' % (aud_root, 'tink.wav'),  #判断正确提示音
-    'F': '%s/%s' % (aud_root, 'tock.wav')   #判断错误提示音             
+    'T': '%s/%s' % (aud_root, 'success.wav'),  #判断正确提示音
+    'F': '%s/%s' % (aud_root, 'failure.wav')   #判断错误提示音             
 }
 
 

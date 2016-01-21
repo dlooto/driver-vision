@@ -144,12 +144,12 @@ class CircleMoveScheme(MoveScheme):
 class SmoothMoveScheme(MoveScheme):
     '''平滑运动'''
 
-    DIRECTIONS = (
-        (-1, 0, 'left'), 
-        (1, 0,  'right'), 
-        (0, -1, 'up'), 
-        (0, 1,  'down')
-    )
+    DIRECTIONS = {
+        'left':  (-1, 0),  
+        'right': (1, 0),   
+        'up':    (0, -1),
+        'down':  (0, 1),  
+    }
     
     def __init__(self, wp_scheme='S'):
         MoveScheme.__init__(self, wp_scheme)
@@ -163,22 +163,64 @@ class SmoothMoveScheme(MoveScheme):
         
     def get_direction(self):
         '''动态敏感度阈值过程时用到该方法'''
-        if self.grad_x == 0 and self.grad_y == -1: #上
+        if self.is_up(): #上
             return 1
-        if self.grad_x == 0 and self.grad_y == 1: #下
+        if self.is_down(): #下
             return 2
-        if self.grad_x == -1 and self.grad_y == 0: #左 
+        if self.is_left(): #左 
             return 3
-        if self.grad_x == 1 and self.grad_y == 0: #右
+        if self.is_right(): #右
             return 4
         return -1 #Unkonw direction
         
     def change_direction(self):
         '''运动敏感度阈值过程时: 改变下一帧的运动方向, 在'上下左右'4个方向中随机选择'''
-        direction = random.choice(self.DIRECTIONS)
-        self.grad_x, self.grad_y = direction[0], direction[1]
-        print 'Move direction changed to: %s' % direction[2]
+        label = random.choice(self.DIRECTIONS.keys())
+        self.change_to(label)
         
+    def change_to(self, label):
+        '''改变到指定运动方向
+        @param label: 方向标识, 取值范围为 'left', 'right', 'up', 'down' 
+        '''
+        direction = self.DIRECTIONS[label]
+        self.grad_x, self.grad_y = direction[0], direction[1]
+        print 'Move direction changed to: %s' % label
+        
+#     def reverse_direction(self):
+#         '''运动敏感度阈值过程时, 且路牌越过边界时则向反方向运动'''
+#         if self.is_up(): #上
+#             self.change_to(self.DIRECTIONS['down'], 'down')
+#             return
+#         if self.down(): #下
+#             self.change_to(self.DIRECTIONS['up'], 'up')
+#             return
+#         if self.is_left(): #左 
+#             self.change_to(self.DIRECTIONS['right'], 'right')
+#             return
+#         if self.is_right(): #右
+#             self.change_to(self.DIRECTIONS['left'], 'left')
+#             return
+        
+    def is_up(self):
+        if self.grad_x == 0 and self.grad_y == -1: #上
+            return True
+        return False
+
+    def is_down(self):
+        if self.grad_x == 0 and self.grad_y == 1: #下
+            return True
+        return False
+    
+    def is_left(self):
+        if self.grad_x == -1 and self.grad_y == 0: #左
+            return True
+        return False
+    
+    def is_right(self):
+        if self.grad_x == 1 and self.grad_y == 0: #右
+            return True
+        return False            
+    
     def print_direct(self):
         self.print_wp_direct()
         print '平滑运动方向: (grad_x, grad_y): (%s, %s)' % (self.grad_x, self.grad_y)
