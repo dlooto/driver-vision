@@ -83,7 +83,7 @@ class DemoThread(threading.Thread):
             raise Exception('Unknown step scheme: %s' % step_scheme)
          
         if step_scheme == 'R':       
-            return SpaceStepAlgo(self.board)
+            return SpaceStepAlgo(self.board, self.param.space_scale_type)
         if step_scheme == 'N':    
             return NumberStepAlgo(self.board)
         if step_scheme == 'S':
@@ -93,7 +93,7 @@ class DemoThread(threading.Thread):
         else:
             return self.build_velocity_step_algo(self.board)    #动态敏感度     
     
-    def build_velocity_step_algo(self, board): 
+    def build_velocity_step_algo(self, board):
         '''为多态重写, 增加该方法'''
         return VelocityStepAlgo(board)
     

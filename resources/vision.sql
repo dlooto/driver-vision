@@ -42,6 +42,9 @@ alter table vision_trialparam add column `space_type` varchar(4);
 alter table vision_block modify column `cate` varchar(4) NOT NULL;
 alter table vision_trial modify column `cate` varchar(4) NOT NULL;
 
+/* 2016-1-21 */
+alter table vision_trialparam add column `space_scale_type` varchar(4);
+
 
 
 

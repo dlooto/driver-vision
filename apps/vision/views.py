@@ -43,7 +43,7 @@ class ParamsSetView(CustomAPIView):
         return True, ''
     
     def extend_params(self, req, params):
-        space_type = req.POST.get('space_type')   #  
+        space_type = req.POST.get('space_type')   #单路牌尺寸阈值过程, 间距变化类型  
         extras = {
             "space_type":  space_type,
         }
@@ -66,6 +66,8 @@ class ParamsSetView(CustomAPIView):
         
         eccent = req.POST.get('eccent')             #路牌中心距
         init_angle = req.POST.get('init_angle')     #初始角度
+        
+        space_scale_type = req.POST.get('space_scale_type') #关键间距缩放类型
         
         correct, msg = self.check_roads_set(road_marks)
         if not correct:
@@ -90,6 +92,8 @@ class ParamsSetView(CustomAPIView):
                 
                 "eccent":       eccent,
                 "init_angle":   init_angle,
+                
+                "space_scale_type": space_scale_type, 
             }
         
             self.extend_params(req, params)

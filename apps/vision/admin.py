@@ -126,8 +126,12 @@ def set_is_coming(modeladmin, request, queryset):
     TrialParam.objects.set_not_coming()
     queryset.update(is_coming=True)
     
+def set_uncoming(modeladmin, request, queryset):
+    queryset.update(is_coming=False)
+    
      
 set_is_coming.short_description = u'设为可用'
+set_uncoming.short_description = u'设为不可用'
     
 class TrialParamAdmin(admin.ModelAdmin):
     list_display = ('id', 'board_type', 'demo_scheme', 'step_scheme', 'board_size', 
@@ -136,7 +140,7 @@ class TrialParamAdmin(admin.ModelAdmin):
     list_filter = ('board_type', 'demo_scheme', 'step_scheme', 'move_type', 'is_coming')
     #fields = ('board_type', 'demo_scheme', )
     ordering = ('-created_time', 'is_coming')
-    actions = [set_is_coming, ]
+    actions = [set_is_coming, set_uncoming]
     change_list_template = 'admin/trial_param_list.html'   #替换template, 使转向到定制页面 
 
 class DemoAdmin(admin.ModelAdmin):

@@ -55,6 +55,10 @@ class StepAlgo(object):
 class SpaceStepAlgo(StepAlgo):
     '''关键间距阶梯算法'''
     
+    def __init__(self, board, space_scale_type):
+        StepAlgo.__init__(self, board)
+        self.space_scale_type = space_scale_type
+    
     def print_prompt(self):
         print('\n求关键间距控制过程开始...')
 
@@ -73,7 +77,12 @@ class SpaceStepAlgo(StepAlgo):
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''
-        self.board.update_flanker_spacings(is_left_algo)
+        
+        update_all = True
+        if self.space_scale_type == 'R2':   #R1: 同时缩放, R2: 逐一缩放
+            update_all = False
+             
+        self.board.update_flanker_spacings(is_left_algo, update_all=update_all)
         print 'Spacing changed:', 'Left' if is_left_algo else 'Right', \
             self.board.get_item_spacings()
             
@@ -140,9 +149,6 @@ class SizeStepAlgo(StepAlgo):
     def get_steps_value(self):
         '''返回阶梯变化值'''
         return self.board.get_item_size()
-    
-    def set_space_scale(self, space_scale):
-        self.board.space_scale = space_scale
     
     def update_vars(self, is_left_algo):
         '''更新阶梯变量'''

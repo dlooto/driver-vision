@@ -85,6 +85,12 @@ SPACE_TYPE_CHOICES = (
     ('S1', u'间距不变'), #目标与干扰尺寸S一同变化, 间距不变(中心间距值)
     ('S2', u'间距缩放'), #路名间距同比例放大或缩小, 表现为路牌膨胀或缩小
 )
+
+SPACE_SCALE_TYPE_CHOICES = ( #关键间距阶梯过程, 间距变化类型
+    ('R1', u'同时缩放'), #
+    ('R2', u'逐一缩放'), #
+)                            
+                            
     
 class TrialParam(BaseModel):
     '''试验数据模型: 初始参数设置记录'''
@@ -107,6 +113,9 @@ class TrialParam(BaseModel):
     
     # 单路牌时尺寸阈值类型
     space_type = models.CharField(u'尺寸阈值类型', max_length=4, choices=SPACE_TYPE_CHOICES, null=True, blank=True, default='S1')
+    
+    # 关键间距1(同时缩放), 关键间距2(逐一缩放)
+    space_scale_type = models.CharField(u'关键间距类型', max_length=4, choices=SPACE_SCALE_TYPE_CHOICES, null=True, blank=True, default='R1')
     
     #多路牌时多个数量以逗号间隔, 形如: 3,5,7
     #road_num = models.CharField(u'路名数量', max_length=10, default='3')   

@@ -183,7 +183,6 @@ class GUI(Tk):
             road_color = TARGET_ROAD_COLOR if road.is_target else DEFAULT_ROAD_COLOR
             tk_id = self.cv.create_text(road.pos, text=road.name, fill=road_color, font=road_font)
             self.cv.widget_list.append(tk_id)
-            
            
     def draw_gameover(self):
         gover = TRIAL_END_PROMPT   

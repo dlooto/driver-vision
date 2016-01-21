@@ -85,6 +85,8 @@ function saveMultiParams() {
     var init_angle = $('#init_angle').val();
     var board_size = $('#board_size').val();
     var road_size =  $('#road_size').val();
+    
+    var space_scale_type = $('#space_scale_type').val();  //关键间距过程, 同时缩放或逐一缩放
     var desc = $('#desc').val();
     
     //构造 road_marks参数
@@ -249,6 +251,18 @@ function setResult(res) {
             <option value="N">数量阈值</option>
             <option value="V">动态敏感度</option>
         </select>
+    </div>
+</div></div>
+
+<!--关键间距缩放类型-->
+<div class="control-group form-row"><div>
+    <div class="control-label"><label>关键间距类型:</label></div>
+    <div class="controls">
+        <select id="space_scale_type" name="space_scale_type">
+            <option value="R1" selected="selected">(间距1)同时缩放</option>
+            <option value="R2">(间距2)逐一缩放</option>        
+        </select>
+        <span class="prompt-text">(关键间距阶梯过程时该参数有效, 默认"同时缩放")</span>
     </div>
 </div></div>
 

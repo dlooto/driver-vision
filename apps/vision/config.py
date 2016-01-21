@@ -19,9 +19,10 @@ import math
 import settings
 
 
-STEPS_COUNT = 20                #阶梯算法循环次数
 show_interval = 1.6             #默认刺激显示间隔时间, 单位秒
+STEPS_COUNT = 20                #阶梯算法循环次数
 MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
+
 WPOINT_DEFAULT_VELOCITY = 15    #注视点默认运动速度值
 BOARD_DEFAULT_VELOCITY = 50     #路牌默认运动速度值
 
@@ -36,8 +37,8 @@ GRADS = [math.tan(math.radians(a)) for a in PRE_MOVE_DIRECTS]
 
 #求关键间距阶梯算法参数
 SPACING_PARAM = {
-    'left':  0.8,          #左算法变化因子
-    'right': 2             #右算法变化量
+    'left':  0.8,          #左算法变化因子, 间距缩小
+    'right': 2             #右算法变化量, 间距增加
 }
 #尺寸阈值阶梯算法参数
 SIZE_PARAM = {
@@ -50,7 +51,7 @@ VELO_PARAM = {
     'right': 0.8                         
 }
 
-DEFAULT_ECCENTS = (60, 100, 140, 160)    #默认离心率变化值范围
+DEFAULT_ECCENTS = (60, 100, 140, 160)               #默认离心率变化值范围
 DEFAULT_ANGLES =  (30, 45, 60, 90, 120, 135, 180)   #默认角度值变化范围
 
 ### 边界值
@@ -62,7 +63,7 @@ BOARD_SIZE_BORDER = {
     'max': (420, 300)                      
 }    
 
-#路牌运动速度最小值和最大值边界(求动态敏感度阈值时) 
+#路牌运动速度最小值和最大值边界(求动态敏感度阈值时)
 VELO_BORDER = {             
     'min': 10.0,        
     'max': 250.0                      
@@ -138,7 +139,7 @@ def scale_refer(factor):
 
 USER_GUIDE = \
 u'''点击 '开始' 按钮进行测试. 操作说明: \n
-    若判断目标路名为 '真', 请按 'y' 键,  判断为 '假' 请按 'n' 键 \n 
+    若判断目标路名为 '真' 请按 'y' 键,  判断为 '假' 请按 'n' 键 \n 
     动态敏感度试验时, 请按方向键进行路牌运动方向判断. 
 ''' 
 
@@ -161,7 +162,7 @@ TARGET_ITEM_PROMPT = {  #目标项位置提示
     'pos':  (WATCH_POS[0], WATCH_POS[1]-300),    #提示文字默认位置
     'font': ("Helvetica", 40),
     'fill': '#1F90F2',
-    'interval': 3       #提示停留时间, 单位秒
+    'interval': 3           #提示停留时间, 单位秒
 }
 
 PROMPT_POS = WATCH_POS  #目标项提示文字坐标

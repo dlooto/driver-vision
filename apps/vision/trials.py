@@ -366,8 +366,8 @@ class Board(BaseBoard):
         for flanker_seat in road_seats:
             self.road_dict[flanker_seat].update_pos(target_road.pos, is_left_algo)
             
-    def update_flanker_spacings(self, is_left_algo, update_all=False):
-        '''以目标项为基准, 更新所有干扰项的坐标.(即更新了干扰项与目标项的间距)
+    def update_flanker_spacings(self, is_left_algo, update_all=True):
+        '''以目标项为基准, 更新所有干扰项的坐标.(也即更新了干扰项与目标项的间距)
         @param is_left_algo: 算法规则, true-流程图左侧看法, 一般设置为间距减小, false-右侧算法, 设置为间距增加
         @param update_all: true-间距统一变化, 
                           false-间距不统一变化, 规则: 若为左侧算法, 则减小最大间距; 若为右侧算法, 则增加最小间距 
@@ -905,9 +905,13 @@ class MultiBoard(BaseBoard):
                 self.board_que.put(key)
                 return
     
-    def update_flanker_spacings(self, is_left_algo, update_all=False):
+    def update_flanker_spacings(self, is_left_algo, update_all=True):
         '''求多路牌关键间距时调用.
-        根据算法更新所有目标项-干扰项间距值, 本质上是更新干扰项的坐标(以目标项为原点)'''
+        根据算法更新所有目标项-干扰项间距值, 本质上是更新干扰项的坐标(以目标项为原点)
+        @param is_left_algo: 算法规则, true-流程图左侧看法, 一般设置为间距减小, false-右侧算法, 设置为间距增加
+        @param update_all: true-间距统一变化, 
+                          false-间距不统一变化, 规则: 若为左侧算法, 则减小最大间距; 若为右侧算法, 则增加最小间距 
+        '''
         
         if update_all:
             self.update_flanker_poses(is_left_algo)
