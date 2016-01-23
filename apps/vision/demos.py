@@ -13,7 +13,7 @@ from vision.trials import Board, WatchPoint
 from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
 from vision.motion import MotionWorker, CircleMoveScheme, SmoothMoveScheme,\
-    MixedMoveScheme
+    MixedMoveScheme, DefaultMoveScheme
 
 
 '''
@@ -49,10 +49,8 @@ class DemoThread(threading.Thread):
         self.wpoint = self.build_wpoint()
         self.board = self.build_board()
         
-        move_scheme = self.build_move_scheme(self.param)
-        #print 'type:', move_scheme.scheme_type()
-        self.board.set_move_scheme(move_scheme)
-        self.wpoint.set_move_scheme(move_scheme)
+        self.board.set_move_scheme(self.build_move_scheme(self.param))
+        self.wpoint.set_move_scheme(self.build_wp_move_scheme(self.param))
         
         self.step_algo = self.build_step_algo(self.param.step_scheme)
         
@@ -99,7 +97,7 @@ class DemoThread(threading.Thread):
     
     def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
-        self.board.reset_pos_xy(WATCH_POS)
+        self.board.reset_pos_xy(WATCH_POINT_SET['pos'])
         
         for road in self.board.prompt_road_dict.values():
             road.is_target = False
@@ -125,6 +123,10 @@ class DemoThread(threading.Thread):
  
     def build_move_scheme(self, param):
         '''仅动态模式时需要构建MoveScheme对象'''
+        
+        if param.is_static():
+            return DefaultMoveScheme()
+        
         if param.move_type not in ('C', 'S', 'M'):
             raise Exception('Unknown move_type: %s' % param.move_type)
         
@@ -133,11 +135,23 @@ class DemoThread(threading.Thread):
             raise Exception('参数错误: 动态敏感度阶梯过程仅在平滑运动时有效')
             
         if param.move_type == 'C':    #圆周
-            return CircleMoveScheme(self.wpoint.pos, param.wp_scheme)
+            return CircleMoveScheme(self.wpoint.pos)
         elif param.move_type == 'S':  #平滑
-            return SmoothMoveScheme(param.wp_scheme)
-        return MixedMoveScheme(param.wp_scheme)  #混合
-        #return MotMoveScheme() 
+            return SmoothMoveScheme()
+        else: #param.move_type == 'M':
+            return MixedMoveScheme()  #混合
+        
+    def build_wp_move_scheme(self, param):
+        '''构建注视点运动模式对象. 注视点目前仅支持平滑运动'''
+                
+        if param.wp_scheme not in ('L', 'S'):
+            raise Exception('Unknown wp_scheme: %s' % param.wp_scheme)
+        
+        if param.is_static() or param.wp_scheme == 'S':
+            return DefaultMoveScheme()        
+        
+        if param.wp_scheme == 'L': #直线运动
+            return SmoothMoveScheme(v=WPOINT_DEFAULT_VELOCITY)
  
     def start_motion_worker(self):
         '''静态试验中, 需重写该方法为空'''
@@ -300,7 +314,7 @@ class DemoThread(threading.Thread):
         '''等待1.6s, 以待用户进行键盘操作判断目标路名真/假并唤醒  
         '''
         self.signal.clear()  ##重置线程flag标志位为False, 以使得signal.wait调用有效.                   
-        self.signal.wait(show_interval)
+        self.signal.wait(FRAME_INTERVAL)
         
     def is_awakened(self):
         '''线程是否被用户按键唤醒, 若刺激显示是自然等待1.6s开始下一帧则未被唤醒, 此时返回False. 

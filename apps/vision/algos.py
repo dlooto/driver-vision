@@ -20,7 +20,7 @@ class StepAlgo(object):
     
     def init_boards(self):
         '''为多路牌时从board_repos重新加载路牌, 以替代在MultiBoard初始构建时无需初始化board_dict''' 
-        self.board.reload_boards()     
+        self.board.reload_boards()
         self.init_others()
             
     def init_others(self):

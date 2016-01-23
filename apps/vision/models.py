@@ -11,13 +11,9 @@ from core.managers import BaseManager
 
 class RoadManager(BaseManager):
     
-    def all_real_roads(self):
-        '''返回所有真路名'''
-        return self.filter(is_real=True, is_valid=True)
+    def get_all_roads(self, is_real):
+        return self.filter(is_real=is_real, is_valid=True)
     
-    def all_kana_roads(self):
-        '''返回所有假路名'''
-        return self.filter(is_real=False, is_valid=True)
     
 class TrialParamManager(BaseManager):
     
@@ -291,7 +287,7 @@ class Trial(BaseModel):
     block = models.ForeignKey(Block, verbose_name=u'所属Block')
     cate = models.CharField(u'阶梯类型', max_length=4, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
     
-    resp_cost = models.FloatField(u'响应时间', default=show_interval) #秒数
+    resp_cost = models.FloatField(u'响应时间', default=FRAME_INTERVAL) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
     steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
     

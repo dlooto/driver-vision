@@ -13,68 +13,64 @@ from config import *
 from vision.models import RoadModel
 
 
-cached_real_roads = RoadModel.objects.all_real_roads()
-cached_kana_roads = RoadModel.objects.all_kana_roads()
+cached_real_roads = RoadModel.objects.get_all_roads(is_real=True)  #缓存真路名
+cached_kana_roads = RoadModel.objects.get_all_roads(is_real=False) #缓存假路名
 
-class WatchPoint(object):
-    pos = WATCH_POS
-    radius = 5
-    
-    def __init__(self, pos=WATCH_POS, radius=5, fill=watch_color, outline=watch_color):
-        #坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
-        self.pos = pos               
-        
-        #运动过程中, 该值为运动坐标. 绘制时以该坐标为准
-        self.move_pos = pos         
-        
-        self.radius = radius        #圆圈半径
-        self.fill = fill            #填充颜色
-        self.outline = outline      #边框颜色
-    
-    def set_move_scheme(self, move_scheme):
-        self.move_scheme = move_scheme
-        
-    def move(self): 
-        self.move_pos = self.move_scheme.new_wp_pos(self.move_pos)  
-        
-
-class BaseBoard(object):
-    
-    #def __init__(self):
-    #    pass
+class Shape(object):
+    '''形状基础类.
+    需注视点/单路牌/多路牌等具体类继承. 为避免WatchPoint与Board代码重复在后续开发中添加
+    '''
     
     def set_move_scheme(self, move_scheme):
         self.move_scheme = move_scheme 
-        
-        if self.move_scheme:
-            self.move_scheme.print_direct()
+        self.move_scheme.print_direction()
             
     def set_move_velocity(self, velocity):
         '''静态试验中重写该方法为空'''
-        if not self.move_scheme:
-            return
-        self.move_scheme.set_velocity(velocity)  
+        self.move_scheme.set_velocity(velocity)
 
     def get_move_velocity(self):
         '''静态试验中重写该方法为空'''
-        return self.move_scheme.get_velocity()         
-        
-    def is_same_direction_with(self, direction):
-        '''用户判断的方向(传入参数)是否与路牌当前运动方向一致
-        @param direction: 1-上, 2-下, 3-左, 4-右
-        @return: 若方向一致返回True, 否则返回False
+        return self.move_scheme.get_velocity()             
+    
+    def get_border_xy(self):
+        '''返回形状当前的边界坐标. 需要子类重载
+        @return: 4元素列表, 分别表示形状最左(x坐标)最右(x坐标)最上(y坐标)最下(y坐标)各边界值.
         '''
-        if self.move_scheme.get_direction() == direction:
-            return True
-        return False    
-        
+        return []
+    
+    def is_left_over(self, xy_boarder):
+        '''形状是否越过试验窗体左边界'''
+        return xy_boarder[0] <= 0
+    
+    def is_right_over(self, xy_boarder):
+        '''形状是否越过试验窗体右边界'''
+        return xy_boarder[1] >= FACE_SIZE['w']
+    
+    def is_up_over(self, xy_boarder):
+        '''形状是否越过试验窗体上边界'''
+        return xy_boarder[2] <= 0
+    
+    def is_down_over(self, xy_boarder):
+        '''形状是否越过试验窗体下边界'''
+        return xy_boarder[3] >= FACE_SIZE['h']
+    
+    def been_to_edge(self):
+        '''形状是否已到窗体边缘'''
+        xy_boarder = self.get_border_xy()
+        return self.is_left_over(xy_boarder) or self.is_right_over(xy_boarder) or \
+                self.is_up_over(xy_boarder) or self.is_down_over(xy_boarder)
+    
     def random_move_direction(self):
-        '''动态敏感度阈值时, 在平滑动态状态下随机改变到另一个运动方向'''
-        self.move_scheme.change_direction()
+        '''随机变化运动方向: 动态敏感度阈值时, 在平滑动态状态下随机改变到另一个运动方向'''
+        self.move_scheme.random_direction()
         self.reverse_move_direction()
         
     def reverse_move_direction(self):
-        '''运动敏感度阈值过程时, 且路牌越过边界时则向反方向运动'''
+        '''动态敏感度阈值过程且形状越过边界时, 则向反方向运动
+            注: 该方法仅考虑垂直方向. 
+        '''
+        
         xy_boarder = self.get_border_xy()
         if self.is_left_over(xy_boarder):
             self.move_scheme.change_to('right')
@@ -89,8 +85,52 @@ class BaseBoard(object):
             self.move_scheme.change_to('up')
             print 'Down Over, Reversed to Up'
         else:
-            pass
-                        
+            pass    
+        
+    def reverse_direction(self):
+        '''检查是否已靠近窗体边界, 若已靠近则运动方向反转'''
+        if self.been_to_edge():
+            self.move_scheme.reverse_direction()
+        
+    def move(self):
+        pass         
+
+class WatchPoint(Shape):
+    '''注视点'''
+    
+    default_set = WATCH_POINT_SET
+    
+    def __init__(self, pos=default_set['pos'], radius=default_set['radius'], 
+                 fill=default_set['fill'], outline=default_set['outline']):
+        #坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
+        self.pos = pos               
+
+        self.radius = radius        #圆圈半径
+        self.fill = fill            #填充颜色
+        self.outline = outline      #边框颜色
+        
+        #运动过程中, 该值为运动坐标. 绘制时以该坐标为准
+        self.move_pos = pos         
+    
+    def move(self): 
+        '''若注视点靠近窗体边界, 则反向运动'''
+        self.reverse_direction()
+        self.move_pos = self.move_scheme.new_pos(self.move_pos)
+        
+    def get_border_xy(self):
+        '''Overwrite: 坐标顺序为 左右上下'''
+        x0, y0 = self.move_pos
+        return [x0-self.radius, x0+self.radius, y0-self.radius, y0+self.radius] 
+
+class BaseBoard(Shape):
+    '''单路牌与多路牌基础类'''
+    
+    def is_same_direction_with(self, direction):
+        '''用户判断的方向(传入参数)是否与路牌当前运动方向一致
+        @param direction: 1-上, 2-下, 3-左, 4-右
+        @return: 若方向一致返回True, 否则返回False
+        '''
+        return self.move_scheme.get_direction() == direction
         
     def change_items_velocity(self, is_left_algo): #动态敏感度阈值时速度阶梯变化
         v0 = self.get_move_velocity()
@@ -109,40 +149,12 @@ class BaseBoard(object):
         '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸. 多路牌时重写为空'''
         pass           
     
-    def get_border_xy(self):
-        '''返回路牌当前的边界坐标. 需要子类重载
-        @return: 4元列表, 分别表示路牌的左(x坐标)右(x坐标)上(y坐标)下(y坐标)各边界值.
-        '''
-        return []
-    
-    def is_left_over(self, xy_boarder):
-        '''路牌是否越过左边界'''
-        if xy_boarder[0] <= 0:
-            return True
-        return False
-    
-    def is_right_over(self, xy_boarder):
-        '''路牌是否越过右边界'''
-        if xy_boarder[1] >= FACE_SIZE['w']:
-            return True
-        return False    
-    
-    def is_up_over(self, xy_boarder):
-        '''路牌是否越过上边界'''
-        if xy_boarder[2] <= 0:
-            return True
-        return False
-    
-    def is_down_over(self, xy_boarder):
-        '''路牌是否越过下边界'''
-        if xy_boarder[3] >= FACE_SIZE['h']:
-            return True
-        return False    
-    
 
 class ItemQueue():
-    '''队列, 主用于路名或路牌增减. 默认规则: 增加路牌/路名以最近的间距增加(表现为出队列)，
-    减少路牌/路名以最远的间距减少(表现为入队列).'''
+    '''队列
+    主用于路名或路牌增减. 默认规则: 增加路牌/路名以最近的间距增加(表现为出队列)，
+    减少路牌/路名以最远的间距减少(表现为入队列).
+    '''
     
     def __init__(self, board, maxsize=8):
         '''
@@ -154,9 +166,7 @@ class ItemQueue():
                    
     def empty(self):
         '''判断队列是否为空'''
-        if not self._queue or len(self._queue) == 0:
-            return True
-        return False
+        return not self._queue or len(self._queue) == 0
     
     def clear(self):
         '''清空队列'''
@@ -190,7 +200,7 @@ class ItemQueue():
         
                
 class Board(BaseBoard):
-    '''路牌'''
+    '''单个路牌'''
     
     def __init__(self, e, a, road_size, width=BOARD_SIZE['w'], height=BOARD_SIZE['h'], 
                  space_scale=False):
@@ -225,7 +235,6 @@ class Board(BaseBoard):
         self.road_seat_refer = scale_refer(width/140.0)
         
         self.reset_pos(e, a)
-        #self.prompt_pos = WATCH_POS
         
         self.prompt_road_dict = {}
         self._load_prompt_roads(road_size)  #提示路牌上的各路名坐标计算依赖于self.pos
@@ -241,7 +250,7 @@ class Board(BaseBoard):
         
         self.change_seat_refer()        
         
-    def reset_pos(self, e, a, wp_pos=WATCH_POS):
+    def reset_pos(self, e, a, wp_pos=WATCH_POINT_SET['pos']):
         ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 重新加载路名后路牌上所有路名坐标将改变.
         
         e: 路牌中心距(路牌中心与注视点距离) 
@@ -656,7 +665,7 @@ class Board(BaseBoard):
         return x, y+s+self.road_seat_refer['blank_y']
     
     def get_border_xy(self):
-        '''返回路牌当前的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
+        '''重载方法: 返回路牌当前的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
         x0, y0 = self.pos
         woffset, hoffset = self.width*1.0/2, self.height*1.0/2
         return [x0-woffset, x0+woffset, y0-hoffset, y0+hoffset]
@@ -692,7 +701,7 @@ class Board(BaseBoard):
 #         canvas.delete(self.tk_id)
 
 class MultiBoard(BaseBoard):
-    '''路牌容器, 内部管理着多个路牌'''
+    '''多路牌. 为路牌容器, 内部管理着多个单路牌'''
     
     def __init__(self, param):
         '''初始化.  
@@ -704,7 +713,7 @@ class MultiBoard(BaseBoard):
         @param board_scale:   路牌缩放比例, 默认1
         
         说明: 
-            初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名,
+            初始化路牌列表, 目标项提示路牌, 并设置目标路牌提示并相应路名
         '''
         BaseBoard.__init__(self)
         
@@ -718,7 +727,7 @@ class MultiBoard(BaseBoard):
         self.board_size = param.get_board_size()
         self.board_range = param.board_range
         self.pre_board_num = param.pre_board_num
-        self.road_size = param.road_size        #最大路名尺寸
+        self.road_size = param.road_size            #最大路名尺寸
         self.board_space = param.board_space
         self.board_scale = param.board_scale
         
@@ -1055,7 +1064,7 @@ class MultiBoard(BaseBoard):
                 road.pos = road.pos[0]+dx, road.pos[1]+dy
                 
     def get_border_xy(self):
-        '''返回多路牌的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
+        '''重载方法: 返回多路牌的边界坐标, 顺序为: 左(x坐标)右(x坐标)上(y坐标)下(y坐标)'''
         l_board, r_board, u_board, d_board = None, None, None, None   #路牌数大于3时, 这可能分别是4个路牌
         x_min, x_max, y_min, y_max = 99999, 0, 9999, 0
         for board in self.board_dict.values():
@@ -1074,14 +1083,10 @@ class MultiBoard(BaseBoard):
                 d_board = board
         
         return [x_min - l_board.width*1.0/2, x_max + r_board.width*1.0/2, 
-                y_min - u_board.height*1.0/2, y_max + d_board.height*1.0/2]            
+                y_min - u_board.height*1.0/2, y_max + d_board.height*1.0/2]        
      
         
 class Road(object):
-    #name = ''           #路名   
-    #pos = 0, 0          #路名中心点在路牌上的位置坐标, 坐标会不断变化
-    #is_target = False   #是否是目标路名
-    #is_real = False     #是否真名
     
     def __init__(self, name, pos, size=15, is_target=False, is_real=False):
         self.name = name
