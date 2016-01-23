@@ -102,6 +102,7 @@ class WatchPoint(Shape):
     
     def __init__(self, pos=default_set['pos'], radius=default_set['radius'], 
                  fill=default_set['fill'], outline=default_set['outline']):
+        
         #坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
         self.pos = pos               
 
@@ -109,7 +110,7 @@ class WatchPoint(Shape):
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
         
-        #运动过程中, 该值为运动坐标. 绘制时以该坐标为准
+        #运动过程中, 该值为运动时的圆心坐标. 注视点绘制时以该坐标为准
         self.move_pos = pos         
     
     def move(self): 
@@ -121,6 +122,19 @@ class WatchPoint(Shape):
         '''Overwrite: 坐标顺序为 左右上下'''
         x0, y0 = self.move_pos
         return [x0-self.radius, x0+self.radius, y0-self.radius, y0+self.radius] 
+    
+    def is_crossed_with(self, board):
+        '''
+        判断注视点与路牌是否相交. 
+        算法: 
+            A=r+width/2, B=r+height/2, (r为圆半径, width为路牌宽度, height为路牌高度)
+            dx=|xw0 - xb0|, dy=|yw0 - yb0| (垂直间距绝对值)
+            如果 dx <= A and dy <= B, 则相交.
+        '''
+        dx, dy = abs(self.move_pos[0]-board.pos[0]), abs(self.move_pos[1]-board.pos[1])
+        dw, dh = self.radius + board.width*1.0/2, self.radius + board.height*1.0/2
+        return dx <= dw and dy <= dh
+            
 
 class BaseBoard(Shape):
     '''单路牌与多路牌基础类'''
@@ -148,6 +162,23 @@ class BaseBoard(Shape):
     def restore_size(self):
         '''单路牌尺寸阈值时路牌尺寸还原, 包括路名尺寸. 多路牌时重写为空'''
         pass           
+    
+    def is_crossed_with(self, wpoint):
+        '''
+        判断注视点与路牌是否相交. 
+        算法: 
+            A=r+width/2, B=r+height/2, (r为注视点圆半径, width为路牌宽度, height为路牌高度)
+            dx=|xw0 - xb0|, dy=|yw0 - yb0| (垂直间距绝对值)
+            如果 dx <= A and dy <= B, 则相交.
+        '''
+        dx, dy = abs(wpoint.move_pos[0]-self.pos[0]), abs(wpoint.move_pos[1]-self.pos[1])
+        dw, dh = wpoint.radius + self.width*1.0/2, wpoint.radius + self.height*1.0/2
+        return dx <= dw and dy <= dh
+    
+    def glue_with(self, wpoint):
+        '''与注视点粘合'''
+        if self.is_crossed_with(wpoint):
+            wpoint.move_scheme = self.move_scheme
     
 
 class ItemQueue():

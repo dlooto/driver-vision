@@ -157,7 +157,8 @@ class GUI(Tk):
     def _draw_single_board(self, board):
         # 绘制路牌面板
         tk_id = self.cv.create_rectangle_pro(
-            board.pos[0], board.pos[1], board.width, board.height, fill=board_color, outline=board_color
+            board.pos[0], board.pos[1], board.width, board.height, 
+            fill=BOARD_FILL_COLOR, outline=BOARD_OUTLINE_COLOR
         )
           
         self.cv.widget_list.append(tk_id)
@@ -173,7 +174,7 @@ class GUI(Tk):
         '''将路牌绘制在屏幕上'''  
         tk_id = self.cv.create_rectangle_pro(
             board.pos[0], board.pos[1], board.original_width, board.original_height, 
-            fill=board_color, outline=board_color
+            fill=BOARD_FILL_COLOR, outline=BOARD_OUTLINE_COLOR
         )
         self.cv.widget_list.append(tk_id)
         

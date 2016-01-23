@@ -148,7 +148,7 @@ class DemoThread(threading.Thread):
             raise Exception('Unknown wp_scheme: %s' % param.wp_scheme)
         
         if param.is_static() or param.wp_scheme == 'S':
-            return DefaultMoveScheme()        
+            return DefaultMoveScheme(v=WPOINT_DEFAULT_VELOCITY)        
         
         if param.wp_scheme == 'L': #直线运动
             return SmoothMoveScheme(v=WPOINT_DEFAULT_VELOCITY)

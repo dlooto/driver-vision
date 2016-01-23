@@ -29,7 +29,7 @@ FRAME_INTERVAL = 1.6            #默认刺激显示间隔时间, 单位秒
 STEPS_COUNT = 20                #阶梯算法循环次数
 MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 
-WPOINT_DEFAULT_VELOCITY = 20    #注视点默认运动速度值
+WPOINT_DEFAULT_VELOCITY = 25    #注视点默认运动速度值
 BOARD_DEFAULT_VELOCITY = 40     #路牌默认运动速度值
 
 # 直线运动时, 决定x轴坐标的变化方向
@@ -87,10 +87,11 @@ WATCH_POINT_SET = {
 }
 watch_pos = WATCH_POINT_SET['pos']  #为后续简化引用, 赋值别名 
  
-face_background = '#F3F9FF'     #主窗口背景颜色
-board_color = "#0866B9"         #路牌背景颜色
-DEFAULT_ROAD_COLOR = 'white'    #路名颜色
-TARGET_ROAD_COLOR = '#ff6600'   #目标路名颜色
+face_background     = '#F3F9FF'     #主窗口背景颜色
+BOARD_FILL_COLOR    = "#0866B9"         #路牌填充颜色
+BOARD_OUTLINE_COLOR = "#CDE5FD"         #路牌边框颜色
+DEFAULT_ROAD_COLOR  = 'white'    #路名颜色
+TARGET_ROAD_COLOR   = '#ff6600'   #目标路名颜色
 
 DEFAULT_ROAD_FONT = ('Microsoft Yahei', 15)      #("Helvetica", 15)
 TRIAL_END_FONT =    ('Microsoft Yahei', 35)      #试验结束文字字体

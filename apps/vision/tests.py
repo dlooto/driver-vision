@@ -113,8 +113,8 @@ ROAD_POS = {
 c = Canvas(root, width=FACE_SIZE['w'], height=FACE_SIZE['h'], background=face_background) #灰白色
 c.pack()
 
-c.create_circle(WATCH_POS[0], WATCH_POS[1], 5, fill=watch_color, outline=watch_color) #注视点
-board_id = c.create_rectangle_pro(BOARD_POS[0], BOARD_POS[1], BOARD_SIZE['w'], BOARD_SIZE['h'], fill=board_color, outline=board_color)
+# c.create_circle(WATCH_POS[0], WATCH_POS[1], 5, fill=watch_color, outline=watch_color) #注视点
+# board_id = c.create_rectangle_pro(BOARD_POS[0], BOARD_POS[1], BOARD_SIZE['w'], BOARD_SIZE['h'], fill=board_color, outline=board_color)
 #c.create_rectangle_pro(BOARD_SIZE_B['w']/2, BOARD_SIZE_B['h']/2, BOARD_SIZE_B['w'], BOARD_SIZE_B['h'], fill=board_color, outline=board_color)  #大路牌
 
 # 路牌中心点, 测试阶段作为标注

@@ -41,6 +41,7 @@ class MotionWorker(threading.Thread):
         while self.is_working:
             self.wpoint.move()
             self.board.move()
+            self.board.glue_with(self.wpoint)
             self.gui.draw_all(self.board, self.wpoint)
             time.sleep(self.interval)
         #print 'move thread ended'    
