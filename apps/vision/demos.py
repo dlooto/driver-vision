@@ -69,7 +69,7 @@ class DemoThread(threading.Thread):
         print('Demo thread ended')
         
     def build_wpoint(self):
-        return WatchPoint()        
+        return WatchPoint()  
         
     def build_board(self):
         '''多路牌情况时需要重写'''
@@ -80,20 +80,20 @@ class DemoThread(threading.Thread):
         if step_scheme not in ('R', 'S', 'N', 'V'):
             raise Exception('Unknown step scheme: %s' % step_scheme)
          
-        if step_scheme == 'R':       
-            return SpaceStepAlgo(self.board, self.param.space_scale_type)
-        if step_scheme == 'N':    
-            return NumberStepAlgo(self.board)
-        if step_scheme == 'S':
-            if self.param.space_type == 'S2':
-                return SizeStepAlgo(self.board, space_scale=True)
-            return SizeStepAlgo(self.board, space_scale=False)
+        if step_scheme == 'R': #关键间距      
+            return SpaceStepAlgo(self.board, self.wpoint, self.param.space_scale_type)
+        if step_scheme == 'N': #数量阈值   
+            return NumberStepAlgo(self.board, self.wpoint)
+        if step_scheme == 'S': #尺寸阈值
+            if self.param.space_type == 'S2': #尺寸阈值2
+                return SizeStepAlgo(self.board, self.wpoint, space_scale=True)
+            return SizeStepAlgo(self.board, self.wpoint, space_scale=False) #尺寸阈值1
         else:
-            return self.build_velocity_step_algo(self.board)    #动态敏感度     
+            return self.build_velocity_step_algo(self.board, self.wpoint)    #动态敏感度     
     
-    def build_velocity_step_algo(self, board):
+    def build_velocity_step_algo(self, board, wpoint):
         '''为多态重写, 增加该方法'''
-        return VelocityStepAlgo(board)
+        return VelocityStepAlgo(board, wpoint)
     
     def prompt_target_seat(self, tseat):
         '''绘制目标位置提示, 停留3秒'''
@@ -195,6 +195,8 @@ class DemoThread(threading.Thread):
                         print 'Block: ', block_data
                         
                         # 阶梯变化开始
+                        self.deglue()   #阶梯过程前去除粘附
+                        
                         step_algo.prepare_steping()
                         for i in range(STEPS_COUNT):
                             if not self.is_started: break  
@@ -211,9 +213,6 @@ class DemoThread(threading.Thread):
                             #刺激显示一帧并进入按键等待. 若为动态模式则开始运动线程.
                             self.show_frame()
 
-                            #路牌停止运动
-                            self.stop_motion_worker()
-                                                        
                             # 自然等待1.6s(非用户按钮唤醒), 视为用户判断错误
                             if not self.is_awakened():
                                 self.current_trial.is_correct = False
@@ -227,6 +226,10 @@ class DemoThread(threading.Thread):
                             # 更新阶梯变量
                             step_algo.update_vars(self.is_left_algo)
 
+    def deglue(self):
+        self.wpoint.deglue()
+        self.board.deglue()                            
+
     def show_frame(self):
         '''刺激显示一帧. 
         路牌显示后将等待并阻塞后续逻辑执行, 直到用户按键判断或等待1.6s
@@ -237,7 +240,10 @@ class DemoThread(threading.Thread):
         self.start_motion_worker()
          
         #等待用户按键判断         
-        self.wait()                
+        self.wait()        
+        
+        #用户按键判断后或自然等待1.6s后, 路牌停止运动
+        self.stop_motion_worker()        
 
     def end_demo(self, is_break=False):
         '''is_break: True-试验被中断, False-试验未被中断. 
@@ -333,19 +339,13 @@ class StaticSingleDemoThread(DemoThread):
     '''静态单路牌'''
     
     #### 静态模式重写以下方法为空   
-    def build_move_scheme(self, param):
-        pass
-    
     def start_motion_worker(self): 
         pass
     
     def stop_motion_worker(self):
         pass
     
-    def print_move_params(self):
-        pass    
-    
-    def build_velocity_step_algo(self, board): #多态重写
+    def build_velocity_step_algo(self, board, wpoint): #多态重写
         raise Exception(u'静态模式无动态敏感度阈值阶梯过程')
 
 class DynamicSingleDemoThread(DemoThread):

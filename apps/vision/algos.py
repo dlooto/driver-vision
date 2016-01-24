@@ -9,11 +9,14 @@ from utils.eggs import float_list_to_str
 class StepAlgo(object):
     '''阶梯算法过程基类'''
     
-    def __init__(self, board):
+    label = ''
+    
+    def __init__(self, board, wpoint):
         self.board = board
+        self.wpoint = wpoint
         
-    def print_prompt(self):
-        pass
+    def print_prompt(self): #输出提示 
+        print('\n%s过程开始...' % self.label)
 
     def extend_block_data(self, block_data):
         pass
@@ -27,6 +30,7 @@ class StepAlgo(object):
         pass
     
     def prepare_steping(self):
+        '''阶梯过程开始前的准备工作'''
         pass
     
     def get_steps_value(self):
@@ -37,33 +41,29 @@ class StepAlgo(object):
         self.board.flash_road_names()
     
     def update_vars(self, is_left_algo):
-        '''
-        更新阶梯变量.
-        '''
+        '''更新阶梯变量'''
         pass
     
     def set_velocity(self, velocity):
         '''动态阶梯控制过程需要该方法'''
         self.board.set_move_velocity(velocity)    #设置运动速度值
-        self.velocity = velocity    
     
             
 class SpaceStepAlgo(StepAlgo):
     '''关键间距阶梯算法'''
     
-    def __init__(self, board, space_scale_type):
-        StepAlgo.__init__(self, board)
+    label = u'求关键间距'
+    
+    def __init__(self, board, wpoint, space_scale_type):
+        StepAlgo.__init__(self, board, wpoint)
         self.space_scale_type = space_scale_type
     
-    def print_prompt(self):
-        print('\n求关键间距控制过程开始...')
-
     def extend_block_data(self, block_data):
         extra_data = {
             'cate':  'R', 
             'N':     self.board.count_flanker_items(), 
             'S':     self.board.get_item_size(), 
-            'V':     self.velocity,
+            'V':     self.board.get_move_velocity(),
         }
         block_data.update(extra_data)
     
@@ -85,15 +85,14 @@ class SpaceStepAlgo(StepAlgo):
 class NumberStepAlgo(StepAlgo):
     '''数量阈值阶梯算法'''
     
-    def print_prompt(self): #打印提示信息
-        print('\n求数量阈值控制过程开始...')
-        
+    label = u'求数量阈值'
+    
     def extend_block_data(self, block_data):
         '''block数据中添加额外的数据'''
         extra_data = {
             'cate': 'N', 
             'S':    self.board.get_item_size(), 
-            'V':    self.velocity,
+            'V':    self.board.get_move_velocity(),
             # 'R': 待确定. 目前间距为统一变化
         }
         block_data.update(extra_data)
@@ -113,18 +112,17 @@ class NumberStepAlgo(StepAlgo):
 class SizeStepAlgo(StepAlgo):
     '''尺寸阶梯算法: 求尺寸阈值'''
     
-    def __init__(self, board, space_scale):
-        StepAlgo.__init__(self, board)
+    label = u'求尺寸阈值'
+    
+    def __init__(self, board, wpoint, space_scale):
+        StepAlgo.__init__(self, board, wpoint)
         self.board.space_scale = space_scale #间距是否缩放
     
-    def print_prompt(self):
-        print('\n求尺寸阈值过程开始...')
-
     def extend_block_data(self, block_data):
         extra_data = {
             'cate': 'S', #求尺寸阈值
             'N':    self.board.count_flanker_items(), 
-            'V':    self.velocity,
+            'V':    self.board.get_move_velocity(),
             # 'R':  置空, 间距随路名尺寸变化而变化
         }
         block_data.update(extra_data)
@@ -154,12 +152,8 @@ class SizeStepAlgo(StepAlgo):
 class VelocityStepAlgo(StepAlgo):
     '''速度阶梯算法: 动态敏感度'''
     
-    #def __init__(self, board, ):
-    #    StepAlgo.__init__(self, board)
-        
-    def print_prompt(self):
-        print('\n求动态敏感度阈值过程开始...')
-
+    label = u'求动态敏感度阈值'
+    
     def extend_block_data(self, block_data):
         extra_data = {
             'cate': 'V',

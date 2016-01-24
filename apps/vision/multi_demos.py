@@ -62,6 +62,8 @@ class MultiDemoThread(DemoThread):
                             print 'Block: ', block_data
                             
                             # 阶梯变化开始
+                            self.deglue() #阶梯过程前去除粘附
+                            
                             step_algo.prepare_steping()
                             for i in range(STEPS_COUNT):
                                 if not self.is_started: break
@@ -79,9 +81,6 @@ class MultiDemoThread(DemoThread):
                                 
                                 #刺激显示一帧并进入按键等待. 若为动态模式则开始运动线程.
                                 self.show_frame()
-                                
-                                #路牌停止运动
-                                self.stop_motion_worker()
                                 
                                 if not self.is_awakened(): #非被唤醒并自然等待1.6s, 视为用户判断错误
                                     self.current_trial.is_correct = False
@@ -107,20 +106,14 @@ class StaticMultiDemoThread(MultiDemoThread):
         super(StaticMultiDemoThread, self).step_process(param, step_algo) 
         
     #### 静态模式重写以下方法为空  
-    def build_move_scheme(self, param):
-        pass
-    
     def start_motion_worker(self): 
         pass                   
     
     def stop_motion_worker(self):
         pass    
     
-    def print_move_params(self):
-        pass
-            
-    def build_velocity_step_algo(self, board): #多态重写
-        raise Exception(u'静态模式无动态敏感度阈值阶梯过程')            
+    def build_velocity_step_algo(self, board, wpoint): #多态重写
+        raise Exception(u'静态模式无动态敏感度阈值阶梯过程')
             
     
 class DynamicMultiDemoThread(MultiDemoThread):

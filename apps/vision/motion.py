@@ -39,9 +39,10 @@ class MotionWorker(threading.Thread):
         self.is_working = True
         
         while self.is_working:
+            self.board.glue_with(self.wpoint) #判断并处理粘附
+            
             self.wpoint.move()
             self.board.move()
-            self.board.glue_with(self.wpoint)
             self.gui.draw_all(self.board, self.wpoint)
             time.sleep(self.interval)
         #print 'move thread ended'    
@@ -90,6 +91,9 @@ class MoveScheme(object):
     def get_velocity(self):
         return self.v    
     
+    def copy_fields(self, move_scheme):
+        pass
+    
     def print_direction(self):
         pass
     
@@ -98,10 +102,13 @@ class MoveScheme(object):
         
         
 class DefaultMoveScheme(MoveScheme):
-    '''默认静止模式(非运动模式). Do nothing when moving'''
+    '''默认静态模式(非运动模式). Do nothing when moving'''
     
     def is_move(self):
-        return False        
+        return False 
+    
+    def get_velocity(self):
+        return 0       
         
 
 class CircleMoveScheme(MoveScheme):
@@ -139,6 +146,12 @@ class SmoothMoveScheme(MoveScheme):
         MoveScheme.__init__(self, v)
         self.grad_x = random.choice(X_DIRECTS)   #x轴变化方向
         self.grad_y = random.choice(GRADS)       #y轴变化方向斜率值
+        
+    def copy_fields(self, move_scheme):
+        '''参数拷贝, 用于处于粘附问题'''
+        self.v = move_scheme.v
+        self.grad_x = move_scheme.grad_x
+        self.grad_y = move_scheme.grad_y    
         
     def _line_formula(self, old_pos, dx, grad_x, grad_y):
         '''直线公式: 
@@ -184,7 +197,7 @@ class SmoothMoveScheme(MoveScheme):
         print 'Direction changed to: %s' % label
         
     def reverse_direction(self):
-        '''朝相反方向运动. 不仅限于垂直方向'''
+        '''朝相反方向运动. 仅限于平滑运动'''
         self.grad_x, self.grad_y = -self.grad_x, -self.grad_y
         print 'Changed to reversed direction: (%s, %s)' % (self.grad_x, self.grad_y)
         

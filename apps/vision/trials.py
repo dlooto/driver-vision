@@ -11,6 +11,7 @@ import random
 import maths
 from config import *
 from vision.models import RoadModel
+import copy
 
 
 cached_real_roads = RoadModel.objects.get_all_roads(is_real=True)  #缓存真路名
@@ -24,6 +25,9 @@ class Shape(object):
     def set_move_scheme(self, move_scheme):
         self.move_scheme = move_scheme 
         self.move_scheme.print_direction()
+        
+        #保存原始move_scheme, 以处理路牌与注视点粘附问题
+        self.original_move_scheme = copy.deepcopy(move_scheme)  
             
     def set_move_velocity(self, velocity):
         '''静态试验中重写该方法为空'''
@@ -88,12 +92,16 @@ class Shape(object):
             pass    
         
     def reverse_direction(self):
-        '''检查是否已靠近窗体边界, 若已靠近则运动方向反转'''
+        '''平滑运动时, 检查是否已靠近窗体边界, 若已靠近则运动方向反转'''
         if self.been_to_edge():
             self.move_scheme.reverse_direction()
         
     def move(self):
-        pass         
+        self.reverse_direction()
+        self._do_move()
+        
+    def _do_move(self):
+        pass             
 
 class WatchPoint(Shape):
     '''注视点'''
@@ -112,10 +120,12 @@ class WatchPoint(Shape):
         
         #运动过程中, 该值为运动时的圆心坐标. 注视点绘制时以该坐标为准
         self.move_pos = pos         
+        
+        self.is_glued = False                #注视点与路牌是否已粘附(当注视点与路牌相遇时进行粘附处理)
     
-    def move(self): 
+    def _do_move(self): 
         '''若注视点靠近窗体边界, 则反向运动'''
-        self.reverse_direction()
+        #self.reverse_direction()
         self.move_pos = self.move_scheme.new_pos(self.move_pos)
         
     def get_border_xy(self):
@@ -123,7 +133,7 @@ class WatchPoint(Shape):
         x0, y0 = self.move_pos
         return [x0-self.radius, x0+self.radius, y0-self.radius, y0+self.radius] 
     
-    def is_crossed_with(self, board):
+    def is_crossed_with(self, board):  #备用...
         '''
         判断注视点与路牌是否相交. 
         算法: 
@@ -134,10 +144,24 @@ class WatchPoint(Shape):
         dx, dy = abs(self.move_pos[0]-board.pos[0]), abs(self.move_pos[1]-board.pos[1])
         dw, dh = self.radius + board.width*1.0/2, self.radius + board.height*1.0/2
         return dx <= dw and dy <= dh
+    
+    def deglue(self):
+        '''去除与路牌的粘附'''
+        if not self.is_glued:
+            return
+        self.copy_move_scheme(self.original_move_scheme)
+        self.is_glued = False 
+        
+    def copy_move_scheme(self, a_move_scheme):
+        '''为避免循环重新构选move_scheme对象, 添加该拷贝函数'''
+        self.move_scheme.copy_fields(a_move_scheme)
             
 
 class BaseBoard(Shape):
     '''单路牌与多路牌基础类'''
+    
+    def __init__(self):
+        self.is_glued = False
     
     def is_same_direction_with(self, direction):
         '''用户判断的方向(传入参数)是否与路牌当前运动方向一致
@@ -164,22 +188,25 @@ class BaseBoard(Shape):
         pass           
     
     def is_crossed_with(self, wpoint):
-        '''
-        判断注视点与路牌是否相交. 
-        算法: 
-            A=r+width/2, B=r+height/2, (r为注视点圆半径, width为路牌宽度, height为路牌高度)
-            dx=|xw0 - xb0|, dy=|yw0 - yb0| (垂直间距绝对值)
-            如果 dx <= A and dy <= B, 则相交.
-        '''
-        dx, dy = abs(wpoint.move_pos[0]-self.pos[0]), abs(wpoint.move_pos[1]-self.pos[1])
-        dw, dh = wpoint.radius + self.width*1.0/2, wpoint.radius + self.height*1.0/2
-        return dx <= dw and dy <= dh
+        '''判断路牌是否与注视点相交'''
+        pass
     
     def glue_with(self, wpoint):
         '''与注视点粘合'''
+        if wpoint.is_glued and self.is_glued:
+            return
+        
         if self.is_crossed_with(wpoint):
-            wpoint.move_scheme = self.move_scheme
-    
+            #wpoint.move_scheme = self.move_scheme  #不应直接赋值, 应重新拷贝一个以彼此不影响
+            wpoint.copy_move_scheme(self.move_scheme)
+            wpoint.is_glued, self.is_glued = True, True
+            
+    def deglue(self):
+        '''去除与注视点的粘附'''
+        if not self.is_glued:
+            return
+        self.is_glued = False            
+            
 
 class ItemQueue():
     '''队列
@@ -610,10 +637,11 @@ class Board(BaseBoard):
         '''返回干扰项数量'''
         return len(self.get_road_seats()) - 1
     
-    def move(self):
+    def _do_move(self):
         ''' 移动路牌坐标
         @param move_scheme: 运动模式对象
         '''
+        
         new_pos = self.move_scheme.new_pos(self.pos)
         
         dx, dy = new_pos[0]-self.pos[0], new_pos[1]-self.pos[1] #路名偏移量
@@ -700,6 +728,18 @@ class Board(BaseBoard):
         x0, y0 = self.pos
         woffset, hoffset = self.width*1.0/2, self.height*1.0/2
         return [x0-woffset, x0+woffset, y0-hoffset, y0+hoffset]
+    
+    def is_crossed_with(self, wpoint):
+        '''
+        判断路牌是否与注视点相交. 
+        算法: 
+            A=r+width/2, B=r+height/2, (r为注视点圆半径, width为路牌宽度, height为路牌高度)
+            dx=|xw0 - xb0|, dy=|yw0 - yb0| (垂直间距绝对值)
+            如果 dx <= A and dy <= B, 则相交.
+        '''
+        dx, dy = abs(wpoint.move_pos[0]-self.pos[0]), abs(wpoint.move_pos[1]-self.pos[1])
+        dw, dh = wpoint.radius + self.width*1.0/2, wpoint.radius + self.height*1.0/2
+        return dx <= dw and dy <= dh    
     
     
 #     def draw(self, canvas):
@@ -1074,7 +1114,7 @@ class MultiBoard(BaseBoard):
         key, iboard = self.get_target_board()
         return iboard.is_target_road_real()      
     
-    def move(self):
+    def _do_move(self):
         ''' 移动路牌坐标
         '''
         key, iboard = self.get_target_board()
@@ -1115,6 +1155,14 @@ class MultiBoard(BaseBoard):
         
         return [x_min - l_board.width*1.0/2, x_max + r_board.width*1.0/2, 
                 y_min - u_board.height*1.0/2, y_max + d_board.height*1.0/2]        
+     
+    def is_crossed_with(self, wpoint):
+        ''' 判断多个路牌是否与注视点相交. 需多个路牌逐一判断, 单个路牌判断方法与单路牌时相同 
+        '''
+        for board in self.board_dict.values():
+            if board.is_crossed_with(wpoint):
+                return True
+        return False         
      
         
 class Road(object):

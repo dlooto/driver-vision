@@ -29,7 +29,7 @@ FRAME_INTERVAL = 1.6            #默认刺激显示间隔时间, 单位秒
 STEPS_COUNT = 20                #阶梯算法循环次数
 MOVE_SLEEP_TIME = 0.1           #运动模式时路牌每一次移动时间间隔, 单位秒(s)
 
-WPOINT_DEFAULT_VELOCITY = 25    #注视点默认运动速度值
+WPOINT_DEFAULT_VELOCITY = 30    #注视点默认运动速度值
 BOARD_DEFAULT_VELOCITY = 40     #路牌默认运动速度值
 
 # 直线运动时, 决定x轴坐标的变化方向
