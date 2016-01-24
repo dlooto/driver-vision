@@ -92,6 +92,6 @@ def export_excel(demo):
             
     
     excel_file.save("%s/%s" % (DATA_ROOT, gen_filename(demo.id, demo.param_id)))
-    print("Export excel data done.") 
+    print("Excel data export success.") 
     
 
