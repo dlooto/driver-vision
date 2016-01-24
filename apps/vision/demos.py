@@ -14,6 +14,7 @@ from vision.algos import SpaceStepAlgo, NumberStepAlgo, SizeStepAlgo,\
     VelocityStepAlgo
 from vision.motion import MotionWorker, CircleMoveScheme, SmoothMoveScheme,\
     MixedMoveScheme, DefaultMoveScheme
+from vision import data_processor
 
 
 '''
@@ -65,6 +66,9 @@ class DemoThread(threading.Thread):
         
         #批量保存block数据, is_started=True 则试验未被中断, 否则被中断
         self.end_demo(is_break=not self.is_started)
+        
+        print('Export Excel data...')
+        data_processor.export_excel(self.demo)
         
         print('Demo thread ended')
         

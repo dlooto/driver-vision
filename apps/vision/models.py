@@ -242,6 +242,18 @@ class Demo(BaseModel):
     def __unicode__(self):
         return u'%s' % self.id
     
+    def get_all_trials(self):
+        blocks = self.block_set.all()
+        trial_list = []
+        for block in blocks:
+            trial_list.extend(block.trial_set.all())
+        
+        for trial in trial_list:
+            trial.param = self.param
+            trial.demo = self
+           
+        return trial_list    
+    
 # 阶梯变化类型
 STEP_TYPE_CHOICES = {
     ('N', u'数量(N)'),
@@ -289,7 +301,10 @@ class Trial(BaseModel):
     
     resp_cost = models.FloatField(u'响应时间', default=FRAME_INTERVAL) #秒数
     is_correct = models.BooleanField(u'判断正确', default=False) #按键判断是否正确
-    steps_value = models.CharField(u'阶梯值', max_length=50, )  #阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串); 其他情况为单值
+    
+    ## 阶梯法记录值. 当间距阶梯变化时, 该值形如: r1,r2,r3(3个干扰项与目标项间距的以逗号分隔的字符串) 
+    ## 其他情况为单值
+    steps_value = models.CharField(u'阶梯值', max_length=50, )  
     
     # 单路牌时如'视觉路', 多路牌时如'B2,视觉路'(目标路牌,目标路名). 由此可知道用户按键情况    
     target_road = models.CharField(u'目标项', max_length=40, null=True, blank=True, default='')
@@ -309,6 +324,19 @@ class Trial(BaseModel):
                          self.steps_value,
                          self.target_road
                          )
+        
+    def get_N(self):
+        return self.steps_value if self.cate == 'N' else ''
+            
+    def get_S(self):
+        return self.steps_value if self.cate == 'S' else ''
+        
+    def get_V(self):
+        return self.steps_value if self.cate == 'V' else ''
+        
+    def get_R(self):
+        return self.steps_value if self.cate == 'R' else ''
+            
     
 class BoardLog(BaseModel):
     '''一次刺激显示中的路牌数据

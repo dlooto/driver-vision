@@ -9,6 +9,7 @@
    ########################
 '''
 
+import os
 import sys
 import math
 import settings
@@ -172,5 +173,15 @@ AUD_PATH = {
     'T': '%s/%s' % (aud_root, 'success.wav'),  #判断正确提示音
     'F': '%s/%s' % (aud_root, 'failure.wav')   #判断错误提示音             
 }
+
+DATA_ROOT = os.path.join(settings.PROJECT_ROOT, 'data')
+
+# Excel文件样式设置
+EXCEL_FONT = {
+    'name':         'Microsoft Yahei',
+    'bold':         True,
+    'color_index':  4,
+    'height':       220,         
+}    
 
 

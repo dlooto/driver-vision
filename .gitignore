@@ -11,5 +11,7 @@ apps/settings/local.py
 /apps/build
 media
 logs
+data/*.xls
 dump.rdb
+
 
