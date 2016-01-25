@@ -68,7 +68,7 @@ class DemoThread(threading.Thread):
         self.end_demo(is_break=not self.is_started)
         
         print('Export Excel data...')
-        data_processor.export_excel(self.demo)
+        data_processor.build_excel_exporter(self.param.step_scheme).export_excel(self.demo)
         
         print('Demo thread ended')
         

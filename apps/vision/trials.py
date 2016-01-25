@@ -966,10 +966,11 @@ class MultiBoard(BaseBoard):
         return len(self.board_dict) - 1 
     
     def get_item_size(self):
-        '''返回路牌尺寸, 为与Board形成多态调用而增加. 目前仅返回最大路牌尺寸
+        '''返回路牌尺寸, 为与Board形成多态调用而增加. 目前仅返回目标路牌尺寸
         @return: width, height
         '''
-        return '%s,%s' % (self.board_size[0], self.board_size[1])
+        key, tboard = self.get_target_board()
+        return '%s,%s' % (tboard.width, tboard.height)
     
     def get_item_spacings(self):
         '''返回目标项与干扰项间距: 与Board类型对象形成多态'''
