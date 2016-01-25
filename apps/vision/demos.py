@@ -129,7 +129,7 @@ class DemoThread(threading.Thread):
         '''仅动态模式时需要构建MoveScheme对象'''
         
         if param.is_static():
-            return DefaultMoveScheme()
+            return DefaultMoveScheme(v=0)
         
         if param.move_type not in ('C', 'S', 'M'):
             raise Exception('Unknown move_type: %s' % param.move_type)
@@ -152,7 +152,7 @@ class DemoThread(threading.Thread):
             raise Exception('Unknown wp_scheme: %s' % param.wp_scheme)
         
         if param.is_static() or param.wp_scheme == 'S':
-            return DefaultMoveScheme(v=WPOINT_DEFAULT_VELOCITY)        
+            return DefaultMoveScheme(v=0)        
         
         if param.wp_scheme == 'L': #直线运动
             return SmoothMoveScheme(v=WPOINT_DEFAULT_VELOCITY)
