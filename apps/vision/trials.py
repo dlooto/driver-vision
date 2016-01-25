@@ -460,7 +460,7 @@ class Board(BaseBoard):
     def get_road_spacings(self):
         if not hasattr(self, 'road_spacings') or not self.road_spacings:
             self.road_spacings = self.calc_target_flanker_spacings()
-        return self.road_spacings  
+        return self.road_spacings
     
     def get_item_spacings(self):
         '''返回目标项与干扰项间距: 与multiBoard形成多态'''
@@ -956,7 +956,7 @@ class MultiBoard(BaseBoard):
             
     def get_target_name(self, target_board_key=None):
         key, board = self.get_target_board(target_board_key)     
-        return '%s:%s' % (key, board.get_target_road().name)
+        return board.get_target_road().name
             
     def get_flanker_boards(self):
         flanker_boards = self.board_dict.values()

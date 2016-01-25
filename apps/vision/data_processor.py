@@ -33,7 +33,7 @@ COL = {
     'M' :  u'目标项/干扰项运动方向',   
 }            
 
-# Excel表格各阈值通用列设置, 值代表列所在位置
+# Excel表格各阈值通用列设置, 数值代表列所在位置
 COL_INDEX = {
     'trial_id':    0, 
     'block_id':    1, 
@@ -152,7 +152,7 @@ class SizeExcelExporter(ExcelExporter):
     '''尺寸阈值数据导出'''
     
     def _write_step_fields(self, sheet, trial, row):
-        sheet.write(row, COL_INDEX['S'], trial.steps_value) 
+        sheet.write(row, COL_INDEX['S'], trial.steps_value)
         sheet.write(row, COL_INDEX['N'], trial.block.N)
         sheet.write(row, COL_INDEX['V'], trial.block.V)
     
