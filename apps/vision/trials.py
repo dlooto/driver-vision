@@ -35,7 +35,10 @@ class Shape(object):
 
     def get_move_velocity(self):
         '''静态试验中重写该方法为空'''
-        return self.move_scheme.get_velocity()             
+        return self.move_scheme.get_velocity()   
+    
+    def get_move_direction(self):
+        return self.move_scheme.get_direction()          
     
     def get_border_xy(self):
         '''返回形状当前的边界坐标. 需要子类重载
@@ -461,7 +464,7 @@ class Board(BaseBoard):
     
     def get_item_spacings(self):
         '''返回目标项与干扰项间距: 与multiBoard形成多态'''
-        return self.get_road_spacings()   
+        return self.calc_target_flanker_spacings()   
     
     def calc_target_flanker_spacings(self):
         '''计算当前目标项与所有干扰项的间距, 返回间距列表'''

@@ -45,6 +45,8 @@ alter table vision_trial modify column `cate` varchar(4) NOT NULL;
 /* 2016-1-21 */
 alter table vision_trialparam add column `space_scale_type` varchar(4);
 
-
+/* 2016-1-26 */
+alter table vision_trial add column `move_direct` varchar(10);
+alter table vision_trial add column `wp_velocity` double precision;
 
 

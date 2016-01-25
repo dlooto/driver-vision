@@ -68,8 +68,8 @@ def set_style():
     return style
 EXCEL_STYLE = set_style()
 
-def gen_filename(demo_id, param_id):
-    return 'demo%s_%s_%s.xls' % (demo_id, param_id, times.datetime_to_str(times.now(), '%Y%m%d%H%M')) #'%Y%m%d%H%M%S'
+def gen_filename(demo_id):
+    return 'demo%s_%s.xls' % (demo_id, times.datetime_to_str(times.now(), '%Y%m%d%H%M')) #'%Y%m%d%H%M%S'
 
 def gen_sheetname(param):
     return param.__unicode__()
@@ -105,7 +105,7 @@ class ExcelExporter():
             self._write_step_fields(sheet, trial, row)
             row += 1
         
-        self.excel_file.save("%s/%s" % (DATA_ROOT, gen_filename(demo.id, demo.param_id)))
+        self.excel_file.save("%s/%s" % (DATA_ROOT, gen_filename(demo.id)))
         print("Data exported success.") 
     
     def _write_common_fields(self, sheet, trial, row):
@@ -116,7 +116,7 @@ class ExcelExporter():
         sheet.write(row, COL_INDEX['move_scheme'], trial.param.move_type)
         sheet.write(row, COL_INDEX['step_scheme'], trial.param.step_scheme)
         sheet.write(row, COL_INDEX['wp_scheme'],   trial.param.wp_scheme)
-        sheet.write(row, COL_INDEX['wp_velocity'], '')
+        sheet.write(row, COL_INDEX['wp_velocity'], trial.wp_velocity)
         
         sheet.write(row, COL_INDEX['target_seat'], trial.block.tseat)
         sheet.write(row, COL_INDEX['eccent'],      trial.block.ee)
@@ -124,6 +124,8 @@ class ExcelExporter():
         sheet.write(row, COL_INDEX['resp_cost'],   trial.resp_cost)
         sheet.write(row, COL_INDEX['is_correct'],  trial.is_correct)
         sheet.write(row, COL_INDEX['target_road'], trial.target_road)
+        
+        sheet.write(row, COL_INDEX['M'],           trial.move_direct)
     
     def _write_step_fields(self, sheet, trial, row):
         '''写入具体阶梯过程字段'''
@@ -159,7 +161,7 @@ class VelocityExcelExporter(ExcelExporter):
     
     def _write_step_fields(self, sheet, trial, row):
         sheet.write(row, COL_INDEX['V'], trial.steps_value)
-        sheet.write(row, COL_INDEX['M'], '')  
+        
     
                 
     

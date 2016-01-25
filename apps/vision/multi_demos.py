@@ -74,7 +74,9 @@ class MultiDemoThread(DemoThread):
                                     'block':        block,  
                                     'cate':         block.cate,
                                     'steps_value':  step_algo.get_steps_value(),    #TODO---
-                                    'target_road':  self.board.get_target_name(),   
+                                    'target_road':  self.board.get_target_name(),  
+                                    'move_direct':  str(self.board.get_move_direction()),
+                                    'wp_velocity':  self.wpoint.get_move_velocity(), 
                                     'created_time': times.now()
                                 }
                                 self.current_trial = self.append_trial(trial_data)

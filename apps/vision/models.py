@@ -310,6 +310,10 @@ class Trial(BaseModel):
     target_road = models.CharField(u'目标项', max_length=40, null=True, blank=True, default='')
     #start_time = models.DateTimeField(u'开始时间', )
     
+    #动态敏感度阈值时目标项/干扰项运动方向(主要有up/down/left/right 4种取值)
+    move_direct = models.CharField(u'运动方向', max_length=10, null=True, blank=True)
+    wp_velocity = models.FloatField(u'注视点速度', null=True, blank=True, default=0.0)
+    
     class Meta:
         db_table = 'vision_trial'
         verbose_name = u'Trial'
