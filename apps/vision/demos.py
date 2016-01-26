@@ -114,7 +114,7 @@ class DemoThread(threading.Thread):
         '''提示目标项位置: 所在路牌及路名
         @param tboard_key: 目标路牌标识, B1/B2/B3
         '''
-        print tboard_key, tseat
+        print '目标位置:', tboard_key, tseat
         
         # set target road
         for iboard in self.board.prompt_board_dict.values():
@@ -129,7 +129,7 @@ class DemoThread(threading.Thread):
         '''仅动态模式时需要构建MoveScheme对象'''
         
         if param.is_static():
-            return DefaultMoveScheme(v=0)
+            return DefaultMoveScheme()
         
         if param.move_type not in ('C', 'S', 'M'):
             raise Exception('Unknown move_type: %s' % param.move_type)
@@ -147,16 +147,15 @@ class DemoThread(threading.Thread):
         
     def build_wp_move_scheme(self, param):
         '''构建注视点运动模式对象. 注视点目前仅支持平滑运动'''
-                
-        if param.wp_scheme not in ('L', 'S'):
-            raise Exception('Unknown wp_scheme: %s' % param.wp_scheme)
         
-        if param.is_static() or param.wp_scheme == 'S':
-            return DefaultMoveScheme(v=0)        
+        if param.is_static() or not param.wp_scheme or param.wp_scheme == 'S':
+            return DefaultMoveScheme()        
         
         if param.wp_scheme == 'L': #直线运动
             return SmoothMoveScheme(v=WPOINT_DEFAULT_VELOCITY)
- 
+                
+        raise Exception('Unknown wp_scheme: %s' % param.wp_scheme)
+        
     def start_motion_worker(self):
         '''静态试验中, 需重写该方法为空'''
         self.motion = MotionWorker(self.gui, self.board, self.wpoint)  #后续可考虑从线程池中取出一个...
@@ -205,6 +204,7 @@ class DemoThread(threading.Thread):
                         for i in range(STEPS_COUNT):
                             if not self.is_started: break  
                             self.total_trials += 1
+                            
                             trial_data = {
                                 'block':        block,  
                                 'cate':         block.cate, 

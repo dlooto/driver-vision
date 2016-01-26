@@ -81,8 +81,8 @@ class MoveScheme(object):
     def change_to(self):
         pass
     
-    def reverse_direction(self):
-        '''平滑运动时方向反转'''
+    def reverse_direction(self, edge_direct=''):
+        '''平滑运动时方向反转, edge_direct为靠近的边界方向'''
         pass    
         
     def set_velocity(self, v):
@@ -94,7 +94,7 @@ class MoveScheme(object):
     def copy_fields(self, move_scheme):
         pass
     
-    def print_direction(self):
+    def print_direction(self, type_label=''):
         pass
     
     def scheme_type(self): #for testing
@@ -103,6 +103,9 @@ class MoveScheme(object):
         
 class DefaultMoveScheme(MoveScheme):
     '''默认静态模式(非运动模式). Do nothing when moving'''
+    
+    def __init__(self, v=0):
+        MoveScheme.__init__(self, v)
     
     def is_move(self):
         return False 
@@ -156,7 +159,7 @@ class SmoothMoveScheme(MoveScheme):
     def _line_formula(self, old_pos, dx, grad_x, grad_y):
         '''直线公式: 
             x=x0 + grad_x*dx, 其中 dx=v*t(v为运动速度值)
-            y=y0 + ky*dx
+            y=y0 + grad_y*dx
         
         @param old_pos: 移动前坐标值(x,y)
         @param dx:      x轴偏移量
@@ -196,10 +199,33 @@ class SmoothMoveScheme(MoveScheme):
         self.grad_x, self.grad_y = direction[0], direction[1]
         print 'Direction changed to: %s' % label
         
-    def reverse_direction(self):
-        '''朝相反方向运动. 仅限于平滑运动'''
-        self.grad_x, self.grad_y = -self.grad_x, -self.grad_y
-        print 'Changed to reversed direction: (%s, %s)' % (self.grad_x, self.grad_y)
+    def reverse_direction(self, edge_direct=''):
+        '''若靠近边界时, 则朝远离边界的方向运动. 仅限于平滑运动
+        注: 若简单将grad_x和grad_y取反, 将会产生路牌振荡情况(路牌无法退出边界)
+        '''
+        if not edge_direct:
+            self.grad_x, self.grad_y = -self.grad_x, -self.grad_y
+            return
+        
+        if edge_direct == 'U': #若近上边界
+            self.grad_x, self.grad_y = self.grad_x, abs(self.grad_y)
+            if self.grad_y == 0:
+                self.grad_y = 1
+        if edge_direct == 'D': #下边界           
+            self.grad_x, self.grad_y = self.grad_x, -abs(self.grad_y)
+            if self.grad_y == 0:
+                self.grad_y = -1
+        if edge_direct == 'L': #左边界           
+            self.grad_x, self.grad_y = abs(self.grad_x), self.grad_y
+            if self.grad_x == 0:
+                self.grad_x = 1
+        if edge_direct == 'R': #右边界           
+            self.grad_x, self.grad_y = -abs(self.grad_x), self.grad_y
+            if self.grad_x == 0: #确保避免上下振荡情况, 让路牌运动出边界
+                self.grad_x = -1
+                        
+            
+        print 'Direction changed : (%s, %s)' % (self.grad_x, self.grad_y)
         
 #     def reverse_direction(self):
 #         '''运动敏感度阈值过程时, 且路牌越过边界时则向反方向运动'''
@@ -228,8 +254,8 @@ class SmoothMoveScheme(MoveScheme):
     def is_right(self):
         return self.grad_x == 1 and self.grad_y == 0 #右
     
-    def print_direction(self):
-        print '平滑运动方向 (grad_x, grad_y): (%s, %s)' % (self.grad_x, self.grad_y)
+    def print_direction(self, type_label=''):
+        print type_label, '平滑运动方向 (grad_x, grad_y): (%s, %s)' % (self.grad_x, self.grad_y)
 
 class MixedMoveScheme(MoveScheme):
     '''混合运动'''

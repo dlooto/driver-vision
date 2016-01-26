@@ -66,9 +66,9 @@ STEP_SCHEME_CHOICES = ( #阶梯类型
 )
 
 MOVE_TYPE_CHOICES = (   #运动模式
-    ('C', u'圆周'),
-    ('S', u'平滑'),
-    ('M', u'混合'),
+    ('C', u'圆周运动'),
+    ('S', u'平滑运动'),
+    ('M', u'混合运动'),
     #('O', u'MOT'),
 )
 
@@ -128,7 +128,7 @@ class TrialParam(BaseModel):
     trialed_count = models.IntegerField(u'执行次数', null=True, blank=True, default=0) #数据被执行次数
     
     #下次试验将被使用, 则其他参数数据将失效. 每次仅有一条数据可用
-    is_coming = models.BooleanField(u'是否可用', default=True)
+    is_coming = models.BooleanField(u'可用', default=True)
     desc = models.CharField(u'描述', max_length=40, null=True, blank=True, default='')
 
     objects = TrialParamManager()

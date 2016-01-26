@@ -22,9 +22,11 @@ class Shape(object):
     需注视点/单路牌/多路牌等具体类继承. 为避免WatchPoint与Board代码重复在后续开发中添加
     '''
     
+    type_label = ''
+    
     def set_move_scheme(self, move_scheme):
         self.move_scheme = move_scheme 
-        self.move_scheme.print_direction()
+        self.move_scheme.print_direction(self.type_label)
         
         #保存原始move_scheme, 以处理路牌与注视点粘附问题
         self.original_move_scheme = copy.deepcopy(move_scheme)  
@@ -62,45 +64,63 @@ class Shape(object):
         '''形状是否越过试验窗体下边界'''
         return xy_boarder[3] >= FACE_SIZE['h']
     
-    def been_to_edge(self):
+    def close_to_edge(self):
         '''形状是否已到窗体边缘'''
         xy_boarder = self.get_border_xy()
-        return self.is_left_over(xy_boarder) or self.is_right_over(xy_boarder) or \
-                self.is_up_over(xy_boarder) or self.is_down_over(xy_boarder)
+        if self.is_left_over(xy_boarder):
+            return True, 'L'
+        if self.is_right_over(xy_boarder):
+            return True, 'R'
+        if self.is_up_over(xy_boarder):
+            return True, 'U'
+        if self.is_down_over(xy_boarder):
+            return True, 'D'
+        return False, ''
+        
+        #return self.is_left_over(xy_boarder) or self.is_right_over(xy_boarder) or \
+        #        self.is_up_over(xy_boarder) or self.is_down_over(xy_boarder)
     
     def random_move_direction(self):
         '''随机变化运动方向: 动态敏感度阈值时, 在平滑动态状态下随机改变到另一个运动方向'''
         self.move_scheme.random_direction()
-        self.reverse_move_direction()
         
-    def reverse_move_direction(self):
-        '''动态敏感度阈值过程且形状越过边界时, 则向反方向运动
-            注: 该方法仅考虑垂直方向. 
+#     def reverse_move_direction(self):
+#         '''动态敏感度阈值过程且形状越过边界时, 则向反方向运动
+#             注: 该方法仅考虑垂直方向. 
+#         '''
+#         
+#         xy_boarder = self.get_border_xy()
+#         if self.is_left_over(xy_boarder):
+#             self.move_scheme.change_to('right')
+#             print 'Left Over, Reversed to Right'
+#         elif self.is_right_over(xy_boarder):
+#             self.move_scheme.change_to('left')
+#             print 'Right Over, Reversed to Left'
+#         elif self.is_up_over(xy_boarder):
+#             self.move_scheme.change_to('down')
+#             print 'Up Over, Reversed to Down'
+#         elif self.is_down_over(xy_boarder):
+#             self.move_scheme.change_to('up')
+#             print 'Down Over, Reversed to Up'
+#         else:
+#             pass    
+        
+    def handle_edge(self):
+        '''平滑运动时, 检查是否已靠近窗体边界, 若已靠近则运动方向反转. 
+        为处理路牌初始即于边界重叠问题, 进行如下处理:
+            进左边界, 则grad_x取正值
+            进右边界, 则grad_x取负值     
+            进上边界, 则grad_y取正值
+            进下边界, 则grad_y取负值
         '''
+        to_edge, edge_direct = self.close_to_edge()
+        if not to_edge:
+            return
+        self.move_scheme.reverse_direction(edge_direct)
         
-        xy_boarder = self.get_border_xy()
-        if self.is_left_over(xy_boarder):
-            self.move_scheme.change_to('right')
-            print 'Left Over, Reversed to Right'
-        elif self.is_right_over(xy_boarder):
-            self.move_scheme.change_to('left')
-            print 'Right Over, Reversed to Left'
-        elif self.is_up_over(xy_boarder):
-            self.move_scheme.change_to('down')
-            print 'Up Over, Reversed to Down'
-        elif self.is_down_over(xy_boarder):
-            self.move_scheme.change_to('up')
-            print 'Down Over, Reversed to Up'
-        else:
-            pass    
-        
-    def reverse_direction(self):
-        '''平滑运动时, 检查是否已靠近窗体边界, 若已靠近则运动方向反转'''
-        if self.been_to_edge():
-            self.move_scheme.reverse_direction()
         
     def move(self):
-        self.reverse_direction()
+        self.handle_edge()
         self._do_move()
         
     def _do_move(self):
@@ -109,6 +129,7 @@ class Shape(object):
 class WatchPoint(Shape):
     '''注视点'''
     
+    type_label = u'注视点'
     default_set = WATCH_POINT_SET
     
     def __init__(self, pos=default_set['pos'], radius=default_set['radius'], 
@@ -128,7 +149,6 @@ class WatchPoint(Shape):
     
     def _do_move(self): 
         '''若注视点靠近窗体边界, 则反向运动'''
-        #self.reverse_direction()
         self.move_pos = self.move_scheme.new_pos(self.move_pos)
         
     def get_border_xy(self):
@@ -162,6 +182,8 @@ class WatchPoint(Shape):
 
 class BaseBoard(Shape):
     '''单路牌与多路牌基础类'''
+    
+    type_label = u'路牌'
     
     def __init__(self):
         self.is_glued = False

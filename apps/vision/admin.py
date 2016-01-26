@@ -134,8 +134,9 @@ set_is_coming.short_description = u'设为可用'
 set_uncoming.short_description = u'设为不可用'
     
 class TrialParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'board_type', 'demo_scheme', 'step_scheme', 'board_size', 
-                    'road_size', 'eccent', 'init_angle', 'move_type', 'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
+    list_display = ('id', 'board_type', 'demo_scheme', 'move_type', 'wp_scheme',   
+                    'step_scheme', 'board_size', 'road_size', 'eccent', 'init_angle', 
+                    'road_marks', 'is_coming', 'trialed_count', 'created_time') # item list 
     search_fields = ('desc', )
     list_filter = ('board_type', 'demo_scheme', 'step_scheme', 'move_type', 'is_coming')
     #fields = ('board_type', 'demo_scheme', )
@@ -156,7 +157,8 @@ class BlockAdmin(admin.ModelAdmin):
     ordering = ('-demo', )     
     
 class TrialAdmin(admin.ModelAdmin):
-    list_display = ('id', 'block', 'cate', 'target_road', 'resp_cost', 'is_correct', 'steps_value', 'created_time') # item list 
+    list_display = ('id', 'block', 'cate', 'target_road', 'resp_cost', 'is_correct', 
+                    'steps_value', 'created_time') # item list 
 #     search_fields = ('desc', )
     list_filter = ('is_correct', )
     #fields = ('param', 'correct_rate', 'end_time', 'is_break', 'desc')
