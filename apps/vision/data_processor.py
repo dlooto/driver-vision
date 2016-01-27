@@ -3,6 +3,7 @@
 # Copyright (C) 2015-2016  NianNian TECH Co., Ltd. All rights reserved.
 # Created on Jan 24, 2016, by Junn
 #
+
 import xlwt
 from vision.config import *
 from utils import times
@@ -68,6 +69,7 @@ def set_style():
     return style
 EXCEL_STYLE = set_style()
 
+
 def gen_filename(demo_id):
     return 'demo%s_%s.xls' % (demo_id, times.datetime_to_str(times.now(), '%Y%m%d%H%M')) #'%Y%m%d%H%M%S'
 
@@ -88,12 +90,13 @@ def build_excel_exporter(step_scheme):
 
 
 class ExcelExporter():
-    '''Excel文件导出管理类'''
+    """Excel文件导出管理类"""
     
     def __init__(self):
         self.excel_file = xlwt.Workbook()
 
     def export_excel(self, demo):
+        """ 导出Excel文件 """
         sheet = self.excel_file.add_sheet(gen_sheetname(demo.param))
         
         for k, v in COL_INDEX.items():
@@ -106,30 +109,31 @@ class ExcelExporter():
             row += 1
         
         self.excel_file.save("%s/%s" % (DATA_ROOT, gen_filename(demo.id)))
-        print("Data exported success.") 
-    
+        print("Data exported success.")
+
     def _write_common_fields(self, sheet, trial, row):
-        '''写入通用字段'''
-        sheet.write(row, COL_INDEX['trial_id'],    trial.id)        #在指定行列写入数据
+        """ 写入通用字段 """
+        sheet.write(row, COL_INDEX['trial_id'],    trial.id)        # 在指定行列写入数据
         sheet.write(row, COL_INDEX['block_id'],    trial.block_id)
         sheet.write(row, COL_INDEX['init_param'],  trial.param.id)
         sheet.write(row, COL_INDEX['move_scheme'], trial.param.move_type)
         sheet.write(row, COL_INDEX['step_scheme'], trial.param.step_scheme)
         sheet.write(row, COL_INDEX['wp_scheme'],   trial.param.wp_scheme)
         sheet.write(row, COL_INDEX['wp_velocity'], trial.wp_velocity)
-        
+
         sheet.write(row, COL_INDEX['target_seat'], trial.block.tseat)
         sheet.write(row, COL_INDEX['eccent'],      trial.block.ee)
         sheet.write(row, COL_INDEX['angle'],       trial.block.angle)
         sheet.write(row, COL_INDEX['resp_cost'],   trial.resp_cost)
         sheet.write(row, COL_INDEX['is_correct'],  trial.is_correct)
         sheet.write(row, COL_INDEX['target_road'], trial.target_road)
-        
+
         sheet.write(row, COL_INDEX['M'],           trial.move_direct)
-    
+
     def _write_step_fields(self, sheet, trial, row):
         '''写入具体阶梯过程字段'''
         pass
+
 
 class SpaceExcelExporter(ExcelExporter):
     '''关键间距数据导出'''
@@ -140,32 +144,33 @@ class SpaceExcelExporter(ExcelExporter):
         sheet.write(row, COL_INDEX['S'], trial.block.S)
         sheet.write(row, COL_INDEX['V'], trial.block.V)
         
+
 class NumberExcelExporter(ExcelExporter):
-    '''数量阈值数据导出'''
+    """数量阈值数据导出"""
     
     def _write_step_fields(self, sheet, trial, row):
         sheet.write(row, COL_INDEX['N'], trial.steps_value)
         sheet.write(row, COL_INDEX['S'], trial.block.S)
         sheet.write(row, COL_INDEX['V'], trial.block.V)
     
+
 class SizeExcelExporter(ExcelExporter):
-    '''尺寸阈值数据导出'''
-    
+    """尺寸阈值数据导出"""
+
     def _write_step_fields(self, sheet, trial, row):
         sheet.write(row, COL_INDEX['S'], trial.steps_value)
         sheet.write(row, COL_INDEX['N'], trial.block.N)
         sheet.write(row, COL_INDEX['V'], trial.block.V)
-    
+
+
 class VelocityExcelExporter(ExcelExporter):
-    '''动态敏感度阈值数据导出'''
+    """动态敏感度阈值数据导出"""
     
     def _write_step_fields(self, sheet, trial, row):
         sheet.write(row, COL_INDEX['V'], trial.steps_value)
         
     
                 
-    
-    
     
     
     

@@ -4,7 +4,6 @@
 # Created on Oct 27, 2015, by Junn
 #
 from runtests.tests import test_export_excel
-from vision.data_processor import export_excel
 
 '''运行Tests'''
 

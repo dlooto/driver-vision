@@ -135,15 +135,15 @@ class WatchPoint(Shape):
     def __init__(self, pos=default_set['pos'], radius=default_set['radius'], 
                  fill=default_set['fill'], outline=default_set['outline']):
         
-        #坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
-        self.pos = pos               
+        # 坐标点. 在圆周运动过程中, 该值为原始坐标, 作为运动圆心代入计算
+        self.pos = pos
 
         self.radius = radius        #圆圈半径
         self.fill = fill            #填充颜色
         self.outline = outline      #边框颜色
         
-        #运动过程中, 该值为运动时的圆心坐标. 注视点绘制时以该坐标为准
-        self.move_pos = pos         
+        # 运动过程中, 该值为运动时的圆心坐标. 注视点绘制时以该坐标为准
+        self.move_pos = pos
         
         self.is_glued = False                #注视点与路牌是否已粘附(当注视点与路牌相遇时进行粘附处理)
     
@@ -334,12 +334,12 @@ class Board(BaseBoard):
         self.change_seat_refer()        
         
     def reset_pos(self, e, a, wp_pos=WATCH_POINT_SET['pos']):
-        ''' 重置路牌中心点坐标.  路牌中心坐标一旦改变, 重新加载路名后路牌上所有路名坐标将改变.
-        
-        e: 路牌中心距(路牌中心与注视点距离) 
-        a: 路牌中心点与注视点连线的水平夹角(角度值) 
+        """ 重置路牌中心点坐标.  路牌中心坐标一旦改变, 重新加载路名后路牌上所有路名坐标将改变.
+
+        e: 路牌中心距(路牌中心与注视点距离)
+        a: 路牌中心点与注视点连线的水平夹角(角度值)
         wp_pos: 注视点坐标
-        '''
+        """
         self.pos = self.calc_pos(e, a, wp_pos)
         
                          

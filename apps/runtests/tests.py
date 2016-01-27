@@ -1,12 +1,13 @@
 #coding=utf-8
-'''
+"""
 Created on Sep 17, 2014
 
 @author: junn
-'''
+"""
 from django.test import TestCase
+from vision import maths
+
 from vision.models import Demo
-from vision.data_processor import export_excel
 
 
 class PostsUnreadTest(TestCase):
@@ -22,7 +23,6 @@ class PostsUnreadTest(TestCase):
     
 import xlwt
 #import xlrd
-import random
 from utils import times
 from vision.config import *
 
@@ -60,7 +60,11 @@ def set_style(name, height, bold=False):
     
 def test_export_excel():
     demo = Demo.objects.get(id=788)
-    export_excel(demo) 
+    # data_processor.ExcelExporter().export_excel(demo)
+    print 'Just test the pycharm....'
+
+
+
 
 if __name__ == "__main__":
     pass
