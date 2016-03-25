@@ -35,5 +35,36 @@ git pull
 ==启动运动worker
 python manage.py celery worker --loglevel=info --settings=settings.local
 
+>>>运行环境构建
+virtualenv, mysql, git
+pip, python, django1.5.1
+python-mysql, suit,  
+#pull code:  ssh-key
+
+==ssh-agent
+若执行ssh-add /path/to/xxx.pem是出现这个错误:Could not open a connection to your authentication agent，则先执行如下命令即可：
+　　ssh-agent bash          - - 有错, 采用如下:
+   eval `ssh-agent`
+
+
 ==pip install 
-pip install -r requirements.txt -i http://pypi.douban.com/simple
+pip install -r requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+
+==tools install 
+http://www.codegood.com/archives/129    --MySQL-python for windows
+http://dev.mysql.com/downloads/file/?id=461390    --mysql for windows
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==

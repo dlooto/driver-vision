@@ -1,0 +1,17 @@
+[
+    {"pk": 10000001, "model": "users.user", "fields": {
+                                        "username": "admin", 
+                                        "password": "admin", 
+                                        "phone": "",
+                                        "email": "",
+                                        "is_superuser": 1,
+                                        "is_staff": 1,
+                                        "is_active": 1,
+                                        "date_joined": "2016-3-25 18:31:00",
+                                        "nickname": "管理员",
+                                        "gender": "M", 
+                                        "avatar": "",
+                                        "birth": "2016-3-25",
+                                        "pdu": "111111"
+                                     }}                                                                                                        
+]
