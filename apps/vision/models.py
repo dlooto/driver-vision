@@ -9,6 +9,7 @@ from django.db import models
 from core.models import BaseModel
 from core.managers import BaseManager
 
+
 class RoadManager(BaseManager):
     
     def get_all_roads(self, is_real):
@@ -18,15 +19,15 @@ class RoadManager(BaseManager):
 class TrialParamManager(BaseManager):
     
     def latest_coming(self):
-        '''获取最新一条可用的初始参数'''
+        """获取最新一条可用的初始参数"""
         return self.filter(is_coming=True).order_by('-created_time')[0]
     
     def set_not_coming(self):
-        '''设置即将使用的参数记录为False'''
+        """设置即将使用的参数记录为False"""
         TrialParam.objects.filter(is_coming=True).update(is_coming=False)    
 
 class RoadModel(BaseModel):
-    '''作为路名字典'''
+    """作为路名字典"""
     name = models.CharField(u'路名', max_length=40, null=True, blank=True, default='')
     is_real = models.BooleanField(u'是真路名', default=False)
     is_valid = models.BooleanField(u'有效', default=True)
@@ -89,7 +90,7 @@ SPACE_SCALE_TYPE_CHOICES = ( #关键间距阶梯过程, 间距变化类型
                             
     
 class TrialParam(BaseModel):
-    '''试验数据模型: 初始参数设置记录'''
+    """试验数据模型: 初始参数设置记录"""
     
     board_type = models.CharField(u'路牌类型', max_length=1, choices=BOARD_CATE, default='S')#默认单路牌
     demo_scheme = models.CharField(u'试验模式', max_length=1, choices=DEMO_SCHEME_CHOICES, default='S')#默认静态试验
@@ -168,15 +169,15 @@ class TrialParam(BaseModel):
         return u'%s-%s' % (self.id, res)
         
     def is_single(self):
-        '''是否单路牌类型'''
+        """是否单路牌类型"""
         return True if self.board_type == 'S' else False
                     
     def is_static(self):
-        '''是否静态模式'''
+        """是否静态模式"""
         return True if self.demo_scheme == 'S' else False  
     
     def is_dynamic_sensitivity(self):
-        '''是否动态敏感度试验类型'''
+        """是否动态敏感度试验类型"""
         if not self.is_static() and self.step_scheme == 'V':
             return True
         return False
@@ -191,18 +192,18 @@ class TrialParam(BaseModel):
         return [float(v) for v in self.velocity.split(',')]
         
     def get_road_seats(self):# TODO...
-        '''将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回 
-        @return: 元组 (['A', 'B', 'D'], ['B', 'D']), 第1个列表为所有路名位置, 第2个列表为可选的目标项位置  
-        '''
+        """将路名位置字符串分解后返回, 如'A,B,D|B,D'分解后返回
+        @return: 元组 (['A', 'B', 'D'], ['B', 'D']), 第1个列表为所有路名位置, 第2个列表为可选的目标项位置
+        """
         roads_str, targets_str = self.road_marks.split('|')
         return roads_str.split(','), targets_str.split(',')
     
     def get_multi_road_seats(self):
-        '''返回路名位置标记列表.
-        
+        """返回路名位置标记列表.
+
         @return: [(['A','B','D'], ['A','B']), (['B','C','D'], ['C','D']), ].
-                返回为元组列表, 每个元组为一个路牌上的路名位置. 各元组中第1个列表为所有路名位置, 第2个列表为可选的目标项位置 
-        '''
+                返回为元组列表, 每个元组为一个路牌上的路名位置. 各元组中第1个列表为所有路名位置, 第2个列表为可选的目标项位置
+        """
         result_list = []
         seats_str_list = self.road_marks.split('::')
         for seats_str in seats_str_list:
@@ -212,21 +213,21 @@ class TrialParam(BaseModel):
         return result_list    
     
     def be_executed(self):
-        '''被执行一次, 执行次数加1'''
+        """被执行一次, 执行次数加1"""
         self.trialed_count += 1
         self.save()
         
     def get_eccents(self):
-        '''返回路牌中心距列表(浮点值列表)''' 
+        """返回路牌中心距列表(浮点值列表)"""
         return [float(e) for e in self.eccent.split(',')]
     
     def get_angles(self):
-        '''返回初始角度值列表(浮点值列表)''' 
+        """返回初始角度值列表(浮点值列表)"""
         return [float(a) for a in self.init_angle.split(',')]
                
         
 class Demo(BaseModel):
-    '''一次完整试验记录'''
+    """一次完整试验记录"""
     
     param = models.ForeignKey(TrialParam, verbose_name=u'初始参数', null=True, blank=True) #所使用的初始参数设置
     correct_rate = models.FloatField(u'试验正确率', default=0)
@@ -263,7 +264,7 @@ STEP_TYPE_CHOICES = {
 }    
     
 class Block(BaseModel):
-    '''连续的阶梯变化为一个Block, 一般40次trial属于一个Block'''
+    """连续的阶梯变化为一个Block, 一般40次trial属于一个Block"""
     
     demo = models.ForeignKey(Demo, verbose_name=u'所属Demo')
     
@@ -294,7 +295,7 @@ class Block(BaseModel):
         return u'%s' % self.id
     
 class Trial(BaseModel):
-    '''一次刺激显示中的数据记录'''
+    """一次刺激显示中的数据记录"""
     
     block = models.ForeignKey(Block, verbose_name=u'所属Block')
     cate = models.CharField(u'阶梯类型', max_length=4, choices=STEP_TYPE_CHOICES) #阶梯变化类型, 由此决定steps_value记录的值类型
@@ -343,9 +344,9 @@ class Trial(BaseModel):
             
     
 class BoardLog(BaseModel):
-    '''一次刺激显示中的路牌数据
+    """一次刺激显示中的路牌数据
     @todo: ...
-    '''
+    """
     
     trial = models.ForeignKey(Trial, verbose_name=u'所属刺激显示')
     #pos, width, height, road_marks, ...

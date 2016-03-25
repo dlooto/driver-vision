@@ -1,4 +1,4 @@
-#vision readme
+## vision readme
 
 ====vision cmd:
 2vt
@@ -15,7 +15,7 @@ e:
   
 C: MySQL
 
-==本地django目录
+==本地程序库目录
 Python27/Lib/site-packages/django/contrib/admin/sites.py
 
 ==MySQL脚本执行
@@ -29,8 +29,11 @@ use vision;
 2vt
 cd ..
 git pull
---->若出现错误, 注意查看错误信息, 将有改动的本地文件备份后删除.重新执行:
+--->若出现错误, 注意查看错误信息, 将有改动的本地文件备份后删除. 重新执行:
 git pull
 
 ==启动运动worker
 python manage.py celery worker --loglevel=info --settings=settings.local
+
+==pip install 
+pip install -r requirements.txt -i http://pypi.douban.com/simple

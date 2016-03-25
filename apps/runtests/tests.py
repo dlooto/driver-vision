@@ -15,12 +15,12 @@ class PostsUnreadTest(TestCase):
     def setUp(self):
         pass
 
-    def test_get_all_posts_unread_count(self):
-        print 'unread_dict: \n'
-        
     def test_gui(self):
         pass
-    
+
+    def test_get_all_posts_unread_count(self):
+        print 'unread_dict: \n'
+
 import xlwt
 #import xlrd
 from utils import times
@@ -61,8 +61,9 @@ def set_style(name, height, bold=False):
 def test_export_excel():
     demo = Demo.objects.get(id=788)
     # data_processor.ExcelExporter().export_excel(demo)
-    print 'Just test the pycharm....'
 
+    print 'Just test the pycharm....'
+    print('ok, let go')  # just for testing Pycharm move line down ...
 
 
 

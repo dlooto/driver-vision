@@ -155,6 +155,7 @@ c.update()
 #移动路牌
 inter = 5
 dx, dy = 0, inter
+board_id = None
 for i in range(1000):
     c.move(board_id, dx, dy)
     c.move(road_id_G, dx, dy)
@@ -169,16 +170,16 @@ for i in range(1000):
     c.update()
     
     if i % 20 == 0:
-        if (dx, dy) == (0,inter): #向下
+        if (dx, dy) == (0,inter): # 向下
             dx, dy = -inter, 0
             continue
-        if (dx, dy) == (-inter,0): #向左
+        if (dx, dy) == (-inter,0): # 向左
             dx, dy = 0, -inter
             continue    
-        if (dx, dy) == (0, -inter): #向上
+        if (dx, dy) == (0, -inter): # 向上
             dx, dy = inter, 0
             continue
-        if (dx, dy) == (inter, 0): #向右
+        if (dx, dy) == (inter, 0): # 向右
             dx, dy = 0, inter
             continue            
             
