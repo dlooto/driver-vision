@@ -1,5 +1,10 @@
 ## vision readme
 
+本程序工程中大量使用Python面向对象及设计模式技巧, 非刻意为之, 实在是因算法控制程序部分太过复杂. 为应对复杂的动态多路牌情况, 程序经过数次大规模重构. 
+
+学习Python面向对象的朋友, 此程序可作为学习参考.  作者对本程序保留所有权利, 非经许可不得用于商业目的.
+
+
 ====vision cmd:
 2vt
 run8                        ---admin后台
@@ -65,6 +70,3 @@ http://dev.mysql.com/downloads/file/?id=461390    --mysql for windows
 
 
 
-
-
-==

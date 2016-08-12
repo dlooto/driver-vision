@@ -11,5 +11,5 @@ from django.views.generic.base import TemplateView
 urlpatterns = patterns(
     '',
     url(r'^/qq_login$',  TemplateView.as_view(template_name='auth/qq_login.html')),
-    
+
 )

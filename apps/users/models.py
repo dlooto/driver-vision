@@ -72,7 +72,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login_ip = models.IPAddressField(u'最后登录IP', null=True, blank=True)
 
     USERNAME_FIELD = 'username'
-    backend = 'django.contrib.auth.backends.ModelBackend'
+    backend = 'django.contrib.auth.backends.ModelBackend'  # user登录时需要该backend
 
     objects = CustomUserManager()
 
@@ -105,10 +105,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             return ''
         return '%s%s/%s' % (settings.MEDIA_URL, settings.USER_AVATAR_DIR['thumb'], self.avatar)             
                 
-        
-    def post_login(self, req):   
-        '''登录及后续其他处理. 
-        @param req: django request请求对象'''
+    def post_login(self, req):
+        """登录及后续其他处理.
+        :param req: django request请求对象"""
          
         login(req, self)
 
