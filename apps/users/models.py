@@ -120,16 +120,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.save()  
         self.cache()      
             
-#     def get_authtoken(self):
-#         '''返回登录鉴权token'''
-#         
-#         try:
-#             token, created = Token.objects.get_or_create(user=self)
-#             return token.key if token else ''
-#         except Exception, e:
-#             logs.error('get auth_token error \n % s' % e)
-#             return ''
-        
     def is_invited_first_login(self):
         '''是否被亲友邀请注册用户首次手机号登录'''   
         if not self.is_active and self.is_invited_signup():

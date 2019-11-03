@@ -1,7 +1,6 @@
 *.project
 *.pydevproject
 *.pyc
-*.settings
 .idea
 
 
@@ -14,4 +13,25 @@ logs
 data/*.xls
 dump.rdb
 
+*.pyc
+.idea
+.settings
 
+media
+logs
+env
+
+*.orig
+*.swp
+*.DS_Store
+*.bak
+*.org
+dump.rdb
+
+.cache
+.pytest_cache
+.env
+*.rdb
+
+apps/build
+apps/celerybeat-schedule.db
