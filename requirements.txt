@@ -1,4 +1,4 @@
-Django==1.5.1
+Django==3.2.24
 django-appconf==1.0.1
 django-debug-toolbar==0.8.5
 django-redis==3.7.1
